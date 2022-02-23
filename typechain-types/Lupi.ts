@@ -20,18 +20,27 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 export interface LupiInterface extends utils.Interface {
   contractName: "Lupi";
   functions: {
-    "commitGuess(int256)": FunctionFragment;
+    "commitGuess(bytes32)": FunctionFragment;
     "endGame()": FunctionFragment;
+    "getCommittedGuessHash()": FunctionFragment;
     "getGuessCounter()": FunctionFragment;
     "getLowestGuess()": FunctionFragment;
+    "getRevealedGuess()": FunctionFragment;
+    "getSaltedHash(uint32,bytes32)": FunctionFragment;
     "getWinner()": FunctionFragment;
+    "newGame()": FunctionFragment;
+    "revealGuess(uint32,bytes32)": FunctionFragment;
   };
 
   encodeFunctionData(
     functionFragment: "commitGuess",
-    values: [BigNumberish]
+    values: [BytesLike]
   ): string;
   encodeFunctionData(functionFragment: "endGame", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "getCommittedGuessHash",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "getGuessCounter",
     values?: undefined
@@ -40,7 +49,20 @@ export interface LupiInterface extends utils.Interface {
     functionFragment: "getLowestGuess",
     values?: undefined
   ): string;
+  encodeFunctionData(
+    functionFragment: "getRevealedGuess",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getSaltedHash",
+    values: [BigNumberish, BytesLike]
+  ): string;
   encodeFunctionData(functionFragment: "getWinner", values?: undefined): string;
+  encodeFunctionData(functionFragment: "newGame", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "revealGuess",
+    values: [BigNumberish, BytesLike]
+  ): string;
 
   decodeFunctionResult(
     functionFragment: "commitGuess",
@@ -48,6 +70,10 @@ export interface LupiInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "endGame", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "getCommittedGuessHash",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getGuessCounter",
     data: BytesLike
   ): Result;
@@ -55,7 +81,20 @@ export interface LupiInterface extends utils.Interface {
     functionFragment: "getLowestGuess",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "getRevealedGuess",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getSaltedHash",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "getWinner", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "newGame", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "revealGuess",
+    data: BytesLike
+  ): Result;
 
   events: {};
 }
@@ -89,7 +128,7 @@ export interface Lupi extends BaseContract {
 
   functions: {
     commitGuess(
-      guess: BigNumberish,
+      guessHash: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -97,17 +136,37 @@ export interface Lupi extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    getCommittedGuessHash(overrides?: CallOverrides): Promise<[string]>;
+
     getGuessCounter(
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { counter: BigNumber }>;
+    ): Promise<[number] & { counter: number }>;
 
     getLowestGuess(overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    getRevealedGuess(overrides?: CallOverrides): Promise<[BigNumber[]]>;
+
+    getSaltedHash(
+      guessData: BigNumberish,
+      salt: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
     getWinner(overrides?: CallOverrides): Promise<[string]>;
+
+    newGame(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    revealGuess(
+      answer: BigNumberish,
+      salt: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
   };
 
   commitGuess(
-    guess: BigNumberish,
+    guessHash: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -115,57 +174,137 @@ export interface Lupi extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  getGuessCounter(overrides?: CallOverrides): Promise<BigNumber>;
+  getCommittedGuessHash(overrides?: CallOverrides): Promise<string>;
+
+  getGuessCounter(overrides?: CallOverrides): Promise<number>;
 
   getLowestGuess(overrides?: CallOverrides): Promise<BigNumber>;
 
+  getRevealedGuess(overrides?: CallOverrides): Promise<BigNumber[]>;
+
+  getSaltedHash(
+    guessData: BigNumberish,
+    salt: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
   getWinner(overrides?: CallOverrides): Promise<string>;
 
+  newGame(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  revealGuess(
+    answer: BigNumberish,
+    salt: BytesLike,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   callStatic: {
-    commitGuess(guess: BigNumberish, overrides?: CallOverrides): Promise<void>;
+    commitGuess(guessHash: BytesLike, overrides?: CallOverrides): Promise<void>;
 
     endGame(overrides?: CallOverrides): Promise<void>;
 
-    getGuessCounter(overrides?: CallOverrides): Promise<BigNumber>;
+    getCommittedGuessHash(overrides?: CallOverrides): Promise<string>;
+
+    getGuessCounter(overrides?: CallOverrides): Promise<number>;
 
     getLowestGuess(overrides?: CallOverrides): Promise<BigNumber>;
 
+    getRevealedGuess(overrides?: CallOverrides): Promise<BigNumber[]>;
+
+    getSaltedHash(
+      guessData: BigNumberish,
+      salt: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
     getWinner(overrides?: CallOverrides): Promise<string>;
+
+    newGame(overrides?: CallOverrides): Promise<void>;
+
+    revealGuess(
+      answer: BigNumberish,
+      salt: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
   };
 
   filters: {};
 
   estimateGas: {
     commitGuess(
-      guess: BigNumberish,
+      guessHash: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     endGame(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    getCommittedGuessHash(overrides?: CallOverrides): Promise<BigNumber>;
 
     getGuessCounter(overrides?: CallOverrides): Promise<BigNumber>;
 
     getLowestGuess(overrides?: CallOverrides): Promise<BigNumber>;
 
+    getRevealedGuess(overrides?: CallOverrides): Promise<BigNumber>;
+
+    getSaltedHash(
+      guessData: BigNumberish,
+      salt: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     getWinner(overrides?: CallOverrides): Promise<BigNumber>;
+
+    newGame(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    revealGuess(
+      answer: BigNumberish,
+      salt: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     commitGuess(
-      guess: BigNumberish,
+      guessHash: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     endGame(
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    getCommittedGuessHash(
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     getGuessCounter(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getLowestGuess(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    getRevealedGuess(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    getSaltedHash(
+      guessData: BigNumberish,
+      salt: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     getWinner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    newGame(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    revealGuess(
+      answer: BigNumberish,
+      salt: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
   };
 }

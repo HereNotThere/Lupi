@@ -74,8 +74,8 @@
       ]
     },
     "/Users/patrickfives/Hacking/lupi/contracts/Lupi.sol": {
-      "lastModificationDate": 1644723889563,
-      "contentHash": "f1ecf1968dd2218d84a446db4869b042",
+      "lastModificationDate": 1644908389696,
+      "contentHash": "9516610fca8502f95d5ffefc696a1566",
       "sourceName": "contracts/Lupi.sol",
       "solcConfig": {
         "version": "0.8.4",
