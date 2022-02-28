@@ -44,6 +44,10 @@ contract Lupi {
         gameVersion = _gameVersion;
     }
 
+    function getGameVersion() public view returns (string memory){
+        return gameVersion;
+    }
+
     function commitGuess(bytes32 guessHash) public {
         require(block.timestamp < guessDeadline, "Guess deadline has passed");
         committedGuesses[msg.sender].guessHash = guessHash;
