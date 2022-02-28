@@ -6,7 +6,8 @@
 .pnp.js
 
 # testing
-/coverage
+coverage
+coverage.json
 
 # production
 /build
@@ -21,3 +22,12 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+typechain
+typechain-types
+
+#Hardhat files
+src/artifacts
+cache
+
+
+
