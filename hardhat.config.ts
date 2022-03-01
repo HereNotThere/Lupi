@@ -38,17 +38,12 @@ const config: HardhatUserConfig = {
     artifacts: "./src/artifacts",
   },
   networks: {
-    hardhat: {
-      chainId: 1337,
+    ropsten: {
+      url: process.env.ROPSTEN_URL || "",
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
   },
-  // networks: {
-  //   ropsten: {
-  //     url: process.env.ROPSTEN_URL || "",
-  //     accounts:
-  //       process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-  //   },
-  // },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
     currency: "USD",

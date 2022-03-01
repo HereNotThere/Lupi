@@ -1,7 +1,9 @@
 import { expect } from "chai";
 import { utils } from "ethers";
 import { ethers } from "hardhat";
+import { describe } from "mocha";
 
+console.log(`index.ts`);
 function getSalt(salt: string) {
   return utils.solidityKeccak256(["string"], [salt]);
 }
@@ -17,8 +19,6 @@ function getGuessHash(currentNonce: string, guess: number, salt: string) {
 const nullAddress = "0x0000000000000000000000000000000000000000";
 
 describe("Lupi", async function () {
-  const [owner, addr1, addr2] = await ethers.getSigners();
-  const users = [addr1, addr2];
   it("Should return return game version after deployment", async function () {
     const Lupi = await ethers.getContractFactory("Lupi");
     const lupi = await Lupi.deploy("1");
@@ -31,6 +31,9 @@ describe("Lupi", async function () {
     const Lupi = await ethers.getContractFactory("Lupi");
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
+
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const users = [addr1, addr2];
 
     const lupiAddr1 = lupi.connect(addr1);
 
@@ -47,6 +50,8 @@ describe("Lupi", async function () {
     const Lupi = await ethers.getContractFactory("Lupi");
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const users = [addr1, addr2];
 
     const lupiAddr1 = lupi.connect(addr1);
 
@@ -71,6 +76,9 @@ describe("Lupi", async function () {
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
 
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const users = [addr1, addr2];
+
     const lupiAddr1 = lupi.connect(addr1);
 
     const currentNonce = await lupiAddr1.getCurrentNonce();
@@ -93,6 +101,8 @@ describe("Lupi", async function () {
     const Lupi = await ethers.getContractFactory("Lupi");
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const users = [addr1, addr2];
 
     const lupiAddr1 = lupi.connect(addr1);
 
@@ -120,6 +130,8 @@ describe("Lupi", async function () {
     const Lupi = await ethers.getContractFactory("Lupi");
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const users = [addr1, addr2];
 
     const lupiAddr1 = lupi.connect(addr1);
 
@@ -138,6 +150,8 @@ describe("Lupi", async function () {
     const Lupi = await ethers.getContractFactory("Lupi");
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const users = [addr1, addr2];
 
     const lupiAddr1 = lupi.connect(addr1);
 
@@ -164,6 +178,9 @@ describe("Lupi", async function () {
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
 
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const users = [addr1, addr2];
+
     const lupiAddr1 = lupi.connect(addr1);
 
     const currentNonce = await lupiAddr1.getCurrentNonce();
@@ -188,6 +205,8 @@ describe("Lupi", async function () {
     const Lupi = await ethers.getContractFactory("Lupi");
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const users = [addr1, addr2];
 
     const lupiAddr1 = lupi.connect(addr1);
 
@@ -215,6 +234,8 @@ describe("Lupi", async function () {
     const Lupi = await ethers.getContractFactory("Lupi");
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const users = [addr1, addr2];
 
     const lupiAddr1 = lupi.connect(addr1);
 
@@ -263,6 +284,9 @@ describe("Lupi", async function () {
     const Lupi = await ethers.getContractFactory("Lupi");
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const users = [addr1, addr2];
+
     const currentNonce = await lupi.getCurrentNonce();
 
     for (let j = 0; j < 2; j++) {
@@ -330,6 +354,9 @@ describe("Lupi", async function () {
     const Lupi = await ethers.getContractFactory("Lupi");
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const users = [addr1, addr2];
+
     const currentNonce = await lupi.getCurrentNonce();
 
     const lupiUser = lupi.connect(users[0]);
@@ -393,6 +420,9 @@ describe("Lupi", async function () {
     const Lupi = await ethers.getContractFactory("Lupi");
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const users = [addr1, addr2];
+
     const currentNonce = await lupi.getCurrentNonce();
 
     for (let j = 0; j < 2; j++) {
@@ -437,6 +467,9 @@ describe("Lupi", async function () {
     const Lupi = await ethers.getContractFactory("Lupi");
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const users = [addr1, addr2];
+
     const currentNonce = await lupi.getCurrentNonce();
 
     for (let j = 0; j < 2; j++) {

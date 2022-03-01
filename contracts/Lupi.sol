@@ -1,8 +1,6 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
-
 // if everyone reveals game is over
 // if time runs out game is over
 // only need a mapping if time limit based, but since we need to know when
