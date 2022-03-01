@@ -123,7 +123,15 @@ function App() {
       const signer = provider.getSigner()
       const contract = new ethers.Contract(lupiAddress, Lupi.abi, signer)
       const secret = ethers.utils.formatBytes32String('secret')
-      const transaction = await contract.revealGuess(revealedGuess, secret)
+      const guessHash = await contract.getSaltedHash(
+        parseInt(revealedGuess),
+        secret
+      )
+      const transaction = await contract.revealGuess(
+        guessHash,
+        revealedGuess,
+        secret
+      )
       await transaction.wait()
     }
   }
