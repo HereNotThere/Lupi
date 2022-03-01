@@ -48,12 +48,12 @@ function App() {
     }
   }
 
-  async function fetchGuessHash() {
+  async function fetchGuessHashes() {
     if (typeof window.ethereum !== 'undefined') {
       const provider = new ethers.providers.Web3Provider(window.ethereum)
       const contract = new ethers.Contract(lupiAddress, Lupi.abi, provider)
       try {
-        const data = await contract.getCommittedGuessHash()
+        const data = await contract.getCommittedGuessHashes()
         console.log('data: ', data.toString())
         setGuessHash(data.toString())
       } catch (err) {
@@ -138,7 +138,7 @@ function App() {
         Winner: {winner}
         <button onClick={fetchLowestGuess}>Fetch Lowest Guess</button>
         Lowest Guess: {lowestGuess}
-        <button onClick={fetchGuessHash}>Fetch Guess Hash</button>
+        <button onClick={fetchGuessHashes}>Fetch Guess Hash</button>
         Guess Hash: {guessHash}
         <button onClick={fetchRevealedGuesses}>Fetch Revealed Guesses</button>
         Revealed Guesses: {allRevealedGuesses}
