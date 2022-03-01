@@ -1,5 +1,4 @@
 import { expect } from "chai";
-import exp from "constants";
 import { utils } from "ethers";
 import { ethers } from "hardhat";
 
@@ -260,7 +259,7 @@ describe("Lupi", async function () {
     await lupi.revealGuess(revealHash, 1, salt);
   });
 
-  it("Two users should commit 5 guesses and make 5 reveals, second user should also guess one unique (1)", async function () {
+  it("Two users should commit 5 guesses and make 5 reveals, one user should also guess one unique (1)", async function () {
     const Lupi = await ethers.getContractFactory("Lupi");
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
@@ -325,6 +324,7 @@ describe("Lupi", async function () {
     await lupi.endGame();
 
     expect(await lupi.getLowestGuess()).to.equal(1);
+    expect(await lupi.getWinner()).to.equal(users[0].address);
   });
 
   it("1 User should commit 9 guesses (4 duplicate, 1 unique) and make 6 reveals", async function () {
@@ -391,7 +391,7 @@ describe("Lupi", async function () {
     expect(await lupi.getWinner()).to.equal(users[0].address);
   });
 
-  it("Should should return no winner if no winner", async function () {
+  it("Two users should make 4 idendtical gusses, there should be no winner", async function () {
     const Lupi = await ethers.getContractFactory("Lupi");
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
@@ -423,6 +423,14 @@ describe("Lupi", async function () {
       }
     }
 
+    const revealDeadline =
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp +
+      3 * 24 * 60 * 60;
+    await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
+    await ethers.provider.send("evm_mine", []);
+
+    await lupi.endGame();
     expect(await lupi.getLowestGuess()).to.equal(0);
     expect(await lupi.getWinner()).to.equal(nullAddress);
   });
