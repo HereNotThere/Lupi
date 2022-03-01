@@ -16,101 +16,117 @@ import "hardhat/console.sol";
 
 contract Lupi {
     mapping(address => CommitGuess) private committedGuesses;
-    RevealGuess[] private revealedGuesses;
-
-    uint32 private guessCounter;
-    uint private lowestGuess;
+    uint32 private lowestGuess;
     string private gameVersion;
     address private winner;
+    Round[] private rounds;
 
-    uint constant guessDeadline = 1645158215;
-    uint constant revealDeadline = 1645158215 + (60*60*24);
+    struct Round {
+        bytes32 nonce;
+        uint guessDeadline;
+        uint revealDeadline;
+        mapping(address => CommitGuess[]) committedGuesses;
+        RevealGuess[] revealedGuesses;
+    }
 
+    struct CommitGuess {
+        bytes32 guessHash;
+        bool revealed;
+        uint blockNumber;
+    }
 
     struct RevealGuess {
-        uint guess;
+        uint32 guess;
         address player;
     }
 
-    struct CommitGuess { 
-        bytes32 guessHash;
-        uint64 block;
-        bool revealed;
-    }
-
-
     constructor(string memory _gameVersion) {
-        console.log("Deploying Lupi Game Version:", _gameVersion);
         gameVersion = _gameVersion;
+        newGame();
     }
 
     function getGameVersion() public view returns (string memory){
         return gameVersion;
     }
 
+    function newGame() private {
+        // Unreachable require
+        // require(rounds.length == 0, "newGame when game is running");
+        Round storage newRound = rounds.push();
+        newRound.guessDeadline = block.timestamp + 3 days;
+        newRound.revealDeadline = block.timestamp + 5 days;
+        newRound.nonce =  bytes32(uint256(uint160(address(this))) << 96); // Replace with chainlink random
+    }
+
     function commitGuess(bytes32 guessHash) public {
-        require(block.timestamp < guessDeadline, "Guess deadline has passed");
-        committedGuesses[msg.sender].guessHash = guessHash;
-        committedGuesses[msg.sender].block= uint64(block.number);
-        committedGuesses[msg.sender].revealed= false;
+        require(rounds.length == 1, "commitGuess without running game");
+        require(block.timestamp < rounds[0].guessDeadline, "Guess deadline has passed");
+        CommitGuess memory guess;
+        guess.guessHash = guessHash;
+        guess.revealed = false;
+        guess.blockNumber= block.number;
+        rounds[0].committedGuesses[msg.sender].push(guess);
     }
 
-    function revealGuess(uint32 answer, bytes32 salt) public {
-        require(block.timestamp > guessDeadline, "Still in guess phase");
-        require(block.timestamp < revealDeadline, "Reveal deadline has passed");
-        require(answer > 0, "Answer must be positive");
-        require(committedGuesses[msg.sender].revealed==false, "Already revealed");
-        committedGuesses[msg.sender].revealed=true;
-        require(getSaltedHash(answer,salt)==committedGuesses[msg.sender].guessHash,"Revealed hash does not match commit");
-        RevealGuess memory rg;
-        rg.guess = answer;
-        rg.player = msg.sender;
-        revealedGuesses.push(rg);
-    }
-
-    function getSaltedHash(uint32 guessData, bytes32 salt) public view returns (bytes32){
-        return keccak256(abi.encodePacked(address(this), guessData, salt));
-    }
-
-    function endGame() public {
-        require(block.timestamp > revealDeadline, "Still in reveal phase");
-        uint tempLowestGuess = 9999;
-        address tempWinner;
-        
-        
-        bool found = false;
-        //...
-        for(uint i=0; i < revealedGuesses.length; i++){
-            if(revealedGuesses[i].guess < tempLowestGuess){
-                tempLowestGuess = revealedGuesses[i].guess;
-                tempWinner = revealedGuesses[i].player;
-                for(uint x = 0; x < revealedGuesses.length; x++){
-                    if((revealedGuesses[x].guess < tempLowestGuess) || (revealedGuesses[x].guess == tempLowestGuess && revealedGuesses[x].player != tempWinner) ){
-                        break;
-                    }
-                    if(x == revealedGuesses.length - 1){
-                        found = true;
-                    }
-                }
-            }
-            if(found){
+    function revealGuess(bytes32 guessHash, uint32 answer, bytes32 salt) public {
+        require(rounds.length == 1, "revealGuess without running game");
+        require(block.timestamp > rounds[0].guessDeadline, "revealGuess guessDeadline hasn't passed");
+        require(block.timestamp < rounds[0].revealDeadline, "revealGuess revealDeadline has passed");
+        require(answer > 0, "revealGuess answer must be positive");
+        require(rounds[0].committedGuesses[msg.sender].length > 0, "No guesses to reveal");
+        require(getSaltedHash(answer,salt)==guessHash,"Reveal hash does not match guessHash");
+        bool found;
+        for (uint i = 0; i < rounds[0].committedGuesses[msg.sender].length; i++) {
+            if(rounds[0].committedGuesses[msg.sender][i].guessHash == guessHash) {
+                require(rounds[0].committedGuesses[msg.sender][i].revealed==false, "Already revealed");
+                rounds[0].committedGuesses[msg.sender][i].revealed=true;
+                RevealGuess memory rg;
+                rg.guess = answer;
+                rg.player = msg.sender;
+                rounds[0].revealedGuesses.push(rg);
+                found = true;
                 break;
             }
         }
+        require(found, "revealGuess no matching guessHash found");
+    }
 
-        if(found){
+    function getCurrentNonce() public view returns (bytes32){
+        require(rounds.length == 1, "getSaltedHash without running game");
+        return (rounds[0].nonce);
+    }
+
+    function getSaltedHash(uint32 answer, bytes32 salt) public view returns (bytes32){
+        require(rounds.length == 1, "getSaltedHash without running game");
+        return keccak256(abi.encodePacked(rounds[0].nonce, answer, salt));
+    }
+
+    function endGame() public {
+        require(rounds.length == 1, "endGame without running game");
+        require(block.timestamp > rounds[0].revealDeadline, "Still in reveal phase");
+        uint32 tempLowestGuess = 0xffffffff;
+        address tempWinner;
+        
+        for(uint i=0; i < rounds[0].revealedGuesses.length; i++){
+            if(rounds[0].revealedGuesses[i].guess < tempLowestGuess){
+                for(uint x = 0; x < rounds[0].revealedGuesses.length; x++){
+                    if((rounds[0].revealedGuesses[x].guess == rounds[0].revealedGuesses[i].guess && i != x && rounds[0].revealedGuesses[x].player != rounds[0].revealedGuesses[i].player) ){
+                        break;
+                    }
+                    if(x == rounds[0].revealedGuesses.length - 1){
+                        tempLowestGuess = rounds[0].revealedGuesses[i].guess;
+                        tempWinner = rounds[0].revealedGuesses[i].player;
+                    }
+                }
+            }
+        }
+
+        if(tempLowestGuess < 0xffffffff){
             lowestGuess = tempLowestGuess;
             winner = tempWinner;
         }
-    }
-
-    function newGame() public {
-        lowestGuess = 0;
-        winner = address(0);
-    }
-    
-    function getGuessCounter() public view returns (uint32 counter){
-        return guessCounter;
+        rounds.pop();
+        newGame();
     }
 
     function getWinner() public view returns (address) {
@@ -121,16 +137,19 @@ contract Lupi {
         return lowestGuess;
     }
 
-    function getCommittedGuessHash() public view returns (bytes32) {
-        return committedGuesses[msg.sender].guessHash;
+    function getCommittedGuessHashes() public view returns (bytes32 [] memory) {
+        bytes32[] memory guesses = new bytes32[](rounds[0].committedGuesses[msg.sender].length);
+        for(uint i=0; i < rounds[0].committedGuesses[msg.sender].length; i++){
+            guesses[i] = rounds[0].committedGuesses[msg.sender][i].guessHash;
+        }
+        return guesses;
     }
     
     function getRevealedGuess() public view returns (uint[] memory) {
-        console.logUint(revealedGuesses.length);
-        uint[] memory guesses = new uint[](revealedGuesses.length);
+        uint[] memory guesses = new uint[](rounds[0].revealedGuesses.length);
 
-        for(uint i=0; i < revealedGuesses.length; i++){
-            guesses[i]=revealedGuesses[i].guess;
+        for(uint i=0; i < rounds[0].revealedGuesses.length; i++){
+            guesses[i]=rounds[0].revealedGuesses[i].guess;
         }
         return guesses;
     }
