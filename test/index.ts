@@ -321,10 +321,9 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
-    await lupi.endGame();
-
-    expect(await lupi.getLowestGuess()).to.equal(1);
-    expect(await lupi.getWinner()).to.equal(users[0].address);
+    await expect(lupi.endGame())
+      .to.emit(lupi, "GameResult")
+      .withArgs(currentNonce, users[0].address, 1);
   });
 
   it("1 User should commit 9 guesses (4 duplicate, 1 unique) and make 6 reveals", async function () {
@@ -385,10 +384,9 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
-    await lupi.endGame();
-
-    expect(await lupi.getLowestGuess()).to.equal(1);
-    expect(await lupi.getWinner()).to.equal(users[0].address);
+    await expect(lupi.endGame())
+      .to.emit(lupi, "GameResult")
+      .withArgs(currentNonce, users[0].address, 1);
   });
 
   it("Two users should make 4 idendtical gusses, there should be no winner", async function () {
@@ -430,9 +428,9 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
-    await lupi.endGame();
-    expect(await lupi.getLowestGuess()).to.equal(0);
-    expect(await lupi.getWinner()).to.equal(nullAddress);
+    await expect(lupi.endGame())
+      .to.emit(lupi, "GameResult")
+      .withArgs(currentNonce, nullAddress, 0);
   });
 
   it("Should should revert if endGame too early", async function () {
