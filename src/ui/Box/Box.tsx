@@ -81,7 +81,7 @@ type Props = {
 
 export type BoxProps = Props;
 
-export const Box = forwardRef<HTMLDivElement, Props>((props, ref) => {
+export const Box = forwardRef<HTMLDivElement, Props>(function Box(props) {
   const className = useMemo(() => {
     const classList = [];
 
@@ -247,9 +247,12 @@ export const Box = forwardRef<HTMLDivElement, Props>((props, ref) => {
 
   const as = props.as ?? "div";
 
-  return React.createElement(as, {
-    className,
-    style,
-    children: props.children,
-  });
+  return React.createElement(
+    as,
+    {
+      className,
+      style,
+    },
+    props.children
+  );
 });

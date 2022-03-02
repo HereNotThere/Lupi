@@ -42,8 +42,8 @@ export const useContract = (guess: string, revealedGuess: string) => {
 
     const contract = new ethers.Contract(lupiAddress, Lupi.abi, provider);
 
-    let eventFilter = contract.filters.GameResult(); //.ContractEvent()
-    let events = await contract.queryFilter(eventFilter, 0, "latest");
+    const eventFilter = contract.filters.GameResult(); //.ContractEvent()
+    const events = await contract.queryFilter(eventFilter, 0, "latest");
 
     console.log(events);
   }
