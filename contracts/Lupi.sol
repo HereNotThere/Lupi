@@ -19,6 +19,7 @@
 pragma solidity ^0.8.0;
 
 import "hardhat/console.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 // if everyone reveals game is over
 // if time runs out game is over
@@ -29,7 +30,7 @@ import "hardhat/console.sol";
 
 uint256 constant ticketPrice = 0.01 ether;
 
-contract Lupi {
+contract Lupi is ReentrancyGuard {
     event GameResult(
         bytes32 indexed nonce,
         address indexed winner,
@@ -76,18 +77,13 @@ contract Lupi {
         rounds[currentRound].nonce = currentRound;
     }
 
-    function commitGuess(bytes32 guessHash) public payable {
+    function commitGuess(bytes32 guessHash) public payable nonReentrant {
         require(
             block.timestamp < rounds[currentRound].guessDeadline,
             "Guess deadline has passed"
         );
-
         require(msg.value >= ticketPrice, "Must send at least ticketPrice");
-        uint256 ethToRetrun = msg.value - ticketPrice;
 
-        if (ethToRetrun > 0) {
-            payable(msg.sender).transfer(ethToRetrun);
-        }
         if (rounds[currentRound].committedGuesses[msg.sender].length == 0) {
             rounds[currentRound].players.push(msg.sender);
         }
@@ -95,6 +91,11 @@ contract Lupi {
             CommitGuess(guessHash, false)
         );
         rounds[currentRound].balance += ticketPrice;
+        uint256 ethToReturn = msg.value - ticketPrice;
+        if (ethToReturn > 0) {
+            (bool sent, ) = msg.sender.call{value: ethToReturn}("");
+            require(sent, "ethToReturn failed to send");
+        }
     }
 
     function revealGuess(
@@ -136,10 +137,9 @@ contract Lupi {
                 );
                 rounds[currentRound]
                 .committedGuesses[msg.sender][i].revealed = true;
-                RevealGuess memory rg;
-                rg.guess = answer;
-                rg.player = msg.sender;
-                rounds[currentRound].revealedGuesses.push(rg);
+                rounds[currentRound].revealedGuesses.push(
+                    RevealGuess(msg.sender, answer)
+                );
                 found = true;
                 break;
             }
@@ -162,7 +162,7 @@ contract Lupi {
             );
     }
 
-    function endGame() public {
+    function endGame() public nonReentrant {
         require(
             block.timestamp > rounds[currentRound].revealDeadline,
             "Still in reveal phase"
