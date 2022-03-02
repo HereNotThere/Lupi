@@ -265,7 +265,10 @@ describe("Lupi", async function () {
 
     await lupi.commitGuess(guessHash);
 
-    const committedGuessHashes = await lupi.getCommittedGuessHashes();
+    const players = await lupi.getPlayers();
+    expect(players.length).to.equal(1);
+
+    const committedGuessHashes = await lupi.getCommittedGuessHashes(players[0]);
     expect(committedGuessHashes.length).to.equal(1);
 
     const now =
@@ -302,7 +305,9 @@ describe("Lupi", async function () {
     for (let j = 0; j < 2; j++) {
       const lupiUser = lupi.connect(users[j]);
 
-      const committedGuessHashes = await lupiUser.getCommittedGuessHashes();
+      const committedGuessHashes = await lupiUser.getCommittedGuessHashes(
+        users[j].address
+      );
       expect(committedGuessHashes.length).to.equal(5);
     }
 
@@ -312,7 +317,9 @@ describe("Lupi", async function () {
 
     await lupiUser.commitGuess(guessHash);
 
-    const committedGuessHashes = await lupiUser.getCommittedGuessHashes();
+    const committedGuessHashes = await lupiUser.getCommittedGuessHashes(
+      users[0].address
+    );
     expect(committedGuessHashes.length).to.equal(6);
 
     const guessDeadline =
@@ -397,7 +404,9 @@ describe("Lupi", async function () {
 
     const revealHash = getGuessHash(currentNonce, 6, salt);
 
-    const committedGuessHashes = await lupiUser.getCommittedGuessHashes();
+    const committedGuessHashes = await lupiUser.getCommittedGuessHashes(
+      users[0].address
+    );
     expect(committedGuessHashes.length).to.equal(9);
 
     await lupiUser.revealGuess(revealHash, 6, salt);

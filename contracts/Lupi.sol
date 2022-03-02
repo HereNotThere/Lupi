@@ -6,9 +6,6 @@ pragma solidity ^0.8.0;
 // only need a mapping if time limit based, but since we need to know when
 // all are revealed, need to keep track of all the addresses in an array
 
-//needs to deploy a new contract rather than reset
-
-//multiple bids per address
 //payables
 
 contract Lupi {
@@ -28,11 +25,11 @@ contract Lupi {
         uint256 revealDeadline;
         mapping(address => CommitGuess[]) committedGuesses;
         RevealGuess[] revealedGuesses;
+        address[] players;
     }
 
     struct CommitGuess {
         bytes32 guessHash;
-        uint256 blockNumber;
         bool revealed;
     }
 
@@ -62,11 +59,12 @@ contract Lupi {
             block.timestamp < rounds[currentRound].guessDeadline,
             "Guess deadline has passed"
         );
-        CommitGuess memory guess;
-        guess.guessHash = guessHash;
-        guess.revealed = false;
-        guess.blockNumber = block.number;
-        rounds[currentRound].committedGuesses[msg.sender].push(guess);
+        if (rounds[currentRound].committedGuesses[msg.sender].length == 0) {
+            rounds[currentRound].players.push(msg.sender);
+        }
+        rounds[currentRound].committedGuesses[msg.sender].push(
+            CommitGuess(guessHash, false)
+        );
     }
 
     function revealGuess(
@@ -92,11 +90,11 @@ contract Lupi {
             "Reveal hash does not match guessHash"
         );
         bool found;
-        for (
-            uint256 i = 0;
-            i < rounds[currentRound].committedGuesses[msg.sender].length;
-            i++
-        ) {
+
+        uint256 length = rounds[currentRound]
+            .committedGuesses[msg.sender]
+            .length;
+        for (uint256 i = 0; i < length; i++) {
             if (
                 rounds[currentRound]
                 .committedGuesses[msg.sender][i].guessHash == guessHash
@@ -181,19 +179,27 @@ contract Lupi {
         newGame();
     }
 
-    function getCommittedGuessHashes() public view returns (bytes32[] memory) {
+    function getCommittedGuessHashes(address player)
+        public
+        view
+        returns (bytes32[] memory)
+    {
         bytes32[] memory guesses = new bytes32[](
-            rounds[currentRound].committedGuesses[msg.sender].length
+            rounds[currentRound].committedGuesses[player].length
         );
         for (
             uint256 i = 0;
-            i < rounds[currentRound].committedGuesses[msg.sender].length;
+            i < rounds[currentRound].committedGuesses[player].length;
             i++
         ) {
             guesses[i] = rounds[currentRound]
-            .committedGuesses[msg.sender][i].guessHash;
+            .committedGuesses[player][i].guessHash;
         }
         return guesses;
+    }
+
+    function getPlayers() public view returns (address[] memory) {
+        return rounds[currentRound].players;
     }
 
     function getRevealedGuess() public view returns (uint256[] memory) {
