@@ -1,6 +1,7 @@
 {
   "name": "lupi",
   "version": "0.1.0",
+  "license": "Apache-2.0",
   "private": true,
   "dependencies": {
     "react": "^17.0.2",
