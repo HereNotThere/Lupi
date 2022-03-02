@@ -1,8 +1,8 @@
-import { DebugPanel } from './components/DebugPanel'
-import { LupiHeader } from './components/LupiHeader'
-import { PlayButton } from './components/PlayButton'
-import { SiteHeader } from './components/SiteHeader'
-import { Box, Text } from './ui'
+import { DebugPanel } from "./components/DebugPanel";
+import { LupiHeader } from "./components/LupiHeader";
+import { PlayButton } from "./components/PlayButton";
+import { SiteHeader } from "./components/SiteHeader";
+import { Box, Text } from "./ui";
 
 function App() {
   return (
@@ -16,7 +16,7 @@ function App() {
             <LupiHeader />
             <Box padding border>
               <Text header="large">
-                Current Jackpot{' '}
+                Current Jackpot{" "}
                 <Text span color="primary">
                   2.5eth
                 </Text>
@@ -33,7 +33,7 @@ function App() {
         <DebugPanel />
       </Box>
     </Box>
-  )
+  );
 }
 
-export default App
+export default App;

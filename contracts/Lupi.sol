@@ -18,8 +18,8 @@
 
 pragma solidity ^0.8.0;
 
-import 'hardhat/console.sol';
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import "hardhat/console.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 // if everyone reveals game is over
 // if time runs out game is over
@@ -86,9 +86,9 @@ contract Lupi is ReentrancyGuard {
   function commitGuess(bytes32 guessHash) public payable nonReentrant {
     require(
       block.timestamp < rounds[currentRound].guessDeadline,
-      'Guess deadline has passed'
+      "Guess deadline has passed"
     );
-    require(msg.value >= ticketPrice, 'Must send at least ticketPrice');
+    require(msg.value >= ticketPrice, "Must send at least ticketPrice");
 
     if (rounds[currentRound].committedGuesses[msg.sender].length == 0) {
       rounds[currentRound].players.push(msg.sender);
@@ -99,8 +99,8 @@ contract Lupi is ReentrancyGuard {
     rounds[currentRound].balance += ticketPrice;
     uint256 ethToReturn = msg.value - ticketPrice;
     if (ethToReturn > 0) {
-      (bool sent, ) = msg.sender.call{value: ethToReturn}('');
-      require(sent, 'ethToReturn failed to send');
+      (bool sent, ) = msg.sender.call{value: ethToReturn}("");
+      require(sent, "ethToReturn failed to send");
     }
   }
 
@@ -111,11 +111,11 @@ contract Lupi is ReentrancyGuard {
     );
     require(
       block.timestamp < rounds[currentRound].revealDeadline,
-      'revealGuesses revealDeadline has passed'
+      "revealGuesses revealDeadline has passed"
     );
     require(
       rounds[currentRound].committedGuesses[msg.sender].length > 0,
-      'No guesses to reveal'
+      "No guesses to reveal"
     );
 
     uint256 length = rounds[currentRound].committedGuesses[msg.sender].length;
@@ -129,18 +129,18 @@ contract Lupi is ReentrancyGuard {
         ) {
           require(
             reveals[r].answer > 0,
-            'revealGuesses answer must be positive'
+            "revealGuesses answer must be positive"
           );
 
           require(
             getSaltedHash(reveals[r].answer, reveals[r].salt) ==
               reveals[r].guessHash,
-            'Reveal hash does not match guessHash'
+            "Reveal hash does not match guessHash"
           );
           require(
             rounds[currentRound].committedGuesses[msg.sender][i].revealed ==
               false,
-            'Already revealed'
+            "Already revealed"
           );
           rounds[currentRound].committedGuesses[msg.sender][i].revealed = true;
           rounds[currentRound].revealedGuesses.push(
@@ -150,7 +150,7 @@ contract Lupi is ReentrancyGuard {
         }
       }
 
-      require(found, 'revealGuesses no matching guessHash found');
+      require(found, "revealGuesses no matching guessHash found");
     }
   }
 
@@ -170,7 +170,7 @@ contract Lupi is ReentrancyGuard {
   function endGame() public nonReentrant {
     require(
       block.timestamp > rounds[currentRound].revealDeadline,
-      'Still in reveal phase'
+      "Still in reveal phase"
     );
     uint32 lowestGuess = 0xffffffff;
     address winner;

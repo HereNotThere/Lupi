@@ -1,10 +1,10 @@
-import { useState } from 'react'
-import { Box, Button, Text } from 'src/ui'
-import { useContract } from '../hooks/useContract'
+import { useState } from "react";
+import { Box, Button, Text } from "src/ui";
+import { useContract } from "../hooks/useContract";
 
 export const DebugPanel = () => {
-  const [guess, setGuessValue] = useState('')
-  const [revealedGuess, setRevealedGuessValue] = useState('')
+  const [guess, setGuessValue] = useState("");
+  const [revealedGuess, setRevealedGuessValue] = useState("");
 
   const {
     getFinishedGames,
@@ -14,7 +14,7 @@ export const DebugPanel = () => {
     allRevealedGuesses,
     fetchRevealedGuesses,
     callEndGame,
-  } = useContract(guess, revealedGuess)
+  } = useContract(guess, revealedGuess);
   return (
     <Box row>
       {/* left container */}
@@ -61,5 +61,5 @@ export const DebugPanel = () => {
         </Box>
       </Box>
     </Box>
-  )
-}
+  );
+};
