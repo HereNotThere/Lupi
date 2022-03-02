@@ -3,6 +3,8 @@ import { BigNumber, utils } from "ethers";
 import { ethers } from "hardhat";
 import { describe } from "mocha";
 
+import { Lupi__factory } from "../typechain-types/index";
+
 console.log(`index.ts`);
 function getSalt(salt: string) {
   return utils.solidityKeccak256(["string"], [salt]);
@@ -20,7 +22,7 @@ const nullAddress = "0x0000000000000000000000000000000000000000";
 
 describe("Lupi", async function () {
   it("Should return return game version after deployment", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
 
@@ -28,11 +30,11 @@ describe("Lupi", async function () {
   });
 
   it("Should commit 5 guesses", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
 
-    const [owner, addr1, addr2] = await ethers.getSigners();
+    const [_owner, addr1, addr2] = await ethers.getSigners();
     const users = [addr1, addr2];
 
     const lupiAddr1 = lupi.connect(addr1);
@@ -51,7 +53,7 @@ describe("Lupi", async function () {
   });
 
   it("Should revert after guessDeadline passes", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
     const [owner, addr1, addr2] = await ethers.getSigners();
@@ -80,7 +82,7 @@ describe("Lupi", async function () {
   });
 
   it("Should revert if no guess made", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
 
@@ -100,13 +102,13 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
     await ethers.provider.send("evm_mine", []);
 
-    await expect(lupiAddr1.revealGuess(guessHash, 1, salt)).to.be.revertedWith(
-      "No guesses to reveal"
-    );
+    await expect(
+      lupiAddr1.revealGuesses([{ guessHash, answer: 1, salt }])
+    ).to.be.revertedWith("No guesses to reveal");
   });
 
   it("Should revert if no matching guessHash found", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
     const [owner, addr1, addr2] = await ethers.getSigners();
@@ -134,12 +136,12 @@ describe("Lupi", async function () {
     const unguessedHash = getGuessHash(currentNonce, 2, salt);
 
     await expect(
-      lupiAddr1.revealGuess(unguessedHash, 2, salt)
-    ).to.be.revertedWith("revealGuess no matching guessHash found");
+      lupiAddr1.revealGuesses([{ guessHash: unguessedHash, answer: 2, salt }])
+    ).to.be.revertedWith("revealGuesses no matching guessHash found");
   });
 
   it("Should revert if reveal too early", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
     const [owner, addr1, addr2] = await ethers.getSigners();
@@ -157,13 +159,13 @@ describe("Lupi", async function () {
 
     await lupiAddr1.commitGuess(guessHash, overrides);
 
-    await expect(lupiAddr1.revealGuess(guessHash, 1, salt)).to.be.revertedWith(
-      "revealGuess guessDeadline hasn't passed"
-    );
+    await expect(
+      lupiAddr1.revealGuesses([{ guessHash, answer: 1, salt }])
+    ).to.be.revertedWith("revealGuesses guessDeadline hasn't passed");
   });
 
   it("Should revert if reveal too late", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
     const [owner, addr1, addr2] = await ethers.getSigners();
@@ -188,13 +190,13 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
     await ethers.provider.send("evm_mine", []);
 
-    await expect(lupiAddr1.revealGuess(guessHash, 1, salt)).to.be.revertedWith(
-      "revealGuess revealDeadline has passed"
-    );
+    await expect(
+      lupiAddr1.revealGuesses([{ guessHash, answer: 1, salt }])
+    ).to.be.revertedWith("revealGuesses revealDeadline has passed");
   });
 
   it("Should revert if reveal is of <=0", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
 
@@ -220,13 +222,13 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
     await ethers.provider.send("evm_mine", []);
 
-    await expect(lupiAddr1.revealGuess(guessHash, 0, salt)).to.be.revertedWith(
-      "revealGuess answer must be positive"
-    );
+    await expect(
+      lupiAddr1.revealGuesses([{ guessHash, answer: 0, salt }])
+    ).to.be.revertedWith("revealGuesses answer must be positive");
   });
 
   it("Should revert if reveal hash doesn't match guess hash", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
     const [owner, addr1, addr2] = await ethers.getSigners();
@@ -254,12 +256,12 @@ describe("Lupi", async function () {
     const wrongSalt = getSalt("43");
 
     await expect(
-      lupiAddr1.revealGuess(guessHash, 1, wrongSalt)
+      lupiAddr1.revealGuesses([{ guessHash, answer: 1, salt: wrongSalt }])
     ).to.be.revertedWith("Reveal hash does not match guessHash");
   });
 
   it("Should revert commitGuess after reveal has started", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
     const [owner, addr1, addr2] = await ethers.getSigners();
@@ -288,7 +290,7 @@ describe("Lupi", async function () {
   });
 
   it("Should commit a guess and make a reveal", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
     const currentNonce = await lupi.getCurrentNonce();
@@ -316,11 +318,11 @@ describe("Lupi", async function () {
 
     const revealHash = getGuessHash(currentNonce, 1, salt);
 
-    await lupi.revealGuess(revealHash, 1, salt);
+    await lupi.revealGuesses([{ guessHash: revealHash, answer: 1, salt }]);
   });
 
   it("Two users should commit 5 guesses and make 5 reveals, one user should also guess one unique (1)", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
     const [owner, addr1, addr2] = await ethers.getSigners();
@@ -374,16 +376,21 @@ describe("Lupi", async function () {
 
     for (let j = 0; j < 2; j++) {
       const lupiUser = lupi.connect(users[j]);
+      const reveals: {
+        guessHash: string;
+        answer: number;
+        salt: string;
+      }[] = [];
       for (let i = 2; i < 7; i++) {
         const guessHash = getGuessHash(currentNonce, i, salt);
-
-        await lupiUser.revealGuess(guessHash, i, salt);
+        reveals.push({ guessHash, answer: i, salt });
       }
+      await lupiUser.revealGuesses(reveals);
     }
 
     const revealHash = getGuessHash(currentNonce, 1, salt);
 
-    await lupiUser.revealGuess(revealHash, 1, salt);
+    await lupiUser.revealGuesses([{ guessHash: revealHash, answer: 1, salt }]);
 
     const revealedGuesses = await lupi.getRevealedGuess();
     expect(revealedGuesses.length).to.equal(11);
@@ -400,8 +407,8 @@ describe("Lupi", async function () {
       .withArgs(currentNonce, users[0].address, 1);
   });
 
-  it("1 User should commit 9 guesses (4 duplicate, 1 unique) and make 6 reveals", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+  it("1 User should commit 9 guesses (4 duplicate, 1 unique) and make 5 reveals", async function () {
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
     const [owner, addr1, addr2] = await ethers.getSigners();
@@ -443,10 +450,10 @@ describe("Lupi", async function () {
         const guessHash = getGuessHash(currentNonce, i, salt);
 
         if (j === 0) {
-          await lupiUser.revealGuess(guessHash, i, salt);
+          await lupiUser.revealGuesses([{ guessHash, answer: i, salt }]);
         } else {
           await expect(
-            lupiUser.revealGuess(guessHash, i, salt)
+            lupiUser.revealGuesses([{ guessHash, answer: i, salt }])
           ).to.be.revertedWith("Already revealed");
         }
       }
@@ -459,10 +466,10 @@ describe("Lupi", async function () {
     );
     expect(committedGuessHashes.length).to.equal(9);
 
-    await lupiUser.revealGuess(revealHash, 6, salt);
+    await lupiUser.revealGuesses([{ guessHash: revealHash, answer: 6, salt }]);
 
     const revealedGuesses = await lupi.getRevealedGuess();
-    expect(revealedGuesses.length).to.equal(5);
+    expect(revealedGuesses.length).to.equal(9);
     const revealDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
@@ -476,7 +483,7 @@ describe("Lupi", async function () {
   });
 
   it("Two users should make 4 idendtical gusses, there should be no winner", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
     const [owner, addr1, addr2] = await ethers.getSigners();
@@ -510,7 +517,7 @@ describe("Lupi", async function () {
       for (let i = 1; i < 5; i++) {
         const guessHash = getGuessHash(currentNonce, i, salt);
 
-        await lupiUser.revealGuess(guessHash, i, salt);
+        await lupiUser.revealGuesses([{ guessHash, answer: i, salt }]);
       }
     }
 
@@ -527,7 +534,7 @@ describe("Lupi", async function () {
   });
 
   it("Should should revert if endGame too early", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
     const [_owner, addr1, addr2] = await ethers.getSigners();
@@ -572,10 +579,10 @@ describe("Lupi", async function () {
         const guessHash = getGuessHash(currentNonce, i, salt);
 
         if (j === 0) {
-          await lupiUser.revealGuess(guessHash, i, salt);
+          await lupiUser.revealGuesses([{ guessHash, answer: i, salt }]);
         } else {
           await expect(
-            lupiUser.revealGuess(guessHash, i, salt)
+            lupiUser.revealGuesses([{ guessHash, answer: i, salt }])
           ).to.be.revertedWith("Already revealed");
         }
       }
@@ -583,17 +590,17 @@ describe("Lupi", async function () {
 
     const revealHash = getGuessHash(currentNonce, 6, salt);
 
-    await lupiUser.revealGuess(revealHash, 6, salt);
+    await lupiUser.revealGuesses([{ guessHash: revealHash, answer: 6, salt }]);
 
     const revealedGuesses = await lupiUser.getRevealedGuess();
 
-    expect(revealedGuesses.length).to.equal(5);
+    expect(revealedGuesses.length).to.equal(9);
 
     await expect(lupi.endGame()).to.be.revertedWith("Still in reveal phase");
   });
 
   it("Should should revert commitGuess if not enough eth provided", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
     const [owner, addr1, addr2] = await ethers.getSigners();
@@ -614,7 +621,7 @@ describe("Lupi", async function () {
   });
 
   it("Should should pay out in full to winner", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
     const [_owner, addr1, addr2] = await ethers.getSigners();
@@ -648,7 +655,7 @@ describe("Lupi", async function () {
 
     for (let i = 1; i < 5; i++) {
       const guessHash = getGuessHash(currentNonce, i, salt);
-      const tx = await lupiUser.revealGuess(guessHash, i, salt);
+      const tx = await lupiUser.revealGuesses([{ guessHash, answer: i, salt }]);
       const { gasUsed } = await tx.wait();
       totalGasUsed = totalGasUsed.add(gasUsed);
     }
@@ -672,7 +679,7 @@ describe("Lupi", async function () {
   });
 
   it("Should should pay out equally in case of a push", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
     const [_owner, addr1, addr2] = await ethers.getSigners();
@@ -717,7 +724,9 @@ describe("Lupi", async function () {
 
       for (let i = 1; i < 5; i++) {
         const guessHash = getGuessHash(currentNonce, i, salt);
-        const tx = await lupiUser.revealGuess(guessHash, i, salt);
+        const tx = await lupiUser.revealGuesses([
+          { guessHash, answer: i, salt },
+        ]);
         const { gasUsed } = await tx.wait();
         totalGasUsed[u] = totalGasUsed[u].add(gasUsed);
       }
@@ -747,7 +756,7 @@ describe("Lupi", async function () {
   });
 
   it("Should should return excess eth from commitGuess", async function () {
-    const Lupi = await ethers.getContractFactory("Lupi");
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
     const [owner, addr1, addr2] = await ethers.getSigners();
