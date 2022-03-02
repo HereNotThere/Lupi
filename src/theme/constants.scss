@@ -1,0 +1,31 @@
+$baseline: 8px;
+
+:root {
+  --color-green: #d1f970;
+  --color-black: #191b21;
+  --color-xdark-grey: #252934;
+  --color-dark-grey: #383b49;
+  --color-white: #ffffff;
+  --color-light-grey: #d9e1e8;
+  --color-grey: #9ba5b8;
+
+  // background
+  --theme-bg: var(--color-black);
+  // foreground
+  --theme-fg: var(--color-white);
+  // primaries
+  --theme-p1: var(--color-green);
+  --theme-p2: var(--color-green);
+  // nuances
+  --theme-n1: var(--color-light-grey);
+  --theme-n2: var(--color-grey);
+  --theme-n3: var(--color-dark-grey);
+  --theme-n4: var(--color-xdark-grey);
+
+  --baseline: #{$baseline};
+  --bl-half: calc(var(--baseline) / 2);
+
+  @for $i from 1 to 8 {
+    --bl#{$i}: #{$baseline * $i};
+  }
+}
