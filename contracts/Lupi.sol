@@ -205,6 +205,23 @@ contract Lupi {
             winner,
             lowestGuess < 0xffffffff ? lowestGuess : 0
         );
+        if (lowestGuess < 0xffffffff) {
+            // Winner takes all
+            payable(winner).transfer(rounds[currentRound].balance);
+        } else {
+            // Push returns funds to all players that revealed
+            uint256 split = rounds[currentRound].balance /
+                rounds[currentRound].revealedGuesses.length;
+
+            for (
+                uint256 i = 0;
+                i < rounds[currentRound].revealedGuesses.length;
+                i++
+            ) {
+                payable(rounds[currentRound].revealedGuesses[i].player)
+                    .transfer(split);
+            }
+        }
         delete rounds[currentRound];
         newGame();
     }

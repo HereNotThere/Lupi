@@ -530,7 +530,7 @@ describe("Lupi", async function () {
     const Lupi = await ethers.getContractFactory("Lupi");
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
-    const [owner, addr1, addr2] = await ethers.getSigners();
+    const [_owner, addr1, addr2] = await ethers.getSigners();
     const users = [addr1, addr2];
 
     const currentNonce = await lupi.getCurrentNonce();
@@ -613,7 +613,140 @@ describe("Lupi", async function () {
     );
   });
 
-  it("Should should return extra eth from commitGuess", async function () {
+  it("Should should pay out in full to winner", async function () {
+    const Lupi = await ethers.getContractFactory("Lupi");
+    const lupi = await Lupi.deploy("1");
+    await lupi.deployed();
+    const [_owner, addr1, addr2] = await ethers.getSigners();
+
+    const startBalance = await addr1.getBalance();
+
+    const currentNonce = await lupi.getCurrentNonce();
+
+    const lupiUser = lupi.connect(addr1);
+    let totalGasUsed: BigNumber = BigNumber.from(0);
+
+    for (let i = 1; i < 5; i++) {
+      const guessHash = getGuessHash(currentNonce, i, salt);
+
+      const overrides = {
+        value: ethers.utils.parseEther("0.01"),
+      };
+
+      const tx = await lupiUser.commitGuess(guessHash, overrides);
+
+      const { gasUsed } = await tx.wait();
+      totalGasUsed = totalGasUsed.add(gasUsed);
+    }
+
+    const guessDeadline =
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp +
+      4 * 24 * 60 * 60;
+    await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
+    await ethers.provider.send("evm_mine", []);
+
+    for (let i = 1; i < 5; i++) {
+      const guessHash = getGuessHash(currentNonce, i, salt);
+      const tx = await lupiUser.revealGuess(guessHash, i, salt);
+      const { gasUsed } = await tx.wait();
+      totalGasUsed = totalGasUsed.add(gasUsed);
+    }
+
+    const revealDeadline =
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp +
+      4 * 24 * 60 * 60;
+    await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
+    await ethers.provider.send("evm_mine", []);
+
+    const afterBalance = await addr1.getBalance();
+
+    await expect(lupi.endGame())
+      .to.emit(lupi, "GameResult")
+      .withArgs(currentNonce, addr1.address, 1);
+
+    expect(BigNumber.from("10000000000000000").mul(4)).to.equal(
+      startBalance.sub(afterBalance).sub(totalGasUsed)
+    );
+  });
+
+  it("Should should pay out equally in case of a push", async function () {
+    const Lupi = await ethers.getContractFactory("Lupi");
+    const lupi = await Lupi.deploy("1");
+    await lupi.deployed();
+    const [_owner, addr1, addr2] = await ethers.getSigners();
+
+    const startBalance = await Promise.all([
+      await addr1.getBalance(),
+      await addr2.getBalance(),
+    ]);
+
+    const currentNonce = await lupi.getCurrentNonce();
+
+    let totalGasUsed: BigNumber[] = [BigNumber.from(0), BigNumber.from(0)];
+
+    for (let u = 0; u < 2; u++) {
+      const users = [addr1, addr2];
+      const lupiUser = lupi.connect(users[u]);
+
+      for (let i = 1; i < 5; i++) {
+        const guessHash = getGuessHash(currentNonce, i, salt);
+
+        const overrides = {
+          value: ethers.utils.parseEther("0.01"),
+        };
+
+        const tx = await lupiUser.commitGuess(guessHash, overrides);
+
+        const { gasUsed } = await tx.wait();
+        totalGasUsed[u] = totalGasUsed[u].add(gasUsed);
+      }
+    }
+
+    const guessDeadline =
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp +
+      4 * 24 * 60 * 60;
+    await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
+    await ethers.provider.send("evm_mine", []);
+
+    for (let u = 0; u < 2; u++) {
+      const users = [addr1, addr2];
+      const lupiUser = lupi.connect(users[u]);
+
+      for (let i = 1; i < 5; i++) {
+        const guessHash = getGuessHash(currentNonce, i, salt);
+        const tx = await lupiUser.revealGuess(guessHash, i, salt);
+        const { gasUsed } = await tx.wait();
+        totalGasUsed[u] = totalGasUsed[u].add(gasUsed);
+      }
+    }
+
+    const revealDeadline =
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp +
+      4 * 24 * 60 * 60;
+    await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
+    await ethers.provider.send("evm_mine", []);
+
+    const afterBalance = await Promise.all([
+      await addr1.getBalance(),
+      await addr2.getBalance(),
+    ]);
+
+    await expect(lupi.endGame())
+      .to.emit(lupi, "GameResult")
+      .withArgs(currentNonce, nullAddress, 0);
+
+    for (let u = 0; u < 2; u++) {
+      expect(BigNumber.from("10000000000000000").mul(4)).to.equal(
+        startBalance[u].sub(afterBalance[u]).sub(totalGasUsed[u])
+      );
+    }
+  });
+
+  it("Should should return excess eth from commitGuess", async function () {
     const Lupi = await ethers.getContractFactory("Lupi");
     const lupi = await Lupi.deploy("1");
     await lupi.deployed();
