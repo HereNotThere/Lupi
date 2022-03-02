@@ -18,12 +18,16 @@
 
 pragma solidity ^0.8.0;
 
+import "hardhat/console.sol";
+
 // if everyone reveals game is over
 // if time runs out game is over
 // only need a mapping if time limit based, but since we need to know when
 // all are revealed, need to keep track of all the addresses in an array
 
 //payables
+
+uint256 constant ticketPrice = 0.01 ether;
 
 contract Lupi {
     event GameResult(
@@ -40,6 +44,7 @@ contract Lupi {
         bytes32 nonce;
         uint256 guessDeadline;
         uint256 revealDeadline;
+        uint256 balance;
         mapping(address => CommitGuess[]) committedGuesses;
         RevealGuess[] revealedGuesses;
         address[] players;
@@ -71,17 +76,25 @@ contract Lupi {
         rounds[currentRound].nonce = currentRound;
     }
 
-    function commitGuess(bytes32 guessHash) public {
+    function commitGuess(bytes32 guessHash) public payable {
         require(
             block.timestamp < rounds[currentRound].guessDeadline,
             "Guess deadline has passed"
         );
+
+        require(msg.value >= ticketPrice, "Must send at least ticketPrice");
+        uint256 ethToRetrun = msg.value - ticketPrice;
+
+        if (ethToRetrun > 0) {
+            payable(msg.sender).transfer(ethToRetrun);
+        }
         if (rounds[currentRound].committedGuesses[msg.sender].length == 0) {
             rounds[currentRound].players.push(msg.sender);
         }
         rounds[currentRound].committedGuesses[msg.sender].push(
             CommitGuess(guessHash, false)
         );
+        rounds[currentRound].balance += ticketPrice;
     }
 
     function revealGuess(

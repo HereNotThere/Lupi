@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { utils } from "ethers";
+import { BigNumber, utils } from "ethers";
 import { ethers } from "hardhat";
 import { describe } from "mocha";
 
@@ -42,7 +42,11 @@ describe("Lupi", async function () {
     for (let i = 1; i < 5; i++) {
       const guessHash = getGuessHash(currentNonce, i, salt);
 
-      await lupiAddr1.commitGuess(guessHash);
+      const overrides = {
+        value: ethers.utils.parseEther("0.01"),
+      };
+
+      await lupiAddr1.commitGuess(guessHash, overrides);
     }
   });
 
@@ -66,9 +70,13 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
     await ethers.provider.send("evm_mine", []);
 
-    await expect(lupiAddr1.commitGuess(guessHash)).to.be.revertedWith(
-      "Guess deadline has passed"
-    );
+    const overrides = {
+      value: ethers.utils.parseEther("0.01"),
+    };
+
+    await expect(
+      lupiAddr1.commitGuess(guessHash, overrides)
+    ).to.be.revertedWith("Guess deadline has passed");
   });
 
   it("Should revert if no guess made", async function () {
@@ -110,7 +118,11 @@ describe("Lupi", async function () {
 
     const guessHash = getGuessHash(currentNonce, 1, salt);
 
-    await lupiAddr1.commitGuess(guessHash);
+    const overrides = {
+      value: ethers.utils.parseEther("0.01"),
+    };
+
+    await lupiAddr1.commitGuess(guessHash, overrides);
 
     const now =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
@@ -139,7 +151,11 @@ describe("Lupi", async function () {
 
     const guessHash = getGuessHash(currentNonce, 1, salt);
 
-    await lupiAddr1.commitGuess(guessHash);
+    const overrides = {
+      value: ethers.utils.parseEther("0.01"),
+    };
+
+    await lupiAddr1.commitGuess(guessHash, overrides);
 
     await expect(lupiAddr1.revealGuess(guessHash, 1, salt)).to.be.revertedWith(
       "revealGuess guessDeadline hasn't passed"
@@ -159,7 +175,11 @@ describe("Lupi", async function () {
 
     const guessHash = getGuessHash(currentNonce, 1, salt);
 
-    await lupiAddr1.commitGuess(guessHash);
+    const overrides = {
+      value: ethers.utils.parseEther("0.01"),
+    };
+
+    await lupiAddr1.commitGuess(guessHash, overrides);
 
     const now =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
@@ -187,7 +207,11 @@ describe("Lupi", async function () {
 
     const guessHash = getGuessHash(currentNonce, 0, salt);
 
-    await lupiAddr1.commitGuess(guessHash);
+    const overrides = {
+      value: ethers.utils.parseEther("0.01"),
+    };
+
+    await lupiAddr1.commitGuess(guessHash, overrides);
 
     const now =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
@@ -214,7 +238,11 @@ describe("Lupi", async function () {
 
     const guessHash = getGuessHash(currentNonce, 1, salt);
 
-    await lupiAddr1.commitGuess(guessHash);
+    const overrides = {
+      value: ethers.utils.parseEther("0.01"),
+    };
+
+    await lupiAddr1.commitGuess(guessHash, overrides);
 
     const now =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
@@ -250,9 +278,13 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
     await ethers.provider.send("evm_mine", []);
 
-    await expect(lupiAddr1.commitGuess(guessHash)).to.be.revertedWith(
-      "Guess deadline has passed"
-    );
+    const overrides = {
+      value: ethers.utils.parseEther("0.01"),
+    };
+
+    await expect(
+      lupiAddr1.commitGuess(guessHash, overrides)
+    ).to.be.revertedWith("Guess deadline has passed");
   });
 
   it("Should commit a guess and make a reveal", async function () {
@@ -263,7 +295,11 @@ describe("Lupi", async function () {
 
     const guessHash = getGuessHash(currentNonce, 1, salt);
 
-    await lupi.commitGuess(guessHash);
+    const overrides = {
+      value: ethers.utils.parseEther("0.01"),
+    };
+
+    await lupi.commitGuess(guessHash, overrides);
 
     const players = await lupi.getPlayers();
     expect(players.length).to.equal(1);
@@ -297,8 +333,11 @@ describe("Lupi", async function () {
 
       for (let i = 2; i < 7; i++) {
         const guessHash = getGuessHash(currentNonce, i, salt);
+        const overrides = {
+          value: ethers.utils.parseEther("0.01"),
+        };
 
-        await lupiUser.commitGuess(guessHash);
+        await lupiUser.commitGuess(guessHash, overrides);
       }
     }
 
@@ -315,7 +354,11 @@ describe("Lupi", async function () {
 
     const guessHash = getGuessHash(currentNonce, 1, salt);
 
-    await lupiUser.commitGuess(guessHash);
+    const overrides = {
+      value: ethers.utils.parseEther("0.01"),
+    };
+
+    await lupiUser.commitGuess(guessHash, overrides);
 
     const committedGuessHashes = await lupiUser.getCommittedGuessHashes(
       users[0].address
@@ -371,14 +414,21 @@ describe("Lupi", async function () {
     for (let j = 0; j < 2; j++) {
       for (let i = 1; i < 5; i++) {
         const guessHash = getGuessHash(currentNonce, i, salt);
+        const overrides = {
+          value: ethers.utils.parseEther("0.01"),
+        };
 
-        await lupiUser.commitGuess(guessHash);
+        await lupiUser.commitGuess(guessHash, overrides);
       }
     }
 
     const guessHash = getGuessHash(currentNonce, 6, salt);
 
-    await lupiUser.commitGuess(guessHash);
+    const overrides = {
+      value: ethers.utils.parseEther("0.01"),
+    };
+
+    await lupiUser.commitGuess(guessHash, overrides);
 
     const guessDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
@@ -440,7 +490,11 @@ describe("Lupi", async function () {
       for (let i = 1; i < 5; i++) {
         const guessHash = getGuessHash(currentNonce, i, salt);
 
-        await lupiUser.commitGuess(guessHash);
+        const overrides = {
+          value: ethers.utils.parseEther("0.01"),
+        };
+
+        await lupiUser.commitGuess(guessHash, overrides);
       }
     }
 
@@ -487,7 +541,11 @@ describe("Lupi", async function () {
       for (let i = 1; i < 5; i++) {
         const guessHash = getGuessHash(currentNonce, i, salt);
 
-        await lupiUser.commitGuess(guessHash);
+        const overrides = {
+          value: ethers.utils.parseEther("0.01"),
+        };
+
+        await lupiUser.commitGuess(guessHash, overrides);
       }
     }
 
@@ -495,7 +553,11 @@ describe("Lupi", async function () {
 
     const guessHash = getGuessHash(currentNonce, 6, salt);
 
-    await lupiUser.commitGuess(guessHash);
+    const overrides = {
+      value: ethers.utils.parseEther("0.01"),
+    };
+
+    await lupiUser.commitGuess(guessHash, overrides);
 
     const guessDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
@@ -528,5 +590,55 @@ describe("Lupi", async function () {
     expect(revealedGuesses.length).to.equal(5);
 
     await expect(lupi.endGame()).to.be.revertedWith("Still in reveal phase");
+  });
+
+  it("Should should revert commitGuess if not enough eth provided", async function () {
+    const Lupi = await ethers.getContractFactory("Lupi");
+    const lupi = await Lupi.deploy("1");
+    await lupi.deployed();
+    const [owner, addr1, addr2] = await ethers.getSigners();
+
+    const currentNonce = await lupi.getCurrentNonce();
+
+    const lupiUser = lupi.connect(addr1);
+
+    const guessHash = getGuessHash(currentNonce, 1, salt);
+
+    const overrides = {
+      value: ethers.utils.parseEther("0.001"),
+    };
+
+    await expect(lupiUser.commitGuess(guessHash, overrides)).to.be.revertedWith(
+      "Must send at least ticketPrice"
+    );
+  });
+
+  it("Should should return extra eth from commitGuess", async function () {
+    const Lupi = await ethers.getContractFactory("Lupi");
+    const lupi = await Lupi.deploy("1");
+    await lupi.deployed();
+    const [owner, addr1, addr2] = await ethers.getSigners();
+
+    const balance = await addr1.getBalance();
+
+    const currentNonce = await lupi.getCurrentNonce();
+
+    const lupiUser = lupi.connect(addr1);
+
+    const guessHash = getGuessHash(currentNonce, 1, salt);
+
+    const overrides = {
+      value: ethers.utils.parseEther("0.02"),
+    };
+
+    const tx = await lupiUser.commitGuess(guessHash, overrides);
+
+    const { gasUsed } = await tx.wait();
+
+    const afterBalance = await addr1.getBalance();
+    expect(
+      BigNumber.from("10000000000000000") ===
+        balance.sub(afterBalance).add(gasUsed)
+    );
   });
 });
