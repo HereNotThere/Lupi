@@ -1,0 +1,53 @@
+.Text {
+  &--color {
+    &-text {
+      color: var(--theme-fg);
+    }
+    &-primary {
+      color: var(--theme-p1);
+    }
+    &-text {
+      color: var(--theme-fg);
+    }
+    &-background {
+      color: var(--theme-bg);
+    }
+  }
+}
+
+$rem: 18;
+
+:root {
+  font-size: #{$rem}px;
+}
+
+h1 {
+  font-size: #{calc(72 / $rem)}rem;
+  line-height: #{calc(92 / $rem)}rem;
+}
+h2 {
+  font-size: #{calc(48 / $rem)}rem;
+  line-height: #{calc(60 / $rem)}rem;
+}
+h3 {
+  font-size: #{calc(24 / $rem)}rem;
+  line-height: #{calc(32 / $rem)}rem;
+}
+h4 {
+  font-size: 1rem;
+  line-height: #{calc(24 / $rem)}rem;
+}
+h5 {
+  font-size: #{calc(13 / $rem)}rem;
+  line-height: #{calc(16 / $rem)}rem;
+}
+
+p {
+  font-size: 1rem;
+  line-height: #{calc(21.5 / $rem)}rem;
+
+  &.Text--small {
+    font-size: #{calc(13 / 18)}rem;
+    line-height: #{calc(17.9 / $rem)}rem;
+  }
+}

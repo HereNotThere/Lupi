@@ -1,0 +1,225 @@
+.Box {
+  position: relative;
+  display: flex;
+  white-space: break-spaces;
+}
+
+/** flex direction
+*/
+.Box {
+  &,
+  &--column {
+    flex-flow: column;
+  }
+  &--row {
+    flex-flow: row;
+  }
+}
+
+.Box {
+  &--border {
+    border: 1px solid;
+  }
+}
+
+.Box {
+  &--grow {
+    flex-grow: 1;
+  }
+  &--shrink {
+    flex-shrink: 1;
+  }
+}
+
+.Box {
+  &--justify-content {
+    &-start {
+      justify-content: start;
+    }
+    &-end {
+      justify-content: end;
+    }
+    &-center {
+      justify-content: center;
+    }
+  }
+  &--justify-items {
+    &-start {
+      justify-items: start;
+    }
+    &-end {
+      justify-items: end;
+    }
+    &-center {
+      justify-items: center;
+    }
+  }
+
+  &--align-content {
+    &-start {
+      align-content: start;
+    }
+    &-end {
+      align-content: end;
+    }
+    &-center {
+      align-content: center;
+    }
+  }
+
+  &--align-items {
+    &-start {
+      align-items: start;
+    }
+    &-end {
+      align-items: end;
+    }
+    &-center {
+      align-items: center;
+    }
+  }
+}
+
+.Box {
+  &--center-content {
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+.Box {
+  &--fill-space {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+  }
+}
+
+.Box {
+  /* specific */
+  &--background-gradient {
+    background: radial-gradient(50% 50% at 50% 50%, #d1f970 0%, #8fff00 100%);
+    box-shadow: 0 0 20px 0px rgba(209, 249, 112, 0.4);
+  }
+}
+
+.Box {
+  &--aspect-ratio {
+    &-square {
+      aspect-ratio: 1;
+    }
+  }
+}
+
+.Box--column {
+  &.Box--overflow {
+    &-scroll {
+      max-height: 100%;
+      > div {
+        flex: 1;
+        overflow-y: scroll;
+      }
+    }
+    &-hidden {
+      overflow: hidden;
+      max-height: 100%;
+    }
+  }
+}
+
+.Box {
+  @for $i from 1 to 12 {
+    &--padding-#{$i} {
+      padding: calc(var(--baseline) * #{$i});
+    }
+  }
+}
+/** border
+*/
+
+.Box--border {
+  border-color: var(--theme-n3);
+}
+
+.Box--column > .Box {
+  &--border {
+    // border: 1px none;
+    &-before {
+      border-style: solid none none none;
+    }
+    &-after {
+      border-style: none none solid none;
+    }
+    &-around {
+      border-style: solid;
+    }
+  }
+}
+
+.Box--border-radius {
+  &-100 {
+    border-radius: 100%;
+  }
+
+  @for $i from 1 to 12 {
+    &-#{$i} {
+      border-radius: calc(var(--baseline) * #{$i});
+    }
+  }
+}
+
+.Box--row > .Box {
+  &--border {
+    &-before {
+      border-style: none none none solid;
+    }
+    &-after {
+      border-style: none solid none none;
+    }
+  }
+}
+
+/** item spacing
+*/
+.Box--column {
+  @for $i from 1 to 12 {
+    &.Box--itemspace-#{$i} {
+      /* skip item spacing if an element has borders  */
+      > *:not(.Box--border-after) + *:not(.Box--border-before) {
+        margin-top: calc(var(--baseline) * #{$i});
+        margin-left: 0;
+      }
+    }
+  }
+}
+
+$sizes: (
+  '05': 0.5,
+  '1': 1,
+  '2': 2,
+  '3': 3,
+  '4': 4,
+  '5': 5,
+  '6': 6,
+  '7': 7,
+  '8': 8,
+  '9': 9,
+  '10': 10,
+  '11': 11,
+  '12': 12,
+  '13': 13,
+  '14': 14,
+);
+
+.Box--row {
+  @each $name, $bl in $sizes {
+    &.Box--itemspace-#{$name} {
+      > * + * {
+        margin-left: calc(var(--baseline) * #{$bl});
+        margin-top: 0;
+      }
+    }
+  }
+}
