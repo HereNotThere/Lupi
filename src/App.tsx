@@ -1,21 +1,21 @@
-import { useCallback, useState } from 'react'
-import { DebugPanel } from './components/DebugPanel'
-import { NumBox } from './components/NumBox'
-import { NumPad } from './components/NumPad'
-import { SiteHeader } from './components/SiteHeader'
-import { Box, Grid, Text } from './ui'
+import { useCallback, useState } from "react";
+import { DebugPanel } from "./components/DebugPanel";
+import { NumBox } from "./components/NumBox";
+import { NumPad } from "./components/NumPad";
+import { SiteHeader } from "./components/SiteHeader";
+import { Box, Grid, Text } from "./ui";
 
 function App() {
-  const [inputValue, setInputValue] = useState(0)
+  const [inputValue, setInputValue] = useState(0);
 
   const onKeyPadPress = useCallback((char: string) => {
-    if (char === 'E') {
-      return
+    if (char === "E") {
+      return;
     }
     if (char === String(Number.parseInt(char))) {
-      setInputValue((v) => Math.min(999, Number.parseInt(`${v}${char}`)))
+      setInputValue((v) => Math.min(999, Number.parseInt(`${v}${char}`)));
     }
-  }, [])
+  }, []);
 
   return (
     <Box padding fillSpace>
@@ -69,7 +69,7 @@ function App() {
         <DebugPanel />
       </Box>
     </Box>
-  )
+  );
 }
 
-export default App
+export default App;

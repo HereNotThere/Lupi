@@ -1,4 +1,4 @@
-import { Text } from '../ui'
+import { Text } from "../ui";
 export const LupiHeader = () => (
   <Text header="giant">
     <Text span color="primary">
@@ -21,4 +21,4 @@ export const LupiHeader = () => (
     </Text>
     nteger
   </Text>
-)
+);

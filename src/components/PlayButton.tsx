@@ -1,4 +1,4 @@
-import { Box, Text } from 'src/ui'
+import { Box, Text } from "src/ui";
 
 export const PlayButton = () => (
   <Box
@@ -12,4 +12,4 @@ export const PlayButton = () => (
       Play
     </Text>
   </Box>
-)
+);

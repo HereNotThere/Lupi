@@ -1,4 +1,4 @@
-import { Box, Text } from '../ui'
+import { Box, Text } from "../ui";
 
 export const SiteHeader = () => (
   <Box row padding="md" border borderRadius>
@@ -19,4 +19,4 @@ export const SiteHeader = () => (
       </Text>
     </Box>
   </Box>
-)
+);

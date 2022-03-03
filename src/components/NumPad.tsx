@@ -1,10 +1,10 @@
-import { Button, Text } from 'src/ui'
-import styled, { css } from 'styled-components'
+import { Button, Text } from "src/ui";
+import styled, { css } from "styled-components";
 
-const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '⏎'] as const
+const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "⏎"] as const;
 
 interface Props {
-  onKeyPadPress: (n: string) => void
+  onKeyPadPress: (n: string) => void;
 }
 
 export const NumPad = (props: Props) => {
@@ -13,7 +13,7 @@ export const NumPad = (props: Props) => {
       {keys.map((value) => (
         <StyledNumKey
           onClick={() => {
-            props.onKeyPadPress(value)
+            props.onKeyPadPress(value);
           }}
           key={value}
           aspectRatio="square"
@@ -25,20 +25,20 @@ export const NumPad = (props: Props) => {
         </StyledNumKey>
       ))}
     </StyledNumPad>
-  )
-}
+  );
+};
 
 const StyledNumPad = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 120px);
   gap: var(--bl3);
-`
+`;
 
 const StyledNumKey = styled(Button)<{ value: string | number }>`
   ${({ value }) =>
-    value === '⏎' &&
+    value === "⏎" &&
     css`
       grid-column: 2 / span 2;
       aspect-ratio: auto; ;
     `}
-`
+`;

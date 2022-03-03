@@ -1,6 +1,6 @@
-import { Box } from 'src/ui'
-import { BoxProps } from 'src/ui/Box/Box'
-import styled from 'styled-components'
+import { Box } from "src/ui";
+import { BoxProps } from "src/ui/Box/Box";
+import styled from "styled-components";
 
 export const NumBox = (props: { value: number } & BoxProps) => (
   <StyledNumBox
@@ -14,10 +14,10 @@ export const NumBox = (props: { value: number } & BoxProps) => (
   >
     {props.value}
   </StyledNumBox>
-)
+);
 
 const StyledNumBox = styled(Box)`
   border: 12px solid var(--color-dark-grey);
   font-size: var(--bl11);
   font-weight: bold;
-`
+`;
