@@ -21,9 +21,20 @@ const HeaderAttrs = {
 
 type Header = keyof typeof HeaderAttrs
 
+const AlignAttrs = {
+  center: 'center',
+  left: 'left',
+  right: 'right',
+  justify: 'justify',
+}
+
+type Align = keyof typeof AlignAttrs
+
 interface BaseProps {
   children?: React.ReactNode
   color?: ColorTheme
+  singleLine?: true
+  align?: Align
 }
 
 interface Props extends BaseProps {
@@ -41,17 +52,22 @@ interface Props extends BaseProps {
 }
 
 export const Text = (props: Props) => {
-  const { header, paragraph, span, small, color, children, ...otherProps } =
-    props
+  const { children, color, align, header, singleLine, small, span } = props
 
   const className = useMemo(() => {
     const classList: string[] = []
 
+    if (align) {
+      classList.push(`align-${props.align}`)
+    }
     if (color) {
       classList.push(`color-${props.color}`)
     }
     if (small) {
       classList.push(`small`)
+    }
+    if (singleLine) {
+      classList.push(`single-line`)
     }
 
     const className = classList
@@ -60,7 +76,7 @@ export const Text = (props: Props) => {
       .join(' ')
 
     return ['Text', className].filter(Boolean).join(' ')
-  }, [color, props.color, small])
+  }, [color, props.color, singleLine, small])
 
   switch (true) {
     default:

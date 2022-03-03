@@ -7,7 +7,7 @@ export const SiteHeader = () => (
         LUPI
       </Text>
     </Box>
-    <Box row grow justifyContent="end" alignItems="center" itemSpace="lg">
+    <Box row grow justifyContent="end" alignItems="center" gap="lg">
       <Text color="text" header="small">
         HOW TO PLAY
       </Text>

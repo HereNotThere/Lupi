@@ -18,7 +18,7 @@ export const DebugPanel = () => {
   return (
     <Box row>
       {/* left container */}
-      <Box itemSpace="lg" padding grow>
+      <Box gap="lg" padding grow>
         <Box padding border centerContent>
           <Text header="large">Commit Guess</Text>
           <input
@@ -48,7 +48,7 @@ export const DebugPanel = () => {
       </Box>
 
       {/* right container */}
-      <Box itemSpace="lg" padding grow>
+      <Box gap="lg" padding grow>
         <Box padding border centerContent>
           <Button onClick={getFinishedGames}>Get Finished Games</Button>
         </Box>
