@@ -26,6 +26,7 @@ const Backgrounds = {
   transparent: "transparent",
   gradient: "gradient",
   muted: "muted",
+  muted2: "muted2",
 } as const;
 
 const AspectRatios = {

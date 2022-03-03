@@ -32,6 +32,7 @@ type Align = keyof typeof AlignAttrs;
 
 interface BaseProps {
   children?: React.ReactNode;
+  className?: string;
   color?: ColorTheme;
   singleLine?: true;
   align?: Align;
@@ -52,7 +53,16 @@ interface Props extends BaseProps {
 }
 
 export const Text = (props: Props) => {
-  const { children, color, align, header, singleLine, small, span } = props;
+  const {
+    children,
+    className: parentClassName,
+    color,
+    align,
+    header,
+    singleLine,
+    small,
+    span,
+  } = props;
 
   const className = useMemo(() => {
     const classList: string[] = [];
@@ -75,8 +85,16 @@ export const Text = (props: Props) => {
       .filter(Boolean)
       .join(" ");
 
-    return ["Text", className].filter(Boolean).join(" ");
-  }, [align, color, props.align, props.color, singleLine, small]);
+    return ["Text", parentClassName, className].filter(Boolean).join(" ");
+  }, [
+    align,
+    color,
+    parentClassName,
+    props.align,
+    props.color,
+    singleLine,
+    small,
+  ]);
 
   switch (true) {
     default:

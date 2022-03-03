@@ -1,22 +1,30 @@
-import { Box, Text } from "../ui";
+import styled from "styled-components";
+import { Box, Grid, Text } from "../ui";
 
 export const SiteHeader = () => (
-  <Box row padding="md" border borderRadius>
+  <Grid columns={2} padding="md" horizontalPadding="lg" border borderRadius>
     <Box>
       <Text color="primary" header="regular">
         LUPI
       </Text>
     </Box>
-    <Box row grow justifyContent="end" alignItems="center" gap="lg">
+    <Box row justifyContent="end" alignItems="center" gap="md">
       <Text color="text" header="small">
         HOW TO PLAY
       </Text>
+      <Separator />
       <Text color="text" header="small">
         PAST LUPIS
       </Text>
+      <Separator />
       <Text color="text" header="small">
         CONNECT WALLET
       </Text>
     </Box>
-  </Box>
+  </Grid>
 );
+
+const Separator = styled.div`
+  border-left: 1px solid var(--theme-n3);
+  height: var(--bl2);
+`;

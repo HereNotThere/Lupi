@@ -1,7 +1,19 @@
 import { Button, Text } from "src/ui";
 import styled, { css } from "styled-components";
 
-const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "⏎"] as const;
+const keys = [
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "0",
+  "ENTER",
+] as const;
 
 interface Props {
   onKeyPadPress: (n: string) => void;
@@ -21,7 +33,7 @@ export const NumPad = (props: Props) => {
           padding="xs"
           value={value}
         >
-          <Text header="giant">{value}</Text>
+          <Text header="giant">{value === "ENTER" ? "⏎" : value}</Text>
         </StyledNumKey>
       ))}
     </StyledNumPad>
