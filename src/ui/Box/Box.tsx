@@ -224,6 +224,8 @@ export const Box = forwardRef<HTMLDivElement, Props>((props, ref) => {
     props.overflow,
     props.border,
     props.padding,
+    props.horizontalPadding,
+    props.verticalPadding,
     props.gap,
     props.borderRadius,
     props.background,
@@ -290,10 +292,15 @@ export const Box = forwardRef<HTMLDivElement, Props>((props, ref) => {
 
   const as = props.as ?? "div";
 
-  return React.createElement(as, {
-    className,
-    style,
-    children: props.children,
-    onClick: props.onClick,
-  });
+  return React.createElement(
+    as,
+    {
+      className,
+      style,
+      onClick: props.onClick,
+    },
+    props.children
+  );
 });
+
+Box.displayName = "Box";

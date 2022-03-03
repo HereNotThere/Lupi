@@ -76,7 +76,7 @@ export const Text = (props: Props) => {
       .join(" ");
 
     return ["Text", className].filter(Boolean).join(" ");
-  }, [color, props.color, singleLine, small]);
+  }, [align, color, props.align, props.color, singleLine, small]);
 
   switch (true) {
     default:

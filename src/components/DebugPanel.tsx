@@ -8,7 +8,6 @@ export const DebugPanel = () => {
 
   const {
     getFinishedGames,
-    guessHash,
     commitGuess,
     revealGuess,
     allRevealedGuesses,
@@ -27,12 +26,6 @@ export const DebugPanel = () => {
           />
           <Button onClick={commitGuess}>Commit Guess</Button>
         </Box>
-
-        {guessHash && (
-          <Box padding border centerContent>
-            Guess Hash: {guessHash}
-          </Box>
-        )}
 
         <Box padding border centerContent>
           <input
