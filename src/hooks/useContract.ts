@@ -8,17 +8,17 @@ const lupiAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 // const lupiAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
 
 export const useContract = (guess: string, revealedGuess: string) => {
-  const [guessHash, setGuessHash] = useState("");
+  // const [guessHash, setGuessHash] = useState("");
 
   const [allRevealedGuesses, setAllRevealedGuesses] = useState("");
-  const [winner, setWinner] = useState("");
-  const [lowestGuess, setLowestGuess] = useState("");
-  const [guessCount, setGuessCount] = useState("");
+  const [, setWinner] = useState("");
+  const [, setLowestGuess] = useState("");
 
   async function requestAccount() {
     await window.ethereum.request({ method: "eth_requestAccounts" });
   }
 
+  /*
   async function fetchGuessCounter() {
     if (typeof window.ethereum !== "undefined") {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -32,6 +32,7 @@ export const useContract = (guess: string, revealedGuess: string) => {
       }
     }
   }
+  */
 
   async function getFinishedGames() {
     if (typeof window.ethereum === "undefined") {
@@ -62,6 +63,7 @@ export const useContract = (guess: string, revealedGuess: string) => {
     }
   }
 
+  /*
   async function fetchGuessHashes() {
     if (typeof window.ethereum !== "undefined") {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -75,6 +77,7 @@ export const useContract = (guess: string, revealedGuess: string) => {
       }
     }
   }
+  */
   async function fetchWinner() {
     if (typeof window.ethereum !== "undefined") {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -158,7 +161,6 @@ export const useContract = (guess: string, revealedGuess: string) => {
     fetchRevealedGuesses,
     fetchWinner,
     getFinishedGames,
-    guessHash,
     revealGuess,
   };
 };

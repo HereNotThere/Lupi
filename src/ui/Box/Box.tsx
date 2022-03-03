@@ -8,9 +8,9 @@ const flexPosition = {
 } as const;
 
 const Sizes = {
-  xs: "1",
-  sm: "2",
-  md: "3",
+  xs: "05",
+  sm: "1",
+  md: "2",
   lg: "4",
 } as const;
 
@@ -26,6 +26,7 @@ const Backgrounds = {
   transparent: "transparent",
   gradient: "gradient",
   muted: "muted",
+  muted2: "muted2",
 } as const;
 
 const AspectRatios = {
@@ -45,43 +46,71 @@ type BackgroundAttr = keyof typeof Backgrounds;
 type AspectRatioAttr = keyof typeof AspectRatios;
 type BorderRadiusAttr = keyof typeof BorderRadius;
 
-type Props = {
+interface BaseProps {
+  // react props
   children?: React.ReactNode;
-  basis?: number | string;
-  grow?: boolean | number;
-  shrink?: boolean | number;
+  className?: string;
+  style?: CSSProperties;
+
+  // flex container
   row?: boolean;
+
   justifyContent?: FlexPosition;
   alignContent?: FlexPosition;
   alignItems?: FlexPosition;
   alignSelf?: FlexPosition;
-  centerContent?: boolean;
-  padding?: SizeAttr | true;
-  itemSpace?: SizeAttr | false;
-  border?: BorderAttr | boolean;
-  borderRadius?: BorderRadiusAttr | boolean;
-  background?: BackgroundAttr;
-  aspectRatio?: AspectRatioAttr;
-  fillSpace?: boolean;
+
+  // size & overflow
+  overflow?: "scroll" | "hidden";
+
+  width?: number | string;
+  height?: number | string;
 
   minWidth?: number | string;
   maxWidth?: number | string;
   minHeight?: number | string;
   maxHeight?: number | string;
 
-  width?: number | string;
-  height?: number | string;
+  centerContent?: boolean;
 
-  overflow?: "scroll" | "hidden";
+  // spacing
+  padding?: SizeAttr | true;
+  horizontalPadding?: SizeAttr;
+  verticalPadding?: SizeAttr;
+  gap?: SizeAttr | false;
+
+  // decoration
+  border?: BorderAttr | boolean;
+  borderRadius?: BorderRadiusAttr | boolean;
+  background?: BackgroundAttr;
+  aspectRatio?: AspectRatioAttr;
+  fillSpace?: boolean;
 
   onClick?: () => void;
 
   as?: keyof HTMLElementTagNameMap;
-};
+}
+
+/**
+ * Flex content props
+ */
+interface Props extends BaseProps {
+  // flex content
+  basis?: number | string;
+  grow?: boolean | number;
+  shrink?: boolean | number;
+}
+
+/**
+ * Grid content props
+ */
+interface Props extends BaseProps {
+  cols?: number;
+}
 
 export type BoxProps = Props;
 
-export const Box = forwardRef<HTMLDivElement, Props>(function Box(props) {
+export const Box = forwardRef<HTMLDivElement, Props>((props, ref) => {
   const className = useMemo(() => {
     const classList = [];
 
@@ -89,6 +118,10 @@ export const Box = forwardRef<HTMLDivElement, Props>(function Box(props) {
       classList.push("row");
     } else {
       classList.push("column");
+    }
+
+    if (props.cols) {
+      classList.push(`cols-${props.cols}`);
     }
 
     if (props.fillSpace) {
@@ -140,15 +173,22 @@ export const Box = forwardRef<HTMLDivElement, Props>(function Box(props) {
       classList.push(`padding`, `padding-${Sizes[padding]}`);
     }
 
+    if (props.horizontalPadding) {
+      classList.push(`padding`, `h-padding-${Sizes[props.horizontalPadding]}`);
+    }
+    if (props.verticalPadding) {
+      classList.push(`padding`, `h-padding-${Sizes[props.verticalPadding]}`);
+    }
+
     const itemsSpace =
-      props.itemSpace !== false
-        ? typeof props.itemSpace === "undefined"
+      props.gap !== false
+        ? typeof props.gap === "undefined"
           ? "sm"
-          : props.itemSpace
+          : props.gap
         : false;
 
     if (itemsSpace) {
-      classList.push(`itemspace-${Sizes[itemsSpace]}`);
+      classList.push(`gap-${Sizes[itemsSpace]}`);
     }
 
     const borderRadius =
@@ -171,9 +211,10 @@ export const Box = forwardRef<HTMLDivElement, Props>(function Box(props) {
       .filter(Boolean)
       .join(" ");
 
-    return ["Box", className].filter(Boolean).join(" ");
+    return ["Box", className, props.className].filter(Boolean).join(" ");
   }, [
     props.row,
+    props.cols,
     props.fillSpace,
     props.grow,
     props.shrink,
@@ -183,27 +224,31 @@ export const Box = forwardRef<HTMLDivElement, Props>(function Box(props) {
     props.centerContent,
     props.overflow,
     props.border,
+    props.padding,
+    props.horizontalPadding,
+    props.verticalPadding,
+    props.gap,
     props.borderRadius,
     props.background,
     props.aspectRatio,
-    props.padding,
-    props.itemSpace,
+    props.className,
   ]);
 
   const {
     basis,
-    width,
+    grow,
     height,
-    minWidth,
+    maxHeight,
     maxWidth,
     minHeight,
-    maxHeight,
-    grow,
+    minWidth,
     shrink,
+    width,
+    style: parentStyle,
   } = props;
 
   const style = useMemo(() => {
-    const style: CSSProperties = {};
+    const style: CSSProperties = parentStyle ? { ...parentStyle } : {};
 
     if (basis) {
       style.flexBasis = basis;
@@ -235,14 +280,15 @@ export const Box = forwardRef<HTMLDivElement, Props>(function Box(props) {
     return style;
   }, [
     basis,
-    width,
+    grow,
     height,
-    minWidth,
+    maxHeight,
     maxWidth,
     minHeight,
-    maxHeight,
-    grow,
+    minWidth,
+    parentStyle,
     shrink,
+    width,
   ]);
 
   const as = props.as ?? "div";
@@ -252,7 +298,10 @@ export const Box = forwardRef<HTMLDivElement, Props>(function Box(props) {
     {
       className,
       style,
+      onClick: props.onClick,
     },
     props.children
   );
 });
+
+Box.displayName = "Box";

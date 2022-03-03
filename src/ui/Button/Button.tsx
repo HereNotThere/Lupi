@@ -1,9 +1,9 @@
 import React from "react";
-import { Box, Text } from "..";
+import { Box } from "..";
 import { BoxProps } from "../Box/Box";
 
 interface Props extends BoxProps {
-  children?: React.ReactText;
+  children?: React.ReactText | React.ReactNode;
 }
 
 export const Button = (props: Props) => (
@@ -14,6 +14,6 @@ export const Button = (props: Props) => (
     padding
     {...props}
   >
-    <Text header="large">{props.children}</Text>
+    {props.children}
   </Box>
 );

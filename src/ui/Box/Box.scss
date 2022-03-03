@@ -98,6 +98,15 @@
 }
 
 .Box {
+  &--background-muted {
+    background-color: var(--theme-n4);
+  }
+  &--background-muted2 {
+    background-color: var(--theme-n3);
+  }
+  &--background-transparent {
+    background-color: transparent;
+  }
   /* specific */
   &--background-gradient {
     background: radial-gradient(50% 50% at 50% 50%, #d1f970 0%, #8fff00 100%);
@@ -133,6 +142,14 @@
   @for $i from 1 to 12 {
     &--padding-#{$i} {
       padding: calc(var(--baseline) * #{$i});
+    }
+    &--h-padding-#{$i} {
+      padding-left: calc(var(--baseline) * #{$i});
+      padding-right: calc(var(--baseline) * #{$i});
+    }
+    &--v-padding-#{$i} {
+      padding-top: calc(var(--baseline) * #{$i});
+      padding-bottom: calc(var(--baseline) * #{$i});
     }
   }
 }
@@ -181,20 +198,6 @@
   }
 }
 
-/** item spacing
-*/
-.Box--column {
-  @for $i from 1 to 12 {
-    &.Box--itemspace-#{$i} {
-      /* skip item spacing if an element has borders  */
-      > *:not(.Box--border-after) + *:not(.Box--border-before) {
-        margin-top: calc(var(--baseline) * #{$i});
-        margin-left: 0;
-      }
-    }
-  }
-}
-
 $sizes: (
   "05": 0.5,
   "1": 1,
@@ -213,12 +216,37 @@ $sizes: (
   "14": 14,
 );
 
-.Box--row {
+.Grid.Box {
   @each $name, $bl in $sizes {
-    &.Box--itemspace-#{$name} {
-      > * + * {
-        margin-left: calc(var(--baseline) * #{$bl});
-        margin-top: 0;
+    &.Box--gap-#{$name} {
+      gap: calc(var(--baseline) * #{$bl});
+    }
+  }
+}
+
+.Box--column {
+  &:not(.Grid) {
+    @each $name, $bl in $sizes {
+      &.Box--gap-#{$name} {
+        /* skip item spacing if an element has borders  */
+        > *:not(.Box--border-after) + *:not(.Box--border-before) {
+          margin-top: calc(var(--baseline) * #{$bl});
+          margin-left: 0;
+        }
+      }
+    }
+  }
+}
+
+.Box--row {
+  &:not(.Grid) {
+    flex-wrap: wrap;
+    @each $name, $bl in $sizes {
+      &.Box--gap-#{$name} {
+        > * + * {
+          margin-left: calc(var(--baseline) * #{$bl});
+          margin-top: 0;
+        }
       }
     }
   }

@@ -25,7 +25,7 @@ $baseline: 8px;
   --baseline: #{$baseline};
   --bl-half: calc(var(--baseline) / 2);
 
-  @for $i from 1 to 8 {
+  @for $i from 1 to 30 {
     --bl#{$i}: #{$baseline * $i};
   }
 }

@@ -8,7 +8,6 @@ export const DebugPanel = () => {
 
   const {
     getFinishedGames,
-    guessHash,
     commitGuess,
     revealGuess,
     allRevealedGuesses,
@@ -18,7 +17,7 @@ export const DebugPanel = () => {
   return (
     <Box row>
       {/* left container */}
-      <Box itemSpace="lg" padding grow>
+      <Box gap="lg" padding grow>
         <Box padding border centerContent>
           <Text header="large">Commit Guess</Text>
           <input
@@ -27,12 +26,6 @@ export const DebugPanel = () => {
           />
           <Button onClick={commitGuess}>Commit Guess</Button>
         </Box>
-
-        {guessHash && (
-          <Box padding border centerContent>
-            Guess Hash: {guessHash}
-          </Box>
-        )}
 
         <Box padding border centerContent>
           <input
@@ -48,7 +41,7 @@ export const DebugPanel = () => {
       </Box>
 
       {/* right container */}
-      <Box itemSpace="lg" padding grow>
+      <Box gap="lg" padding grow>
         <Box padding border centerContent>
           <Button onClick={getFinishedGames}>Get Finished Games</Button>
         </Box>

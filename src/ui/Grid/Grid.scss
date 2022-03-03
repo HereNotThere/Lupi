@@ -1,0 +1,17 @@
+.Grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+}
+
+.Grid > * {
+  // grid-column: span var(--grid-columns);
+  grid-column: span 1;
+}
+
+.Grid {
+  @for $i from 1 to 32 {
+    > .Box--cols-#{$i} {
+      grid-column: span #{$i};
+    }
+  }
+}

@@ -1,34 +1,33 @@
 import { DebugPanel } from "./components/DebugPanel";
-import { LupiHeader } from "./components/LupiHeader";
-import { PlayButton } from "./components/PlayButton";
 import { SiteHeader } from "./components/SiteHeader";
-import { Box, Text } from "./ui";
+import { Box } from "./ui";
+import { PlayState } from "./views/PlayView";
+
+export interface RoundData {
+  roundId: string;
+  jackpot: number;
+  entries: number;
+  revealDate: Date;
+  maxGuess: number;
+}
+
+const roundData: RoundData = {
+  roundId: "99",
+  maxGuess: 999,
+  jackpot: 2.5,
+  entries: 78,
+  revealDate: new Date(Date.now() + 86400000),
+};
 
 function App() {
   return (
-    <Box padding fillSpace>
+    <Box padding="md" fillSpace>
+      {/* above the fold container */}
       <Box grow minHeight={`100vh`}>
         <SiteHeader />
-        {/* body */}
-        <Box row grow>
-          {/* left container */}
-          <Box grow centerContent itemSpace="md">
-            <LupiHeader />
-            <Box padding border>
-              <Text header="large">
-                Current Jackpot{" "}
-                <Text span color="primary">
-                  2.5eth
-                </Text>
-              </Text>
-            </Box>
-          </Box>
-          {/* right container */}
-          <Box grow centerContent>
-            <PlayButton />
-          </Box>
-        </Box>
+        <PlayState roundData={roundData} />
       </Box>
+
       <Box>
         <DebugPanel />
       </Box>
