@@ -18,7 +18,7 @@ async function main() {
   // const greeter = await Greeter.deploy("Hello, Hardhat!");
 
   const Lupi = await ethers.getContractFactory("Lupi");
-  const lupi = await Lupi.deploy("1");
+  const lupi = await Lupi.deploy();
 
   await lupi.deployed();
 

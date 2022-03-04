@@ -1,6 +1,6 @@
 export type TicketData = ReturnType<typeof generateTicketData>;
 
-export const generateTicketData = (guess: number, roundId: string) => ({
+export const generateTicketData = (guess: number, roundId: number) => ({
   guess,
   hash: "",
   roundId,

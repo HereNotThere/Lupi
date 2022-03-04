@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { RoundData } from "src/App";
+import { GameStats } from "src/components/GameStats";
 import { NumBox } from "src/components/NumBox";
 import { NumPad } from "src/components/NumPad";
-import { RoundStats } from "src/components/RoundStats";
 import { Ticket } from "src/components/Ticket";
+import { useGameData } from "src/hooks/useGameData";
+import { GameData, isValidGameData } from "src/hooks/useWeb3Context";
 import { Box, Button, Grid, Text } from "src/ui";
 import {
   generateTicketData,
@@ -11,21 +12,17 @@ import {
   validateGuess,
 } from "src/utils/lupiUtils";
 
-interface Props {
-  roundData: RoundData;
-}
-
-export const PlayState = (props: Props) => {
-  const { roundData } = props;
+export const PlayState = () => {
+  const { game } = useGameData();
   const [inputValue, setInputValue] = useState(0);
   const [ticketData, setTicketData] = useState<TicketData>();
 
   const validate = useCallback(() => {
-    if (validateGuess(inputValue, roundData.maxGuess)) {
-      const ticketData = generateTicketData(inputValue, roundData.roundId);
+    if (isValidGameData(game) && validateGuess(inputValue, game.maxGuess)) {
+      const ticketData = generateTicketData(inputValue, game?.roundId);
       setTicketData(ticketData);
     }
-  }, [inputValue, roundData.maxGuess, roundData.roundId]);
+  }, [inputValue, game]);
 
   const onKeyPadPress = useCallback(
     (char: string) => {
@@ -60,11 +57,15 @@ export const PlayState = (props: Props) => {
     };
   }, [onKeyPadPress, validate]);
 
+  if (!game) {
+    return <>INVALID GAME</>;
+  }
+
   return !ticketData ? (
     <PlayView
       inputValue={inputValue}
       onKeyPadPress={onKeyPadPress}
-      roundData={roundData}
+      game={game}
     />
   ) : (
     <TicketView ticketData={ticketData} />
@@ -91,12 +92,12 @@ const TicketView = (props: { ticketData: TicketData }) => {
 const PlayView = (props: {
   inputValue: number;
   onKeyPadPress: (value: string) => void;
-  roundData: RoundData;
+  game: GameData;
 }) => (
   <Grid columns={2} grow>
     {/* left column */}
     <Box centerContent>
-      <RoundPanel inputValue={props.inputValue} roundData={props.roundData} />
+      <RoundPanel inputValue={props.inputValue} game={props.game} />
     </Box>
     {/* right column */}
     <Box grow centerContent>
@@ -105,22 +106,21 @@ const PlayView = (props: {
   </Grid>
 );
 
-const RoundPanel = ({
-  inputValue,
-  roundData,
-}: {
-  inputValue: number;
-  roundData: RoundData;
-}) => (
-  <Grid columns={1} gap="md">
-    <Text header="regular" align="center">
-      Round {roundData.roundId}
-    </Text>
-    <NumBox value={inputValue} cols={1} />
-    <RoundStats
-      jackpot={roundData.jackpot}
-      entries={roundData.entries}
-      revealDate={roundData.revealDate}
-    />
-  </Grid>
-);
+const RoundPanel = (props: { inputValue: number; game: GameData }) => {
+  const { game, inputValue } = props;
+  return isValidGameData(game) ? (
+    <Grid columns={1} gap="md">
+      <Text header="regular" align="center">
+        Round {game.roundId}
+      </Text>
+      <NumBox value={inputValue} cols={1} />
+      <GameStats
+        jackpot={game.currentBalance}
+        entries={game.players.length}
+        revealDate={game.phaseDeadLine}
+      />
+    </Grid>
+  ) : (
+    <></>
+  );
+};

@@ -83,8 +83,8 @@ contract Lupi is ReentrancyGuard {
   function newGame() private {
     round++;
     currentRound = bytes32(uint256(uint160(address(this))) << 96); // Replace with chainlink random
-    rounds[currentRound].guessDeadline = block.timestamp + 3 days;
-    rounds[currentRound].revealDeadline = block.timestamp + 5 days;
+    rounds[currentRound].guessDeadline = block.timestamp + 5 minutes;
+    rounds[currentRound].revealDeadline = block.timestamp + 10 minutes;
     rounds[currentRound].nonce = currentRound;
   }
 

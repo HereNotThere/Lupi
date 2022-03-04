@@ -1,11 +1,32 @@
 import { ethers } from "ethers";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Lupi from "../artifacts/contracts/Lupi.sol/Lupi.json";
 
-declare let window: any;
+declare let window: { ethereum: any };
 
 const lupiAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 // const lupiAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
+
+const getProvider = () => {
+  if (typeof window.ethereum === "undefined") {
+    return;
+  }
+  return new ethers.providers.Web3Provider(window.ethereum);
+};
+
+const getContract = (signed: boolean) => {
+  const provider = getProvider();
+  if (!provider) {
+    throw new Error("no provider");
+  }
+  const signerOrProvider = signed ? provider.getSigner() : provider;
+  const contract = new ethers.Contract(lupiAddress, Lupi.abi, signerOrProvider);
+  return contract;
+};
+
+export const useGetContract = () => {
+  return { getContract };
+};
 
 export const useContract = (guess: string, revealedGuess: string) => {
   // const [guessHash, setGuessHash] = useState("");
@@ -34,13 +55,19 @@ export const useContract = (guess: string, revealedGuess: string) => {
   }
   */
 
+  async function getPhase() {
+    const contract = getContract(false);
+    if (contract) {
+      return await contract.getPhase();
+    }
+  }
+
   async function getFinishedGames() {
     if (typeof window.ethereum === "undefined") {
       return;
     }
 
     const provider = new ethers.providers.Web3Provider(window.ethereum);
-
     const contract = new ethers.Contract(lupiAddress, Lupi.abi, provider);
 
     const eventFilter = contract.filters.GameResult(); //.ContractEvent()
@@ -154,6 +181,7 @@ export const useContract = (guess: string, revealedGuess: string) => {
   }
 
   return {
+    getPhase,
     allRevealedGuesses,
     callEndGame,
     commitGuess,

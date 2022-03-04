@@ -6,7 +6,7 @@ interface Props {
   revealDate: Date;
 }
 
-export const RoundStats = (props: Props) => {
+export const GameStats = (props: Props) => {
   return (
     <Grid columns={2} gap="sm" alignContent="center" alignItems="center">
       <Box padding="sm" border centerContent gap="xs">
