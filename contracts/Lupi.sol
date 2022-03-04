@@ -31,15 +31,23 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 uint256 constant ticketPrice = 0.01 ether;
 
 contract Lupi is ReentrancyGuard {
+  enum GamePhase {
+    GUESS,
+    REVEAL,
+    ENDGAME
+  }
+
   event GameResult(
     bytes32 indexed nonce,
     address indexed winner,
+    uint256 award,
     uint32 lowestGuess
   );
 
-  string private gameVersion;
   bytes32 private currentRound;
+  uint256 private rollover;
   mapping(bytes32 => Round) private rounds;
+  uint8 round;
 
   struct Round {
     bytes32 nonce;
@@ -67,16 +75,13 @@ contract Lupi is ReentrancyGuard {
     bytes32 salt;
   }
 
-  constructor(string memory _gameVersion) {
-    gameVersion = _gameVersion;
+  constructor() {
+    round = 0;
     newGame();
   }
 
-  function getGameVersion() public view returns (string memory) {
-    return gameVersion;
-  }
-
   function newGame() private {
+    round++;
     currentRound = bytes32(uint256(uint160(address(this))) << 96); // Replace with chainlink random
     rounds[currentRound].guessDeadline = block.timestamp + 3 days;
     rounds[currentRound].revealDeadline = block.timestamp + 5 days;
@@ -99,8 +104,7 @@ contract Lupi is ReentrancyGuard {
     rounds[currentRound].balance += ticketPrice;
     uint256 ethToReturn = msg.value - ticketPrice;
     if (ethToReturn > 0) {
-      (bool sent, ) = msg.sender.call{value: ethToReturn}("");
-      require(sent, "ethToReturn failed to send");
+      payable(msg.sender).transfer(ethToReturn);
     }
   }
 
@@ -199,27 +203,26 @@ contract Lupi is ReentrancyGuard {
       }
     }
 
+    uint256 award;
+
+    if (lowestGuess < 0xffffffff && winner != address(0)) {
+      // Winner takes all plus rollover
+      award = rollover + rounds[currentRound].balance;
+      rollover = 0;
+    } else {
+      // Balance rolls over to next round
+      rollover += rounds[currentRound].balance;
+    }
+    if (award > 0 && winner != address(0)) {
+      payable(winner).transfer(award);
+    }
     emit GameResult(
       rounds[currentRound].nonce,
       winner,
+      award,
       lowestGuess < 0xffffffff ? lowestGuess : 0
     );
-    if (lowestGuess < 0xffffffff) {
-      // Winner takes all
-      payable(winner).transfer(rounds[currentRound].balance);
-    } else {
-      // Push returns funds to all players that revealed
-      uint256 split = rounds[currentRound].balance /
-        rounds[currentRound].revealedGuesses.length;
 
-      for (
-        uint256 i = 0;
-        i < rounds[currentRound].revealedGuesses.length;
-        i++
-      ) {
-        payable(rounds[currentRound].revealedGuesses[i].player).transfer(split);
-      }
-    }
     delete rounds[currentRound];
     newGame();
   }
@@ -244,6 +247,38 @@ contract Lupi is ReentrancyGuard {
 
   function getPlayers() public view returns (address[] memory) {
     return rounds[currentRound].players;
+  }
+
+  function getCurrentBalance() public view returns (uint256) {
+    return rounds[currentRound].balance;
+  }
+
+  function getRolloverBalance() public view returns (uint256) {
+    return rollover;
+  }
+
+  function getRound() public view returns (uint8) {
+    return round;
+  }
+
+  function getPhase() public view returns (GamePhase) {
+    if (block.timestamp <= rounds[currentRound].guessDeadline) {
+      return GamePhase.GUESS;
+    } else if (block.timestamp <= rounds[currentRound].revealDeadline) {
+      return GamePhase.REVEAL;
+    } else {
+      return GamePhase.ENDGAME;
+    }
+  }
+
+  function getPhaseDeadline() public view returns (uint256) {
+    if (block.timestamp <= rounds[currentRound].guessDeadline) {
+      return rounds[currentRound].guessDeadline - block.timestamp;
+    } else if (block.timestamp <= rounds[currentRound].revealDeadline) {
+      return rounds[currentRound].revealDeadline - block.timestamp;
+    } else {
+      return 0;
+    }
   }
 
   function getRevealedGuess() public view returns (uint256[] memory) {
