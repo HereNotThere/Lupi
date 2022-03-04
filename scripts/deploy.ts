@@ -18,11 +18,11 @@ async function main() {
   // const greeter = await Greeter.deploy("Hello, Hardhat!");
 
   const Lupi = await ethers.getContractFactory("Lupi");
-  const lupi = await Lupi.deploy("1");
+  const lupi = await Lupi.deploy();
 
   await lupi.deployed();
 
-  console.log("Greeter deployed to:", lupi.address);
+  console.log("Lupi deployed to:", lupi.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -38,6 +38,10 @@ const config: HardhatUserConfig = {
     artifacts: "./src/artifacts",
   },
   networks: {
+    rinkeby: {
+      url: `https://rinkeby.infura.io/v3/fb413fbb148a4a63b37698824d8d617a`,
+      accounts: [`${process.env.RINKEBY_PRIVATE_KEY}`],
+    },
     ropsten: {
       url: process.env.ROPSTEN_URL || "",
       accounts:
