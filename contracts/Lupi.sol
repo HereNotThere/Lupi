@@ -44,17 +44,27 @@ contract Lupi is ReentrancyGuard {
     uint32 lowestGuess
   );
 
-  event AwardDeferred(address indexed winner, uint256 amount);
+  event AwardDeferred(
+    bytes32 indexed nonce,
+    address indexed winner,
+    uint256 amount
+  );
   event AwardWithdrawn(
+    bytes32 indexed nonce,
     address indexed winner,
     address indexed payee,
     uint256 amount
   );
-  event AwardForfeited(address indexed winner, uint256 amount);
+  event AwardForfeited(
+    bytes32 indexed nonce,
+    address indexed winner,
+    uint256 amount
+  );
 
   bytes32 private currentRound;
   uint256 private rollover;
   mapping(bytes32 => Round) private rounds;
+  bytes32 private pendingAwardRound;
   address private pendingWinner; // Hold funds for this winner if call failes
   uint256 private pendingAmount; // Amount held until the next game starts, otherwise forfeit into rollover
   uint8 private round;
@@ -229,11 +239,9 @@ contract Lupi is ReentrancyGuard {
       // Balance rolls over to next round
       rollover += rounds[currentRound].balance;
     }
+    bool success;
     if (award > 0 && winner != address(0)) {
-      (bool success, ) = winner.call{gas: 21000, value: award}("");
-      if (!success) {
-        deferAward(winner, award);
-      }
+      (success, ) = winner.call{gas: 21000, value: award}("");
     }
     emit GameResult(
       rounds[currentRound].nonce,
@@ -242,8 +250,12 @@ contract Lupi is ReentrancyGuard {
       lowestGuess < 0xffffffff ? lowestGuess : 0
     );
 
+    bytes32 priorRound = currentRound;
     delete rounds[currentRound];
     newGame();
+    if (!success && award > 0 && winner != address(0)) {
+      deferAward(priorRound, winner, award);
+    }
   }
 
   function getCommittedGuessHashes(address player)
@@ -268,14 +280,15 @@ contract Lupi is ReentrancyGuard {
    * @dev Deposit balance for a winner when the call in endGame failed.
    * @param winner The address to which funds may be claimed from.
    */
-  function deferAward(address winner, uint256 amount) internal {
-    require(
-      pendingAmount == 0 && pendingWinner == address(0),
-      "Only one pending at a time"
-    );
+  function deferAward(
+    bytes32 roundNonce,
+    address winner,
+    uint256 amount
+  ) internal {
     pendingWinner = winner;
     pendingAmount = amount;
-    emit AwardDeferred(winner, amount);
+    pendingAwardRound = roundNonce;
+    emit AwardDeferred(roundNonce, winner, amount);
   }
 
   /**
@@ -287,14 +300,17 @@ contract Lupi is ReentrancyGuard {
       msg.sender == pendingWinner,
       "Only the winning address may withdraw"
     );
+    bytes32 roundNonce = pendingAwardRound;
     uint256 amount = pendingAmount;
     address winner = pendingWinner;
+
     delete pendingAmount;
     delete pendingWinner;
+    delete pendingAwardRound;
 
     (bool success, ) = payee.call{value: amount}("");
     require(success, "withdrawAward unable to send value");
-    emit AwardWithdrawn(winner, payee, amount);
+    emit AwardWithdrawn(roundNonce, winner, payee, amount);
   }
 
   /**
@@ -302,11 +318,9 @@ contract Lupi is ReentrancyGuard {
    * next round starting.
    */
   function forfeitAward() internal {
-    require(
-      pendingAmount != 0 && pendingWinner != address(0),
-      "No pending award to forfeit"
-    );
-    emit AwardForfeited(pendingWinner, pendingAmount);
+    rollover += pendingAmount;
+    emit AwardForfeited(pendingAwardRound, pendingWinner, pendingAmount);
+    delete pendingAwardRound;
     delete pendingWinner;
     delete pendingAmount;
   }
@@ -325,6 +339,10 @@ contract Lupi is ReentrancyGuard {
 
   function getRound() public view returns (uint8) {
     return round;
+  }
+
+  function getPendingWinner() public view returns (address) {
+    return pendingWinner;
   }
 
   function getPhase() public view returns (GamePhase) {
