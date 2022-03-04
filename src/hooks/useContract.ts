@@ -128,8 +128,11 @@ export const useContract = (guess: string, revealedGuess: string) => {
 
       const secret = ethers.utils.formatBytes32String("secret");
       const guessHash = contract.getSaltedHash(parseInt(guess), secret);
+      const overrides = {
+        value: ethers.utils.parseEther("0.01"),
+      };
 
-      const transaction = await contract.commitGuess(guessHash);
+      const transaction = await contract.commitGuess(guessHash, overrides);
       await transaction.wait();
     }
   }
