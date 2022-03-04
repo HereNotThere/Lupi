@@ -44,10 +44,30 @@ contract Lupi is ReentrancyGuard {
     uint32 lowestGuess
   );
 
+  event AwardDeferred(
+    bytes32 indexed nonce,
+    address indexed winner,
+    uint256 amount
+  );
+  event AwardWithdrawn(
+    bytes32 indexed nonce,
+    address indexed winner,
+    address indexed payee,
+    uint256 amount
+  );
+  event AwardForfeited(
+    bytes32 indexed nonce,
+    address indexed winner,
+    uint256 amount
+  );
+
   bytes32 private currentRound;
   uint256 private rollover;
   mapping(bytes32 => Round) private rounds;
-  uint8 round;
+  bytes32 private pendingAwardRound;
+  address private pendingWinner; // Hold funds for this winner if call failes
+  uint256 private pendingAmount; // Amount held until the next game starts, otherwise forfeit into rollover
+  uint8 private round;
 
   struct Round {
     bytes32 nonce;
@@ -82,6 +102,12 @@ contract Lupi is ReentrancyGuard {
 
   function newGame() private {
     round++;
+
+    // If the prior winner failed to receive payment, and failed to collect payment, it is forfeit
+    // at the start of the next round
+    if (pendingWinner != address(0)) {
+      forfeitAward();
+    }
     currentRound = bytes32(uint256(uint160(address(this))) << 96); // Replace with chainlink random
     rounds[currentRound].guessDeadline = block.timestamp + 3 days;
     rounds[currentRound].revealDeadline = block.timestamp + 5 days;
@@ -213,8 +239,9 @@ contract Lupi is ReentrancyGuard {
       // Balance rolls over to next round
       rollover += rounds[currentRound].balance;
     }
+    bool success;
     if (award > 0 && winner != address(0)) {
-      payable(winner).transfer(award);
+      (success, ) = winner.call{gas: 21000, value: award}("");
     }
     emit GameResult(
       rounds[currentRound].nonce,
@@ -223,8 +250,12 @@ contract Lupi is ReentrancyGuard {
       lowestGuess < 0xffffffff ? lowestGuess : 0
     );
 
+    bytes32 priorRound = currentRound;
     delete rounds[currentRound];
     newGame();
+    if (!success && award > 0 && winner != address(0)) {
+      deferAward(priorRound, winner, award);
+    }
   }
 
   function getCommittedGuessHashes(address player)
@@ -245,6 +276,55 @@ contract Lupi is ReentrancyGuard {
     return guesses;
   }
 
+  /**
+   * @dev Deposit balance for a winner when the call in endGame failed.
+   * @param winner The address to which funds may be claimed from.
+   */
+  function deferAward(
+    bytes32 roundNonce,
+    address winner,
+    uint256 amount
+  ) internal {
+    pendingWinner = winner;
+    pendingAmount = amount;
+    pendingAwardRound = roundNonce;
+    emit AwardDeferred(roundNonce, winner, amount);
+  }
+
+  /**
+   * @dev Withdraw deferred balance for a winner when the call in endGame failed.
+   * @param payee The address to which funds will be sent to.
+   */
+  function withdrawAward(address payable payee) public nonReentrant {
+    require(
+      msg.sender == pendingWinner,
+      "Only the winning address may withdraw"
+    );
+    bytes32 roundNonce = pendingAwardRound;
+    uint256 amount = pendingAmount;
+    address winner = pendingWinner;
+
+    delete pendingAmount;
+    delete pendingWinner;
+    delete pendingAwardRound;
+
+    (bool success, ) = payee.call{value: amount}("");
+    require(success, "withdrawAward unable to send value");
+    emit AwardWithdrawn(roundNonce, winner, payee, amount);
+  }
+
+  /**
+   * @dev Forfeit balance for a winner when the balance wasn't retrieved prior to the
+   * next round starting.
+   */
+  function forfeitAward() internal {
+    rollover += pendingAmount;
+    emit AwardForfeited(pendingAwardRound, pendingWinner, pendingAmount);
+    delete pendingAwardRound;
+    delete pendingWinner;
+    delete pendingAmount;
+  }
+
   function getPlayers() public view returns (address[] memory) {
     return rounds[currentRound].players;
   }
@@ -259,6 +339,10 @@ contract Lupi is ReentrancyGuard {
 
   function getRound() public view returns (uint8) {
     return round;
+  }
+
+  function getPendingWinner() public view returns (address) {
+    return pendingWinner;
   }
 
   function getPhase() public view returns (GamePhase) {
