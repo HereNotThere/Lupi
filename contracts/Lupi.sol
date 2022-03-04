@@ -44,10 +44,20 @@ contract Lupi is ReentrancyGuard {
     uint32 lowestGuess
   );
 
+  event AwardDeferred(address indexed winner, uint256 amount);
+  event AwardWithdrawn(
+    address indexed winner,
+    address indexed payee,
+    uint256 amount
+  );
+  event AwardForfeited(address indexed winner, uint256 amount);
+
   bytes32 private currentRound;
   uint256 private rollover;
   mapping(bytes32 => Round) private rounds;
-  uint8 round;
+  address private pendingWinner; // Hold funds for this winner if call failes
+  uint256 private pendingAmount; // Amount held until the next game starts, otherwise forfeit into rollover
+  uint8 private round;
 
   struct Round {
     bytes32 nonce;
@@ -82,6 +92,12 @@ contract Lupi is ReentrancyGuard {
 
   function newGame() private {
     round++;
+
+    // If the prior winner failed to receive payment, and failed to collect payment, it is forfeit
+    // at the start of the next round
+    if (pendingWinner != address(0)) {
+      forfeitAward();
+    }
     currentRound = bytes32(uint256(uint160(address(this))) << 96); // Replace with chainlink random
     rounds[currentRound].guessDeadline = block.timestamp + 3 days;
     rounds[currentRound].revealDeadline = block.timestamp + 5 days;
@@ -214,7 +230,10 @@ contract Lupi is ReentrancyGuard {
       rollover += rounds[currentRound].balance;
     }
     if (award > 0 && winner != address(0)) {
-      payable(winner).transfer(award);
+      (bool success, ) = winner.call{gas: 21000, value: award}("");
+      if (!success) {
+        deferAward(winner, award);
+      }
     }
     emit GameResult(
       rounds[currentRound].nonce,
@@ -243,6 +262,53 @@ contract Lupi is ReentrancyGuard {
       guesses[i] = rounds[currentRound].committedGuesses[player][i].guessHash;
     }
     return guesses;
+  }
+
+  /**
+   * @dev Deposit balance for a winner when the call in endGame failed.
+   * @param winner The address to which funds may be claimed from.
+   */
+  function deferAward(address winner, uint256 amount) internal {
+    require(
+      pendingAmount == 0 && pendingWinner == address(0),
+      "Only one pending at a time"
+    );
+    pendingWinner = winner;
+    pendingAmount = amount;
+    emit AwardDeferred(winner, amount);
+  }
+
+  /**
+   * @dev Withdraw deferred balance for a winner when the call in endGame failed.
+   * @param payee The address to which funds will be sent to.
+   */
+  function withdrawAward(address payable payee) public nonReentrant {
+    require(
+      msg.sender == pendingWinner,
+      "Only the winning address may withdraw"
+    );
+    uint256 amount = pendingAmount;
+    address winner = pendingWinner;
+    delete pendingAmount;
+    delete pendingWinner;
+
+    (bool success, ) = payee.call{value: amount}("");
+    require(success, "withdrawAward unable to send value");
+    emit AwardWithdrawn(winner, payee, amount);
+  }
+
+  /**
+   * @dev Forfeit balance for a winner when the balance wasn't retrieved prior to the
+   * next round starting.
+   */
+  function forfeitAward() internal {
+    require(
+      pendingAmount != 0 && pendingWinner != address(0),
+      "No pending award to forfeit"
+    );
+    emit AwardForfeited(pendingWinner, pendingAmount);
+    delete pendingWinner;
+    delete pendingAmount;
   }
 
   function getPlayers() public view returns (address[] memory) {
