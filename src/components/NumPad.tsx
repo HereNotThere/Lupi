@@ -48,7 +48,7 @@ const StyledNumPad = styled.div`
 
 const StyledNumKey = styled(Button)<{ value: string | number }>`
   ${({ value }) =>
-    value === "⏎" &&
+    value === "ENTER" &&
     css`
       grid-column: 2 / span 2;
       aspect-ratio: auto; ;
