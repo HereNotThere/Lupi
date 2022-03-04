@@ -4,7 +4,9 @@ import Lupi from "../artifacts/contracts/Lupi.sol/Lupi.json";
 
 declare let window: any;
 
-const lupiAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+// Lupi on Rinkeby
+const lupiAddress = "0xa586B7adE6E07FD3B5f1A5a37882D53c28791aDb";
+//const lupiAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 // const lupiAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
 
 export const useContract = (guess: string, revealedGuess: string) => {
