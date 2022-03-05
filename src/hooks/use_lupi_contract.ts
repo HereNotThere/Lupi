@@ -1,12 +1,20 @@
-import { BigNumber, ethers } from "ethers";
+import { BigNumber, ethers, utils } from "ethers";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWeb3Context } from "./use_web3";
-import Lupi from "../artifacts/contracts/Lupi.sol/Lupi.json";
+import LupiAbi from "../artifacts/contracts/Lupi.sol/Lupi.json";
+import { Lupi } from "typechain-types";
 
 // Lupi on Rinkeby
 const lupiAddress = "0xa586B7adE6E07FD3B5f1A5a37882D53c28791aDb";
 //const lupiAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 // const lupiAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
+
+function getGuessHash(currentNonce: string, guess: number, salt: string) {
+  return utils.solidityKeccak256(
+    ["bytes32", "uint32", "bytes32"],
+    [currentNonce, guess, salt]
+  );
+}
 
 export const useLupiContract = () => {
   const { provider } = useWeb3Context();
@@ -15,14 +23,16 @@ export const useLupiContract = () => {
   const contract = useMemo(
     () =>
       provider
-        ? new ethers.Contract(lupiAddress, Lupi.abi, provider)
+        ? (new ethers.Contract(lupiAddress, LupiAbi.abi, provider) as Lupi)
         : undefined,
     [provider]
   );
 
   const contractSigner = useMemo(
     () =>
-      signer ? new ethers.Contract(lupiAddress, Lupi.abi, signer) : undefined,
+      signer
+        ? (new ethers.Contract(lupiAddress, LupiAbi.abi, signer) as Lupi)
+        : undefined,
     [signer]
   );
 
@@ -128,13 +138,15 @@ export const useLupiContract = () => {
     })();
   }, [contract]);
 
-  const [phaseDeadline, setPhaseDeadline] = useState();
+  const [phaseDeadline, setPhaseDeadline] = useState<number>();
 
   useEffect(() => {
     void (async () => {
       if (contract) {
         const phaseDeadline = await contract.getPhaseDeadline();
-        setPhaseDeadline(phaseDeadline);
+        setPhaseDeadline(
+          phaseDeadline ? BigNumber.from(phaseDeadline).toNumber() : 0
+        );
       }
     })();
   }, [contract]);
@@ -240,7 +252,9 @@ export const useLupiContract = () => {
         transactionRunning.current = true;
 
         const secret = ethers.utils.formatBytes32String("secret");
-        const guessHash = contract.getSaltedHash(parseInt(guess), secret);
+
+        const currentNonce = await contract.getCurrentNonce();
+        const guessHash = getGuessHash(currentNonce, parseInt(guess), secret);
         const overrides = {
           value: ethers.utils.parseEther("0.01"),
         };
@@ -262,15 +276,19 @@ export const useLupiContract = () => {
         transactionRunning.current = true;
 
         const secret = ethers.utils.formatBytes32String("secret");
-        const guessHash = await contract.getSaltedHash(
+        const currentNonce = await contract.getCurrentNonce();
+        const guessHash = getGuessHash(
+          currentNonce,
           parseInt(revealedGuess),
           secret
         );
-        const transaction = await contractSigner.revealGuess(
-          guessHash,
-          revealedGuess,
-          secret
-        );
+        const transaction = await contractSigner.revealGuesses([
+          {
+            guessHash,
+            answer: revealedGuess,
+            salt: secret,
+          },
+        ]);
         await transaction.wait();
         transactionRunning.current = false;
       }
