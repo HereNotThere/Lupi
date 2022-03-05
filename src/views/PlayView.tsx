@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { RoundData } from "src/App";
 import { NumBox } from "src/components/NumBox";
 import { NumPad } from "src/components/NumPad";
 import { RoundStats } from "src/components/RoundStats";
 import { Ticket } from "src/components/Ticket";
+import { useLupiContract } from "src/hooks/use_lupi_contract";
 import { Box, Button, Grid, Text } from "src/ui";
 import {
   generateTicketData,
@@ -11,21 +11,17 @@ import {
   validateGuess,
 } from "src/utils/lupiUtils";
 
-interface Props {
-  roundData: RoundData;
-}
-
-export const PlayState = (props: Props) => {
-  const { roundData } = props;
+export const PlayState = () => {
   const [inputValue, setInputValue] = useState(0);
   const [ticketData, setTicketData] = useState<TicketData>();
+  const { round } = useLupiContract();
 
   const validate = useCallback(() => {
-    if (validateGuess(inputValue, roundData.maxGuess)) {
-      const ticketData = generateTicketData(inputValue, roundData.roundId);
+    if (validateGuess(inputValue, 999)) {
+      const ticketData = generateTicketData(inputValue, String(round ?? 0));
       setTicketData(ticketData);
     }
-  }, [inputValue, roundData.maxGuess, roundData.roundId]);
+  }, [inputValue, round]);
 
   const onKeyPadPress = useCallback(
     (char: string) => {
@@ -61,11 +57,7 @@ export const PlayState = (props: Props) => {
   }, [onKeyPadPress, validate]);
 
   return !ticketData ? (
-    <PlayView
-      inputValue={inputValue}
-      onKeyPadPress={onKeyPadPress}
-      roundData={roundData}
-    />
+    <PlayView inputValue={inputValue} onKeyPadPress={onKeyPadPress} />
   ) : (
     <TicketView ticketData={ticketData} />
   );
@@ -91,12 +83,11 @@ const TicketView = (props: { ticketData: TicketData }) => {
 const PlayView = (props: {
   inputValue: number;
   onKeyPadPress: (value: string) => void;
-  roundData: RoundData;
 }) => (
   <Grid columns={2} grow>
     {/* left column */}
     <Box centerContent>
-      <RoundPanel inputValue={props.inputValue} roundData={props.roundData} />
+      <RoundPanel inputValue={props.inputValue} />
     </Box>
     {/* right column */}
     <Box grow centerContent>
@@ -105,22 +96,21 @@ const PlayView = (props: {
   </Grid>
 );
 
-const RoundPanel = ({
-  inputValue,
-  roundData,
-}: {
-  inputValue: number;
-  roundData: RoundData;
-}) => (
-  <Grid columns={1} gap="md">
-    <Text header="regular" align="center">
-      Round {roundData.roundId}
-    </Text>
-    <NumBox value={inputValue} cols={1} />
-    <RoundStats
-      jackpot={roundData.jackpot}
-      entries={roundData.entries}
-      revealDate={roundData.revealDate}
-    />
-  </Grid>
-);
+const RoundPanel = ({ inputValue }: { inputValue: number }) => {
+  const { round, guessHashes, phaseDeadline, currentBalance, rolloverBalance } =
+    useLupiContract();
+
+  return (
+    <Grid columns={1} gap="md">
+      <Text header="regular" align="center">
+        Round {round}
+      </Text>
+      <NumBox value={inputValue} cols={1} />
+      <RoundStats
+        jackpot={currentBalance?.add(rolloverBalance ?? 0).toString() ?? "0"}
+        entries={guessHashes.length}
+        revealDate={new Date(phaseDeadline ?? 0)}
+      />
+    </Grid>
+  );
+};
