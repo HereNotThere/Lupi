@@ -42,15 +42,15 @@ contract FakeCaller {
     acceptsPayment = _acceptsPayment;
   }
 
-  function commitGuess(bytes32 guessHash) public payable {
+  function commitGuess(bytes32 guessHash) external payable {
     lupi.commitGuess{value: msg.value}(guessHash);
   }
 
-  function revealGuesses(Lupi.Reveal[] calldata reveals) public {
+  function revealGuesses(Lupi.Reveal[] calldata reveals) external {
     lupi.revealGuesses(reveals);
   }
 
-  function withdrawAward(address payable payee) public {
+  function withdrawAward(address payable payee) external {
     lupi.withdrawAward(payee);
   }
 }

@@ -28,9 +28,8 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 //payables
 
-uint256 constant ticketPrice = 0.01 ether;
-
 contract Lupi is ReentrancyGuard {
+  uint256 private constant TICKET_PRICE = 0.01 ether;
   enum GamePhase {
     GUESS,
     REVEAL,
@@ -65,8 +64,8 @@ contract Lupi is ReentrancyGuard {
   uint256 private rollover;
   mapping(bytes32 => Round) private rounds;
   bytes32 private pendingAwardRound;
-  address private pendingWinner; // Hold funds for this winner if call failes
-  uint256 private pendingAmount; // Amount held until the next game starts, otherwise forfeit into rollover
+  address private pendingWinner = address(0); // Hold funds for this winner if call fails
+  uint256 private pendingAmount = 0; // Amount held until the next game starts, otherwise forfeit into rollover
   uint8 private round;
 
   struct Round {
@@ -95,6 +94,14 @@ contract Lupi is ReentrancyGuard {
     bytes32 salt;
   }
 
+  function getSaltedHash(
+    bytes32 nonce,
+    uint32 answer,
+    bytes32 salt
+  ) private pure returns (bytes32) {
+    return keccak256(abi.encodePacked(nonce, answer, salt));
+  }
+
   constructor() {
     round = 0;
     newGame();
@@ -114,12 +121,12 @@ contract Lupi is ReentrancyGuard {
     rounds[currentRound].nonce = currentRound;
   }
 
-  function commitGuess(bytes32 guessHash) public payable nonReentrant {
+  function commitGuess(bytes32 guessHash) external payable nonReentrant {
     require(
       block.timestamp < rounds[currentRound].guessDeadline,
       "Guess deadline has passed"
     );
-    require(msg.value >= ticketPrice, "Must send at least ticketPrice");
+    require(msg.value >= TICKET_PRICE, "Must send at least TICKET_PRICE");
 
     if (rounds[currentRound].committedGuesses[msg.sender].length == 0) {
       rounds[currentRound].players.push(msg.sender);
@@ -127,14 +134,14 @@ contract Lupi is ReentrancyGuard {
     rounds[currentRound].committedGuesses[msg.sender].push(
       CommitedGuess(guessHash, false)
     );
-    rounds[currentRound].balance += ticketPrice;
-    uint256 ethToReturn = msg.value - ticketPrice;
+    rounds[currentRound].balance += TICKET_PRICE;
+    uint256 ethToReturn = msg.value - TICKET_PRICE;
     if (ethToReturn > 0) {
       payable(msg.sender).transfer(ethToReturn);
     }
   }
 
-  function revealGuesses(Reveal[] calldata reveals) public {
+  function revealGuesses(Reveal[] calldata reveals) external {
     require(
       block.timestamp > rounds[currentRound].guessDeadline,
       "revealGuesses guessDeadline hasn't passed"
@@ -151,7 +158,7 @@ contract Lupi is ReentrancyGuard {
     uint256 length = rounds[currentRound].committedGuesses[msg.sender].length;
 
     for (uint256 r = 0; r < reveals.length; r++) {
-      bool found;
+      bool found = false;
       for (uint256 i = 0; i < length; i++) {
         if (
           rounds[currentRound].committedGuesses[msg.sender][i].guessHash ==
@@ -163,13 +170,15 @@ contract Lupi is ReentrancyGuard {
           );
 
           require(
-            getSaltedHash(reveals[r].answer, reveals[r].salt) ==
-              reveals[r].guessHash,
+            getSaltedHash(
+              rounds[currentRound].nonce,
+              reveals[r].answer,
+              reveals[r].salt
+            ) == reveals[r].guessHash,
             "Reveal hash does not match guessHash"
           );
           require(
-            rounds[currentRound].committedGuesses[msg.sender][i].revealed ==
-              false,
+            !rounds[currentRound].committedGuesses[msg.sender][i].revealed,
             "Already revealed"
           );
           rounds[currentRound].committedGuesses[msg.sender][i].revealed = true;
@@ -184,26 +193,17 @@ contract Lupi is ReentrancyGuard {
     }
   }
 
-  function getCurrentNonce() public view returns (bytes32) {
+  function getCurrentNonce() external view returns (bytes32) {
     return (rounds[currentRound].nonce);
   }
 
-  function getSaltedHash(uint32 answer, bytes32 salt)
-    public
-    view
-    returns (bytes32)
-  {
-    return
-      keccak256(abi.encodePacked(rounds[currentRound].nonce, answer, salt));
-  }
-
-  function endGame() public nonReentrant {
+  function endGame() external nonReentrant {
     require(
       block.timestamp > rounds[currentRound].revealDeadline,
       "Still in reveal phase"
     );
     uint32 lowestGuess = 0xffffffff;
-    address winner;
+    address winner = address(0);
 
     for (uint256 i = 0; i < rounds[currentRound].revealedGuesses.length; i++) {
       if (rounds[currentRound].revealedGuesses[i].guess < lowestGuess) {
@@ -229,7 +229,8 @@ contract Lupi is ReentrancyGuard {
       }
     }
 
-    uint256 award;
+    uint256 award = 0;
+    bytes32 nonce = rounds[currentRound].nonce;
 
     if (lowestGuess < 0xffffffff && winner != address(0)) {
       // Winner takes all plus rollover
@@ -239,27 +240,36 @@ contract Lupi is ReentrancyGuard {
       // Balance rolls over to next round
       rollover += rounds[currentRound].balance;
     }
-    bool success;
+
+    bytes32 priorRound = currentRound;
+    for (uint256 i = 0; i < rounds[currentRound].players.length; i++) {
+      delete rounds[currentRound].committedGuesses[
+        rounds[currentRound].players[i]
+      ];
+    }
+    delete rounds[currentRound].revealedGuesses;
+    delete rounds[currentRound].players;
+    //slither-disable-next-line mapping-deletion
+    delete rounds[currentRound];
+    newGame();
+    bool success = false;
     if (award > 0 && winner != address(0)) {
+      //slither-disable-next-line reentrancy-eth
       (success, ) = winner.call{gas: 21000, value: award}("");
     }
     emit GameResult(
-      rounds[currentRound].nonce,
+      nonce,
       winner,
       award,
       lowestGuess < 0xffffffff ? lowestGuess : 0
     );
-
-    bytes32 priorRound = currentRound;
-    delete rounds[currentRound];
-    newGame();
     if (!success && award > 0 && winner != address(0)) {
       deferAward(priorRound, winner, award);
     }
   }
 
   function getCommittedGuessHashes(address player)
-    public
+    external
     view
     returns (bytes32[] memory)
   {
@@ -295,11 +305,12 @@ contract Lupi is ReentrancyGuard {
    * @dev Withdraw deferred balance for a winner when the call in endGame failed.
    * @param payee The address to which funds will be sent to.
    */
-  function withdrawAward(address payable payee) public nonReentrant {
+  function withdrawAward(address payable payee) external nonReentrant {
     require(
       msg.sender == pendingWinner,
       "Only the winning address may withdraw"
     );
+    require(payee != address(0), "Not allowed to transfer to address(0)");
     bytes32 roundNonce = pendingAwardRound;
     uint256 amount = pendingAmount;
     address winner = pendingWinner;
@@ -325,27 +336,27 @@ contract Lupi is ReentrancyGuard {
     delete pendingAmount;
   }
 
-  function getPlayers() public view returns (address[] memory) {
+  function getPlayers() external view returns (address[] memory) {
     return rounds[currentRound].players;
   }
 
-  function getCurrentBalance() public view returns (uint256) {
+  function getCurrentBalance() external view returns (uint256) {
     return rounds[currentRound].balance;
   }
 
-  function getRolloverBalance() public view returns (uint256) {
+  function getRolloverBalance() external view returns (uint256) {
     return rollover;
   }
 
-  function getRound() public view returns (uint8) {
+  function getRound() external view returns (uint8) {
     return round;
   }
 
-  function getPendingWinner() public view returns (address) {
+  function getPendingWinner() external view returns (address) {
     return pendingWinner;
   }
 
-  function getPhase() public view returns (GamePhase) {
+  function getPhase() external view returns (GamePhase) {
     if (block.timestamp <= rounds[currentRound].guessDeadline) {
       return GamePhase.GUESS;
     } else if (block.timestamp <= rounds[currentRound].revealDeadline) {
@@ -355,7 +366,7 @@ contract Lupi is ReentrancyGuard {
     }
   }
 
-  function getPhaseDeadline() public view returns (uint256) {
+  function getPhaseDeadline() external view returns (uint256) {
     if (block.timestamp <= rounds[currentRound].guessDeadline) {
       return rounds[currentRound].guessDeadline - block.timestamp;
     } else if (block.timestamp <= rounds[currentRound].revealDeadline) {
@@ -365,7 +376,7 @@ contract Lupi is ReentrancyGuard {
     }
   }
 
-  function getRevealedGuess() public view returns (uint256[] memory) {
+  function getRevealedGuess() external view returns (uint256[] memory) {
     uint256[] memory guesses = new uint256[](
       rounds[currentRound].revealedGuesses.length
     );
