@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWeb3Context } from "./use_web3";
 import LupiAbi from "../artifacts/contracts/Lupi.sol/Lupi.json";
 import { Lupi } from "typechain-types";
+import { notUndefined } from "../utils";
 
 // Lupi on Rinkeby
 const lupiAddress = "0xa586B7adE6E07FD3B5f1A5a37882D53c28791aDb";
@@ -97,108 +98,167 @@ export const useLupiContract = () => {
   const [currentBalance, setCurrentBalance] = useState<BigNumber>();
 
   useEffect(() => {
+    let shutdown = false;
     void (async () => {
       if (contract) {
         const currentBalance = await contract.getCurrentBalance();
-        setCurrentBalance(currentBalance);
+        if (!shutdown) {
+          setCurrentBalance(currentBalance);
+        }
       }
     })();
+    return () => {
+      shutdown = true;
+    };
   }, [contract]);
 
   const [rolloverBalance, setRolloverBalance] = useState<BigNumber>();
 
   useEffect(() => {
+    let shutdown = false;
     void (async () => {
       if (contract) {
         const rolloverBalance = await contract.getRolloverBalance();
-        setRolloverBalance(rolloverBalance);
+        if (!shutdown) {
+          setRolloverBalance(rolloverBalance);
+        }
       }
     })();
+    return () => {
+      shutdown = true;
+    };
   }, [contract]);
 
   const [round, setRound] = useState<number>();
 
   useEffect(() => {
+    let shutdown = false;
     void (async () => {
       if (contract) {
         const round = await contract.getRound();
-        setRound(round);
+        if (!shutdown) {
+          setRound(round);
+        }
       }
     })();
+    return () => {
+      shutdown = true;
+    };
   }, [contract]);
 
   const [phase, setPhase] = useState<number>();
 
   useEffect(() => {
+    let shutdown = false;
     void (async () => {
       if (contract) {
         const phase = await contract.getPhase();
-        setPhase(phase);
+        if (!shutdown) {
+          setPhase(phase);
+        }
       }
     })();
+    return () => {
+      shutdown = true;
+    };
   }, [contract]);
 
   const [phaseDeadline, setPhaseDeadline] = useState<number>();
 
   useEffect(() => {
+    let shutdown = false;
     void (async () => {
       if (contract) {
         const phaseDeadline = await contract.getPhaseDeadline();
-        setPhaseDeadline(
-          phaseDeadline ? BigNumber.from(phaseDeadline).toNumber() : 0
-        );
+        if (!shutdown) {
+          setPhaseDeadline(
+            phaseDeadline ? BigNumber.from(phaseDeadline).toNumber() : 0
+          );
+        }
       }
     })();
+    return () => {
+      shutdown = true;
+    };
   }, [contract]);
 
   const [players, setPlayers] = useState<string[]>([]);
 
   useEffect(() => {
+    let shutdown = false;
     void (async () => {
       if (contract) {
         const players = await contract.getPlayers();
-        setPlayers(players);
+        if (!shutdown) {
+          setPlayers(players);
+        }
       }
     })();
+    return () => {
+      shutdown = true;
+    };
   }, [contract]);
 
   const [guessHashes, setGuessHashes] = useState<string[]>([]);
 
   useEffect(() => {
+    let shutdown = false;
     void (async () => {
       if (contract) {
         const guessHashes = (
           await Promise.all(
-            players.map((player) => contract.getCommittedGuessHashes(player))
+            players.map(async (player) => {
+              if (!shutdown) {
+                return await contract.getCommittedGuessHashes(player);
+              }
+            })
           )
-        ).flatMap((p) => p);
-        setGuessHashes(guessHashes);
+        )
+          .flatMap((p) => p)
+          .filter(notUndefined);
+        if (!shutdown) {
+          setGuessHashes(guessHashes);
+        }
       }
     })();
+    return () => {
+      shutdown = true;
+    };
   }, [contract, players]);
 
   const [finishedGames, setFinishedGames] = useState<ethers.Event[]>([]);
 
   useEffect(() => {
+    let shutdown = false;
     void (async () => {
       if (contract) {
         const eventFilter = contract.filters.GameResult(); //.ContractEvent()
         const events = await contract.queryFilter(eventFilter, 0, "latest");
-        setFinishedGames(events);
+        if (!shutdown) {
+          setFinishedGames(events);
+        }
       }
     })();
+    return () => {
+      shutdown = true;
+    };
   }, [contract]);
 
   const [revealedGuesses, setRevealedGuesses] = useState<string>();
 
   useEffect(() => {
+    let shutdown = false;
     void (async function getFinishedGames() {
       if (contract) {
         const data = await contract.getRevealedGuess();
-        console.log("data: ", data);
-        setRevealedGuesses(data.toString());
+        if (!shutdown) {
+          setRevealedGuesses(data.toString());
+        }
       }
     })();
+    return () => {
+      shutdown = true;
+    };
   }, [contract]);
 
   /*
@@ -240,9 +300,12 @@ export const useLupiContract = () => {
   const callEndGame = useCallback(async () => {
     if (!transactionRunning.current && contractSigner) {
       transactionRunning.current = true;
-      const transaction = await contractSigner.endGame();
-      await transaction.wait();
-      transactionRunning.current = false;
+      try {
+        const transaction = await contractSigner.endGame();
+        await transaction.wait();
+      } finally {
+        transactionRunning.current = false;
+      }
     }
   }, [contractSigner]);
 
@@ -250,21 +313,23 @@ export const useLupiContract = () => {
     async (guess: string) => {
       if (!transactionRunning.current && contractSigner && contract) {
         transactionRunning.current = true;
+        try {
+          const secret = ethers.utils.formatBytes32String("secret");
 
-        const secret = ethers.utils.formatBytes32String("secret");
+          const currentNonce = await contract.getCurrentNonce();
+          const guessHash = getGuessHash(currentNonce, parseInt(guess), secret);
+          const overrides = {
+            value: ethers.utils.parseEther("0.01"),
+          };
 
-        const currentNonce = await contract.getCurrentNonce();
-        const guessHash = getGuessHash(currentNonce, parseInt(guess), secret);
-        const overrides = {
-          value: ethers.utils.parseEther("0.01"),
-        };
-
-        const transaction = await contractSigner.commitGuess(
-          guessHash,
-          overrides
-        );
-        await transaction.wait();
-        transactionRunning.current = false;
+          const transaction = await contractSigner.commitGuess(
+            guessHash,
+            overrides
+          );
+          await transaction.wait();
+        } finally {
+          transactionRunning.current = false;
+        }
       }
     },
     [contract, contractSigner]
@@ -274,23 +339,25 @@ export const useLupiContract = () => {
     async (revealedGuess: string) => {
       if (!transactionRunning.current && contractSigner && contract) {
         transactionRunning.current = true;
-
-        const secret = ethers.utils.formatBytes32String("secret");
-        const currentNonce = await contract.getCurrentNonce();
-        const guessHash = getGuessHash(
-          currentNonce,
-          parseInt(revealedGuess),
-          secret
-        );
-        const transaction = await contractSigner.revealGuesses([
-          {
-            guessHash,
-            answer: revealedGuess,
-            salt: secret,
-          },
-        ]);
-        await transaction.wait();
-        transactionRunning.current = false;
+        try {
+          const secret = ethers.utils.formatBytes32String("secret");
+          const currentNonce = await contract.getCurrentNonce();
+          const guessHash = getGuessHash(
+            currentNonce,
+            parseInt(revealedGuess),
+            secret
+          );
+          const transaction = await contractSigner.revealGuesses([
+            {
+              guessHash,
+              answer: revealedGuess,
+              salt: secret,
+            },
+          ]);
+          await transaction.wait();
+        } finally {
+          transactionRunning.current = false;
+        }
       }
     },
     [contract, contractSigner]
