@@ -97,8 +97,7 @@ const PlayView = (props: {
 );
 
 const RoundPanel = ({ inputValue }: { inputValue: number }) => {
-  const { round, guessHashes, phaseDeadline, currentBalance, rolloverBalance } =
-    useLupiContract();
+  const { round } = useLupiContract();
 
   return (
     <Grid columns={1} gap="md">
@@ -106,11 +105,7 @@ const RoundPanel = ({ inputValue }: { inputValue: number }) => {
         Round {round}
       </Text>
       <NumBox value={inputValue} cols={1} />
-      <RoundStats
-        jackpot={currentBalance?.add(rolloverBalance ?? 0).toString() ?? "0"}
-        entries={guessHashes.length}
-        revealDate={new Date(phaseDeadline ?? 0)}
-      />
+      <RoundStats />
     </Grid>
   );
 };

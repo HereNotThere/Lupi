@@ -368,9 +368,9 @@ contract Lupi is ReentrancyGuard {
 
   function getPhaseDeadline() external view returns (uint256) {
     if (block.timestamp <= rounds[currentRound].guessDeadline) {
-      return rounds[currentRound].guessDeadline - block.timestamp;
+      return rounds[currentRound].guessDeadline;
     } else if (block.timestamp <= rounds[currentRound].revealDeadline) {
-      return rounds[currentRound].revealDeadline - block.timestamp;
+      return rounds[currentRound].revealDeadline;
     } else {
       return 0;
     }

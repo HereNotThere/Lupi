@@ -1,14 +1,41 @@
-import { BigNumber, ethers, utils } from "ethers";
+import { ethers, utils } from "ethers";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWeb3Context } from "./use_web3";
 import LupiAbi from "../artifacts/contracts/Lupi.sol/Lupi.json";
 import { Lupi } from "typechain-types";
 import { notUndefined } from "../utils";
+import { GameResultEvent } from "typechain-types/Lupi";
 
 // Lupi on Rinkeby
 const lupiAddress = "0xa586B7adE6E07FD3B5f1A5a37882D53c28791aDb";
 //const lupiAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 // const lupiAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
+
+export const useContractCall = <T>(func?: () => Promise<T> | undefined) => {
+  const [state, setState] = useState<T | undefined>(undefined);
+
+  useEffect(() => {
+    let shutdown = false;
+    void (async () => {
+      try {
+        if (func) {
+          const round = await func();
+          if (!shutdown) {
+            setState(round);
+          }
+        }
+      } catch (err) {
+        console.warn(`useContractCall failed`);
+        setState(undefined);
+      }
+    })();
+    return () => {
+      shutdown = true;
+    };
+  }, [func]);
+
+  return state;
+};
 
 function getGuessHash(currentNonce: string, guess: number, salt: string) {
   return utils.solidityKeccak256(
@@ -37,264 +64,50 @@ export const useLupiContract = () => {
     [signer]
   );
 
-  // const [guessHash, setGuessHash] = useState("");
+  const currentBalance = useContractCall(contract?.getCurrentBalance);
+  const rolloverBalance = useContractCall(contract?.getRolloverBalance);
+  const round = useContractCall(contract?.getRound);
+  const phase = useContractCall(contract?.getPhase);
+  const phaseDeadline = useContractCall(contract?.getPhaseDeadline);
+  const players = useContractCall(contract?.getPlayers);
+  const revealedGuesses = useContractCall(contract?.getRevealedGuess);
 
-  /*
-  async function fetchGuessCounter() {
-    if (typeof window.ethereum !== "undefined") {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const contract = new ethers.Contract(lupiAddress, Lupi.abi, provider);
-      try {
-        const data = await contract.getGuessCounter();
-        console.log("data: ", data.toNumber());
-        setGuessCount(data.toNumber());
-      } catch (err) {
-        console.log("Error: ", err);
-      }
+  const getGuessHashes = useCallback(async () => {
+    try {
+      const getPlayers = players
+        ?.map((player) => contract?.getCommittedGuessHashes(player))
+        .filter(notUndefined);
+      const res = getPlayers ? await Promise.all(getPlayers) : undefined;
+
+      return res?.flatMap((p) => p).filter(notUndefined);
+    } catch {
+      console.warn(`getCommittedGuessHashes failed`);
     }
-  }
-  */
-
-  /*
-
-    function getCurrentBalance() public view returns (uint256) {
-    return rounds[currentRound].balance;
-  }
-
-  function getRolloverBalance() public view returns (uint256) {
-    return rollover;
-  }
-
-  function getRound() public view returns (uint8) {
-    return round;
-  }
-
-  function getPendingWinner() public view returns (address) {
-    return pendingWinner;
-  }
-
-  function getPhase() public view returns (GamePhase) {
-    if (block.timestamp <= rounds[currentRound].guessDeadline) {
-      return GamePhase.GUESS;
-    } else if (block.timestamp <= rounds[currentRound].revealDeadline) {
-      return GamePhase.REVEAL;
-    } else {
-      return GamePhase.ENDGAME;
-    }
-  }
-
-  function getPhaseDeadline() public view returns (uint256) {
-    if (block.timestamp <= rounds[currentRound].guessDeadline) {
-      return rounds[currentRound].guessDeadline - block.timestamp;
-    } else if (block.timestamp <= rounds[currentRound].revealDeadline) {
-      return rounds[currentRound].revealDeadline - block.timestamp;
-    } else {
-      return 0;
-    }
-  }
-
-  */
-
-  const [currentBalance, setCurrentBalance] = useState<BigNumber>();
-
-  useEffect(() => {
-    let shutdown = false;
-    void (async () => {
-      if (contract) {
-        const currentBalance = await contract.getCurrentBalance();
-        if (!shutdown) {
-          setCurrentBalance(currentBalance);
-        }
-      }
-    })();
-    return () => {
-      shutdown = true;
-    };
-  }, [contract]);
-
-  const [rolloverBalance, setRolloverBalance] = useState<BigNumber>();
-
-  useEffect(() => {
-    let shutdown = false;
-    void (async () => {
-      if (contract) {
-        const rolloverBalance = await contract.getRolloverBalance();
-        if (!shutdown) {
-          setRolloverBalance(rolloverBalance);
-        }
-      }
-    })();
-    return () => {
-      shutdown = true;
-    };
-  }, [contract]);
-
-  const [round, setRound] = useState<number>();
-
-  useEffect(() => {
-    let shutdown = false;
-    void (async () => {
-      if (contract) {
-        const round = await contract.getRound();
-        if (!shutdown) {
-          setRound(round);
-        }
-      }
-    })();
-    return () => {
-      shutdown = true;
-    };
-  }, [contract]);
-
-  const [phase, setPhase] = useState<number>();
-
-  useEffect(() => {
-    let shutdown = false;
-    void (async () => {
-      if (contract) {
-        const phase = await contract.getPhase();
-        if (!shutdown) {
-          setPhase(phase);
-        }
-      }
-    })();
-    return () => {
-      shutdown = true;
-    };
-  }, [contract]);
-
-  const [phaseDeadline, setPhaseDeadline] = useState<number>();
-
-  useEffect(() => {
-    let shutdown = false;
-    void (async () => {
-      if (contract) {
-        const phaseDeadline = await contract.getPhaseDeadline();
-        if (!shutdown) {
-          setPhaseDeadline(
-            phaseDeadline ? BigNumber.from(phaseDeadline).toNumber() : 0
-          );
-        }
-      }
-    })();
-    return () => {
-      shutdown = true;
-    };
-  }, [contract]);
-
-  const [players, setPlayers] = useState<string[]>([]);
-
-  useEffect(() => {
-    let shutdown = false;
-    void (async () => {
-      if (contract) {
-        const players = await contract.getPlayers();
-        if (!shutdown) {
-          setPlayers(players);
-        }
-      }
-    })();
-    return () => {
-      shutdown = true;
-    };
-  }, [contract]);
-
-  const [guessHashes, setGuessHashes] = useState<string[]>([]);
-
-  useEffect(() => {
-    let shutdown = false;
-    void (async () => {
-      if (contract) {
-        const guessHashes = (
-          await Promise.all(
-            players.map(async (player) => {
-              if (!shutdown) {
-                return await contract.getCommittedGuessHashes(player);
-              }
-            })
-          )
-        )
-          .flatMap((p) => p)
-          .filter(notUndefined);
-        if (!shutdown) {
-          setGuessHashes(guessHashes);
-        }
-      }
-    })();
-    return () => {
-      shutdown = true;
-    };
   }, [contract, players]);
 
-  const [finishedGames, setFinishedGames] = useState<ethers.Event[]>([]);
+  const guessHashes = useContractCall(getGuessHashes);
+
+  const [finishedGames, setFinishedGames] = useState<GameResultEvent[]>([]);
 
   useEffect(() => {
-    let shutdown = false;
-    void (async () => {
-      if (contract) {
-        const eventFilter = contract.filters.GameResult(); //.ContractEvent()
-        const events = await contract.queryFilter(eventFilter, 0, "latest");
-        if (!shutdown) {
-          setFinishedGames(events);
+    try {
+      let shutdown = false;
+      void (async () => {
+        if (contract) {
+          const eventFilter = contract.filters.GameResult(); //.ContractEvent()
+          const events = await contract.queryFilter(eventFilter, 0, "latest");
+          if (!shutdown) {
+            setFinishedGames(events);
+          }
         }
-      }
-    })();
-    return () => {
-      shutdown = true;
-    };
-  }, [contract]);
-
-  const [revealedGuesses, setRevealedGuesses] = useState<string>();
-
-  useEffect(() => {
-    let shutdown = false;
-    void (async function getFinishedGames() {
-      if (contract) {
-        const data = await contract.getRevealedGuess();
-        if (!shutdown) {
-          setRevealedGuesses(data.toString());
-        }
-      }
-    })();
-    return () => {
-      shutdown = true;
-    };
-  }, [contract]);
-
-  /*
-  async function fetchGuessHashes() {
-    if (typeof window.ethereum !== "undefined") {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const contract = new ethers.Contract(lupiAddress, Lupi.abi, provider);
-      try {
-        const data = await contract.getCommittedGuessHashes();
-        console.log("data: ", data.toString());
-        setGuessHash(data.toString());
-      } catch (err) {
-        console.log("Error: ", err);
-      }
+      })();
+      return () => {
+        shutdown = true;
+      };
+    } catch (err) {
+      console.warn(`GameResult failed`);
     }
-  }
-  */
-  /*
-  async function fetchWinner() {
-    const data = await contract.getWinner();
-    console.log("data: ", data);
-    setWinner(data.toString());
-  }
-  */
-  /*
-  const [lowestGuess, setLowestGuess] = useState<number>();
-
-  useEffect(() => {
-    void (async function getLowestGuess() {
-      if (contract) {
-        const data = await contract.getLowestGuess();
-        setLowestGuess(data);
-      }
-    })();
   }, [contract]);
-  */
 
   const transactionRunning = useRef(false);
   const callEndGame = useCallback(async () => {
