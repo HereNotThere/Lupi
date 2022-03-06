@@ -40,7 +40,10 @@ const config: HardhatUserConfig = {
   networks: {
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/fb413fbb148a4a63b37698824d8d617a`,
-      accounts: [`${process.env.RINKEBY_PRIVATE_KEY}`],
+      accounts:
+        process.env.RINKEBY_PRIVATE_KEY !== undefined
+          ? [process.env.RINKEBY_PRIVATE_KEY]
+          : [],
     },
     ropsten: {
       url: process.env.ROPSTEN_URL || "",
