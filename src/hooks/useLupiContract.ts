@@ -1,6 +1,6 @@
 import { ethers, utils } from "ethers";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useWeb3Context } from "./use_web3";
+import { useWeb3Context } from "./useWeb3";
 import LupiAbi from "../artifacts/contracts/Lupi.sol/Lupi.json";
 import { Lupi } from "typechain-types";
 import { notUndefined } from "../utils";
@@ -9,7 +9,7 @@ import { GameResultEvent } from "typechain-types/Lupi";
 // Lupi on Rinkeby
 const rinkebylupiAddress = "0xa586B7adE6E07FD3B5f1A5a37882D53c28791aDb";
 const arbRinkebyAddress = "0xaeE8cA8c96BC12Efe3E740A3B50FddDfA8BB2110";
-//const lupiAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const hhAddress = process.env.REACT_APP_HARDHAT_ADDRESS;
 // const lupiAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
 
 export const useContractCall = <T>(func?: () => Promise<T> | undefined) => {
@@ -55,7 +55,14 @@ export const useLupiContract = () => {
         return arbRinkebyAddress;
       case "0x4":
         return rinkebylupiAddress;
+      case "0x7a69":
+        console.log(
+          "useLupiContract::useLupiContractconnecting to hardhat",
+          hhAddress
+        );
+        return hhAddress;
       default:
+        console.warn("useLupiContract::connecting to unhandled network");
         return undefined;
     }
   }, [chainId]);

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
+import { GameStats } from "src/components/GameStats";
 import { NumBox } from "src/components/NumBox";
 import { NumPad } from "src/components/NumPad";
-import { RoundStats } from "src/components/RoundStats";
 import { Ticket } from "src/components/Ticket";
-import { useLupiContract } from "src/hooks/use_lupi_contract";
+import { useLupiContract } from "src/hooks/useLupiContract";
 import { Box, Button, Grid, Text } from "src/ui";
 import {
   generateTicketData,
@@ -14,11 +14,12 @@ import {
 export const PlayState = () => {
   const [inputValue, setInputValue] = useState(0);
   const [ticketData, setTicketData] = useState<TicketData>();
-  const { round } = useLupiContract();
+  const game = useLupiContract();
+  const { round, commitGuess } = game;
 
   const validate = useCallback(() => {
     if (validateGuess(inputValue, 999)) {
-      const ticketData = generateTicketData(inputValue, String(round ?? 0));
+      const ticketData = generateTicketData(inputValue, round ?? 0);
       setTicketData(ticketData);
     }
   }, [inputValue, round]);
@@ -56,22 +57,49 @@ export const PlayState = () => {
     };
   }, [onKeyPadPress, validate]);
 
+  const submitTicket = useCallback(async () => {
+    console.log(ticketData);
+    const result = await commitGuess(String(inputValue));
+    console.log({ result });
+  }, [commitGuess, inputValue, ticketData]);
+
+  const onSubmitClick = useCallback(() => {
+    submitTicket().catch((e) => console.error(e));
+  }, [submitTicket]);
+
+  const onCancelClick = useCallback(() => {
+    setTicketData(undefined);
+  }, []);
+
   return !ticketData ? (
-    <PlayView inputValue={inputValue} onKeyPadPress={onKeyPadPress} />
+    <GuessView inputValue={inputValue} onKeyPadPress={onKeyPadPress} />
   ) : (
-    <TicketView ticketData={ticketData} />
+    <TicketView
+      ticketData={ticketData}
+      onSubmitClick={onSubmitClick}
+      onCancelClick={onCancelClick}
+    />
   );
 };
 
-const TicketView = (props: { ticketData: TicketData }) => {
+const TicketView = (props: {
+  ticketData: TicketData;
+  onSubmitClick: () => void;
+  onCancelClick: () => void;
+}) => {
   return (
     <Box grow centerContent gap="md">
       <Ticket ticketData={props.ticketData} />
       <Text>Entry fee: 0.01ETH + gas</Text>
-      <Button padding="md" horizontalPadding="lg">
+      <Button padding="md" horizontalPadding="lg" onClick={props.onSubmitClick}>
         <Text header="large">Submit Ticket</Text>
       </Button>
-      <Button padding="md" horizontalPadding="lg" background="muted2">
+      <Button
+        padding="md"
+        horizontalPadding="lg"
+        background="muted2"
+        onClick={props.onCancelClick}
+      >
         <Text header="large" color="text">
           Back
         </Text>
@@ -80,7 +108,7 @@ const TicketView = (props: { ticketData: TicketData }) => {
   );
 };
 
-const PlayView = (props: {
+const GuessView = (props: {
   inputValue: number;
   onKeyPadPress: (value: string) => void;
 }) => (
@@ -105,7 +133,7 @@ const RoundPanel = ({ inputValue }: { inputValue: number }) => {
         Round {round}
       </Text>
       <NumBox value={inputValue} cols={1} />
-      <RoundStats />
+      <GameStats />
     </Grid>
   );
 };

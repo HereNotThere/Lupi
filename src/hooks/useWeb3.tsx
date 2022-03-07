@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import React, { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createGenericContext } from "../utils/create_generic_context";
+import { createGenericContext } from "../utils/createGenericContext";
 import { logger } from "../utils/logger";
 
 export const enum WalletStatus {

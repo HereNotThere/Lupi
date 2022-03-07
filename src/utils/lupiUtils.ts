@@ -1,6 +1,6 @@
 export type TicketData = ReturnType<typeof generateTicketData>;
 
-export const generateTicketData = (guess: number, roundId: string) => ({
+export const generateTicketData = (guess: number, roundId: number) => ({
   guess,
   hash: "",
   roundId,
@@ -13,4 +13,10 @@ export const validateGuess = (value: number, maxGuess: number) => {
     value > 0 &&
     value <= maxGuess
   );
+};
+
+export const getShortAddress = (address?: string | undefined) => {
+  return address && address.length > 16
+    ? `${address.slice(0, 5)}..${address.slice(-4)}`
+    : address;
 };
