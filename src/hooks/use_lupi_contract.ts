@@ -8,7 +8,7 @@ import { GameResultEvent } from "typechain-types/Lupi";
 
 // Lupi on Rinkeby
 const rinkebylupiAddress = "0xa586B7adE6E07FD3B5f1A5a37882D53c28791aDb";
-const arbRinkebyAddress = "0x4951e6c53dE1FBe34baeF5d4Cd9BD3B417D7d577";
+const arbRinkebyAddress = "0xaeE8cA8c96BC12Efe3E740A3B50FddDfA8BB2110";
 //const lupiAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 // const lupiAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
 
@@ -134,6 +134,8 @@ export const useLupiContract = () => {
       try {
         const transaction = await contractSigner.endGame();
         await transaction.wait();
+      } catch (err) {
+        console.log(`endGame failed ${err}`, err);
       } finally {
         transactionRunning.current = false;
       }
@@ -158,6 +160,8 @@ export const useLupiContract = () => {
             overrides
           );
           await transaction.wait();
+        } catch (err) {
+          console.log(`commitGuess failed ${err}`, err);
         } finally {
           transactionRunning.current = false;
         }

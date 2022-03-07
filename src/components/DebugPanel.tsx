@@ -6,7 +6,8 @@ import { useWeb3Context } from "../hooks/use_web3";
 export const DebugPanel = () => {
   const [guess, setGuessValue] = useState("");
   const [revealedGuess, setRevealedGuessValue] = useState("");
-  const { addArbitrumRinkebyChain, switchEthereumChain } = useWeb3Context();
+  const { addArbitrumRinkebyChain, addArbitrumOneChain, switchEthereumChain } =
+    useWeb3Context();
 
   const {
     finishedGames,
@@ -30,7 +31,15 @@ export const DebugPanel = () => {
         </Box>
 
         <Box>
-          <Button onClick={() => addArbitrumRinkebyChain()}>Add Chain</Button>
+          <Button onClick={() => addArbitrumRinkebyChain()}>
+            Add addArbitrumRinkebyChain
+          </Button>
+        </Box>
+
+        <Box>
+          <Button onClick={() => addArbitrumOneChain()}>
+            Add addArbitrumOneChain
+          </Button>
         </Box>
 
         <Box>

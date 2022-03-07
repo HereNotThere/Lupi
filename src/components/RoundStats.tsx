@@ -1,9 +1,17 @@
+import { useMemo } from "react";
 import { useLupiContract } from "src/hooks/use_lupi_contract";
 import { Box, Grid, Text } from "src/ui";
 
 export const RoundStats = () => {
   const { guessHashes, currentBalance, rolloverBalance, phaseDeadline } =
     useLupiContract();
+  const phaseEndTimestamp = useMemo(
+    () =>
+      phaseDeadline?.toNumber()
+        ? new Date(phaseDeadline.toNumber() * 1000).toISOString()
+        : "NaN",
+    [phaseDeadline]
+  );
   return (
     <Grid columns={2} gap="sm" alignContent="center" alignItems="center">
       <Box padding="sm" border centerContent gap="xs">
@@ -21,12 +29,10 @@ export const RoundStats = () => {
       <Box padding="sm" border centerContent gap="xs" cols={2}>
         <Text header="small">The LUPI Reveal</Text>
         <Text header="regular" color="primary">
-          {new Date(
-            Date.now() + (phaseDeadline?.toNumber() ?? 0)
-          ).toLocaleTimeString()}
+          {"P: " + phaseEndTimestamp}
         </Text>
         <Text header="regular" color="primary">
-          {phaseDeadline?.toString()}
+          {"N: " + new Date().toISOString()}
         </Text>
       </Box>
     </Grid>

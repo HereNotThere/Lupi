@@ -117,14 +117,12 @@ contract Lupi is ReentrancyGuard {
     }
     currentRound = bytes32(uint256(uint160(address(this))) << 96); // Replace with chainlink random
     // When on Arbitrum Testnet run rounds faster
-    rounds[currentRound].guessDeadline = block.timestamp + block.chainid ==
-      421611
-      ? 45 minutes
-      : 3 days;
-    rounds[currentRound].revealDeadline = block.timestamp + block.chainid ==
-      421611
-      ? 60 minutes
-      : 5 days;
+    rounds[currentRound].guessDeadline =
+      block.timestamp +
+      (block.chainid == 421611 ? 45 minutes : 3 days);
+    rounds[currentRound].revealDeadline =
+      block.timestamp +
+      (block.chainid == 421611 ? 60 minutes : 5 days);
     rounds[currentRound].nonce = currentRound;
   }
 

@@ -299,7 +299,7 @@ const useWeb3 = () => {
         params: [
           {
             chainName: "Arbitrum Rinkeby",
-            chainId: "0x66EEB",
+            chainId: "0x66eeb",
             nativeCurrency: {
               name: "Arbitrum Rinkeby Ether",
               symbol: "ARETH",
