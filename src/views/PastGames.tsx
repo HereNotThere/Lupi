@@ -21,9 +21,9 @@ export const GameList = (props: Props) => {
         ></ResultRow>
         {props.games.map((result, index) => (
           <ResultRow
-            key={`${result.args.nonce}-${index}`}
+            key={`${result.args.round}-${index}`}
             columns={[
-              getShortAddress(result.args.nonce),
+              result.args.round,
               "?",
               result.args.award.toString(),
               result.args.lowestGuess.toString(),
