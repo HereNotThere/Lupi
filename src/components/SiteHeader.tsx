@@ -11,7 +11,7 @@ interface Props {
 }
 
 export const SiteHeader = (props: Props) => {
-  const { accounts, chainId } = useWeb3Context();
+  const { accounts, chainId, requestAccounts, walletStatus } = useWeb3Context();
   const shortAccounts = accounts.map(getShortAddress);
   return (
     <Grid columns={2} padding="md" horizontalPadding="lg" border borderRadius>
@@ -48,9 +48,17 @@ export const SiteHeader = (props: Props) => {
         <Text color="muted" header="small" textTransform="uppercase">
           Chain ID: {chainId}
         </Text>
+        <Separator />
         <Text color="muted" header="small" textTransform="uppercase">
-          Account: {shortAccounts}
+          Wallet Status: {walletStatus}
         </Text>
+        {accounts.length > 0 ? (
+          <Text color="muted" header="small" textTransform="uppercase">
+            Account: {shortAccounts}
+          </Text>
+        ) : (
+          <Button onClick={() => requestAccounts()}>Connect Wallet</Button>
+        )}
       </Box>
     </Grid>
   );
