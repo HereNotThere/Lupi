@@ -19,13 +19,8 @@ export const DebugPanel = () => {
     useWeb3Context();
 
   const { tickets } = useTickets();
-  const {
-    finishedGames,
-    revealedGuesses,
-    commitGuess,
-    revealGuess,
-    callEndGame,
-  } = useLupiContract();
+  const { finishedGames, revealedGuesses, commitGuess, callEndGame } =
+    useLupiContract();
 
   return (
     <Box row>

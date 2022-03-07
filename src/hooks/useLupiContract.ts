@@ -13,7 +13,7 @@ const arbRinkebyAddress = "0xaeE8cA8c96BC12Efe3E740A3B50FddDfA8BB2110";
 const hhAddress = process.env.REACT_APP_HARDHAT_ADDRESS;
 // const lupiAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
 
-enum GamePhase {
+export enum GamePhase {
   GUESS,
   REVEAL,
   ENDGAME,

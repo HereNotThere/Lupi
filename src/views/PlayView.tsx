@@ -3,7 +3,7 @@ import { GameStats } from "src/components/GameStats";
 import { NumBox } from "src/components/NumBox";
 import { NumPad } from "src/components/NumPad";
 import { Ticket } from "src/components/Ticket";
-import { useLupiContract } from "src/hooks/useLupiContract";
+import { useLupiContract, GamePhase } from "src/hooks/useLupiContract";
 import { useTickets } from "src/hooks/useTickets";
 import { TicketData, validateGuess } from "src/schema/Ticket";
 import { Box, Button, Grid, Text } from "src/ui";
@@ -11,7 +11,8 @@ import { Box, Button, Grid, Text } from "src/ui";
 export const PlayState = () => {
   const [inputValue, setInputValue] = useState(0);
   const [guess, setGuess] = useState(0);
-  const { commitGuess, phase } = useLupiContract();
+  const { commitGuess, callEndGame, phase, revealedGuesses } =
+    useLupiContract();
   const { tickets, setTickets } = useTickets();
 
   const validate = useCallback(() => {
@@ -71,20 +72,40 @@ export const PlayState = () => {
     setInputValue(0);
   }, []);
 
-  return phase === 0 ? (
-    <GuessView inputValue={inputValue} onKeyPadPress={onKeyPadPress} />
-  ) : (
-    <ul>
-      {tickets.map((ticket) => (
-        <TicketView
-          key={`${ticket.roundId}${ticket.guess}`}
-          ticketData={ticket}
-          onSubmitClick={onSubmitClick}
-          onCancelClick={onCancelClick}
-        />
-      ))}
-    </ul>
-  );
+  switch (phase) {
+    case GamePhase.GUESS:
+      return (
+        <GuessView inputValue={inputValue} onKeyPadPress={onKeyPadPress} />
+      );
+    case GamePhase.REVEAL:
+      return (
+        <>
+          <Text>{"Time to redeem tickets"}</Text>
+          <ul>
+            {tickets.map((ticket) => (
+              <TicketView
+                key={`${ticket.roundId}${ticket.guess}`}
+                ticketData={ticket}
+                onSubmitClick={onSubmitClick}
+                onCancelClick={onCancelClick}
+              />
+            ))}
+          </ul>
+        </>
+      );
+    case GamePhase.ENDGAME:
+      return (
+        <>
+          <Text>
+            {"Time to end the game"}
+            {JSON.stringify(revealedGuesses)}
+          </Text>
+          <Button onClick={() => callEndGame()}>{"EndGame"}</Button>
+        </>
+      );
+    default:
+      return <Text>Uknown game state</Text>;
+  }
 };
 
 const TicketView = (props: {
