@@ -72,7 +72,7 @@ export const PlayState = () => {
   }, []);
 
   return !ticketData ? (
-    <PlayView inputValue={inputValue} onKeyPadPress={onKeyPadPress} />
+    <GuessView inputValue={inputValue} onKeyPadPress={onKeyPadPress} />
   ) : (
     <TicketView
       ticketData={ticketData}
@@ -108,7 +108,7 @@ const TicketView = (props: {
   );
 };
 
-const PlayView = (props: {
+const GuessView = (props: {
   inputValue: number;
   onKeyPadPress: (value: string) => void;
 }) => (

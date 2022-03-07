@@ -106,8 +106,10 @@ export const Text = (props: Props) => {
     parentClassName,
     props.align,
     props.color,
+    props.textTransform,
     singleLine,
     small,
+    textTransform,
   ]);
 
   switch (true) {
