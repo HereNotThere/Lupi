@@ -4,25 +4,21 @@ import { NumBox } from "src/components/NumBox";
 import { NumPad } from "src/components/NumPad";
 import { Ticket } from "src/components/Ticket";
 import { useLupiContract } from "src/hooks/useLupiContract";
+import { useTickets } from "src/hooks/useTickets";
+import { TicketData, validateGuess } from "src/schema/Ticket";
 import { Box, Button, Grid, Text } from "src/ui";
-import {
-  generateTicketData,
-  TicketData,
-  validateGuess,
-} from "src/utils/lupiUtils";
 
 export const PlayState = () => {
   const [inputValue, setInputValue] = useState(0);
-  const [ticketData, setTicketData] = useState<TicketData>();
-  const game = useLupiContract();
-  const { round, commitGuess } = game;
+  const [guess, setGuess] = useState(0);
+  const { commitGuess, phase } = useLupiContract();
+  const { tickets, setTickets } = useTickets();
 
   const validate = useCallback(() => {
     if (validateGuess(inputValue, 999)) {
-      const ticketData = generateTicketData(inputValue, round ?? 0);
-      setTicketData(ticketData);
+      setGuess(inputValue);
     }
-  }, [inputValue, round]);
+  }, [inputValue]);
 
   const onKeyPadPress = useCallback(
     (char: string) => {
@@ -58,27 +54,36 @@ export const PlayState = () => {
   }, [onKeyPadPress, validate]);
 
   const submitTicket = useCallback(async () => {
-    console.log(ticketData);
-    const result = await commitGuess(String(inputValue));
-    console.log({ result });
-  }, [commitGuess, inputValue, ticketData]);
+    console.log(guess);
+    const result = await commitGuess(inputValue);
+    if (result) {
+      setTickets((tickets) => [...tickets, result]);
+    } else {
+      console.warn(`commitGuess failed`, { result });
+    }
+  }, [commitGuess, guess, inputValue, setTickets]);
 
   const onSubmitClick = useCallback(() => {
     submitTicket().catch((e) => console.error(e));
   }, [submitTicket]);
 
   const onCancelClick = useCallback(() => {
-    setTicketData(undefined);
+    setInputValue(0);
   }, []);
 
-  return !ticketData ? (
+  return phase === 0 ? (
     <GuessView inputValue={inputValue} onKeyPadPress={onKeyPadPress} />
   ) : (
-    <TicketView
-      ticketData={ticketData}
-      onSubmitClick={onSubmitClick}
-      onCancelClick={onCancelClick}
-    />
+    <ul>
+      {tickets.map((ticket) => (
+        <TicketView
+          key={`${ticket.roundId}${ticket.guess}`}
+          ticketData={ticket}
+          onSubmitClick={onSubmitClick}
+          onCancelClick={onCancelClick}
+        />
+      ))}
+    </ul>
   );
 };
 

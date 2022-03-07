@@ -108,6 +108,7 @@ describe("Lupi", async function () {
     const lupiAddr1 = lupi.connect(addr1);
 
     const currentNonce = await lupiAddr1.getCurrentNonce();
+    const round = await lupiAddr1.getRound();
 
     const guessHash = getGuessHash(currentNonce, 1, salt);
 
@@ -119,8 +120,42 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_mine", []);
 
     await expect(
-      lupiAddr1.revealGuesses([{ guessHash, answer: 1, salt }])
+      lupiAddr1.revealGuesses([{ round, guessHash, answer: 1, salt }])
     ).to.be.revertedWith("No guesses to reveal");
+  });
+
+  it("Should revert if reveal is for wrong round", async function () {
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
+    const lupi = await Lupi.deploy();
+    await lupi.deployed();
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const users = [addr1, addr2];
+
+    const lupiAddr1 = lupi.connect(addr1);
+
+    const currentNonce = await lupiAddr1.getCurrentNonce();
+    const round = await lupiAddr1.getRound();
+
+    const guessHash = getGuessHash(currentNonce, 1, salt);
+
+    const overrides = {
+      value: ethers.utils.parseEther("0.01"),
+    };
+
+    await lupiAddr1.commitGuess(guessHash, overrides);
+
+    const now =
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp +
+      4 * 24 * 60 * 60;
+    await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
+    await ethers.provider.send("evm_mine", []);
+
+    await expect(
+      lupiAddr1.revealGuesses([
+        { round: round + 1, guessHash, answer: 2, salt },
+      ])
+    ).to.be.revertedWith("revealGuesses must be for current round");
   });
 
   it("Should revert if no matching guessHash found", async function () {
@@ -133,6 +168,7 @@ describe("Lupi", async function () {
     const lupiAddr1 = lupi.connect(addr1);
 
     const currentNonce = await lupiAddr1.getCurrentNonce();
+    const round = await lupiAddr1.getRound();
 
     const guessHash = getGuessHash(currentNonce, 1, salt);
 
@@ -152,7 +188,9 @@ describe("Lupi", async function () {
     const unguessedHash = getGuessHash(currentNonce, 2, salt);
 
     await expect(
-      lupiAddr1.revealGuesses([{ guessHash: unguessedHash, answer: 2, salt }])
+      lupiAddr1.revealGuesses([
+        { round, guessHash: unguessedHash, answer: 2, salt },
+      ])
     ).to.be.revertedWith("revealGuesses no matching guessHash found");
   });
 
@@ -166,7 +204,7 @@ describe("Lupi", async function () {
     const lupiAddr1 = lupi.connect(addr1);
 
     const currentNonce = await lupiAddr1.getCurrentNonce();
-
+    const round = await lupiAddr1.getRound();
     const guessHash = getGuessHash(currentNonce, 1, salt);
 
     const overrides = {
@@ -176,7 +214,7 @@ describe("Lupi", async function () {
     await lupiAddr1.commitGuess(guessHash, overrides);
 
     await expect(
-      lupiAddr1.revealGuesses([{ guessHash, answer: 1, salt }])
+      lupiAddr1.revealGuesses([{ round, guessHash, answer: 1, salt }])
     ).to.be.revertedWith("revealGuesses guessDeadline hasn't passed");
   });
 
@@ -190,6 +228,7 @@ describe("Lupi", async function () {
     const lupiAddr1 = lupi.connect(addr1);
 
     const currentNonce = await lupiAddr1.getCurrentNonce();
+    const round = await lupiAddr1.getRound();
 
     const guessHash = getGuessHash(currentNonce, 1, salt);
 
@@ -207,7 +246,7 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_mine", []);
 
     await expect(
-      lupiAddr1.revealGuesses([{ guessHash, answer: 1, salt }])
+      lupiAddr1.revealGuesses([{ round, guessHash, answer: 1, salt }])
     ).to.be.revertedWith("revealGuesses revealDeadline has passed");
   });
 
@@ -222,6 +261,7 @@ describe("Lupi", async function () {
     const lupiAddr1 = lupi.connect(addr1);
 
     const currentNonce = await lupiAddr1.getCurrentNonce();
+    const round = await lupiAddr1.getRound();
 
     const guessHash = getGuessHash(currentNonce, 0, salt);
 
@@ -239,7 +279,7 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_mine", []);
 
     await expect(
-      lupiAddr1.revealGuesses([{ guessHash, answer: 0, salt }])
+      lupiAddr1.revealGuesses([{ round, guessHash, answer: 0, salt }])
     ).to.be.revertedWith("revealGuesses answer must be positive");
   });
 
@@ -253,6 +293,7 @@ describe("Lupi", async function () {
     const lupiAddr1 = lupi.connect(addr1);
 
     const currentNonce = await lupiAddr1.getCurrentNonce();
+    const round = await lupiAddr1.getRound();
 
     const guessHash = getGuessHash(currentNonce, 1, salt);
 
@@ -272,7 +313,9 @@ describe("Lupi", async function () {
     const wrongSalt = getSalt("43");
 
     await expect(
-      lupiAddr1.revealGuesses([{ guessHash, answer: 1, salt: wrongSalt }])
+      lupiAddr1.revealGuesses([
+        { round, guessHash, answer: 1, salt: wrongSalt },
+      ])
     ).to.be.revertedWith("Reveal hash does not match guessHash");
   });
 
@@ -310,6 +353,7 @@ describe("Lupi", async function () {
     const lupi = await Lupi.deploy();
     await lupi.deployed();
     const currentNonce = await lupi.getCurrentNonce();
+    const round = await lupi.getRound();
 
     const guessHash = getGuessHash(currentNonce, 1, salt);
 
@@ -334,7 +378,9 @@ describe("Lupi", async function () {
 
     const revealHash = getGuessHash(currentNonce, 1, salt);
 
-    await lupi.revealGuesses([{ guessHash: revealHash, answer: 1, salt }]);
+    await lupi.revealGuesses([
+      { round, guessHash: revealHash, answer: 1, salt },
+    ]);
   });
 
   it("Two users should commit 5 guesses and make 5 reveals, one user should also guess one unique (1)", async function () {
@@ -349,6 +395,7 @@ describe("Lupi", async function () {
     const blockTimestamp = blockAfter.timestamp;
 
     const currentNonce = await lupi.getCurrentNonce();
+    const round = await lupi.getRound();
 
     expect(await lupi.getPhase()).to.equal(GamePhase.GUESS);
 
@@ -404,20 +451,23 @@ describe("Lupi", async function () {
     for (let j = 0; j < 2; j++) {
       const lupiUser = lupi.connect(users[j]);
       const reveals: {
+        round: number;
         guessHash: string;
         answer: number;
         salt: string;
       }[] = [];
       for (let i = 2; i < 7; i++) {
         const guessHash = getGuessHash(currentNonce, i, salt);
-        reveals.push({ guessHash, answer: i, salt });
+        reveals.push({ round, guessHash, answer: i, salt });
       }
       await lupiUser.revealGuesses(reveals);
     }
 
     const revealHash = getGuessHash(currentNonce, 1, salt);
 
-    await lupiUser.revealGuesses([{ guessHash: revealHash, answer: 1, salt }]);
+    await lupiUser.revealGuesses([
+      { round, guessHash: revealHash, answer: 1, salt },
+    ]);
 
     const revealedGuesses = await lupi.getRevealedGuess();
     expect(revealedGuesses.length).to.equal(11);
@@ -435,7 +485,7 @@ describe("Lupi", async function () {
     await expect(lupi.endGame())
       .to.emit(lupi, "GameResult")
       .withArgs(
-        currentNonce,
+        round,
         users[0].address,
         BigNumber.from("110000000000000000"),
         1
@@ -456,6 +506,7 @@ describe("Lupi", async function () {
     const users = [addr1, addr2];
 
     const currentNonce = await lupi.getCurrentNonce();
+    const round = await lupi.getRound();
 
     const lupiUser = lupi.connect(users[0]);
 
@@ -491,10 +542,10 @@ describe("Lupi", async function () {
         const guessHash = getGuessHash(currentNonce, i, salt);
 
         if (j === 0) {
-          await lupiUser.revealGuesses([{ guessHash, answer: i, salt }]);
+          await lupiUser.revealGuesses([{ round, guessHash, answer: i, salt }]);
         } else {
           await expect(
-            lupiUser.revealGuesses([{ guessHash, answer: i, salt }])
+            lupiUser.revealGuesses([{ round, guessHash, answer: i, salt }])
           ).to.be.revertedWith("Already revealed");
         }
       }
@@ -507,7 +558,9 @@ describe("Lupi", async function () {
     );
     expect(committedGuessHashes.length).to.equal(9);
 
-    await lupiUser.revealGuesses([{ guessHash: revealHash, answer: 6, salt }]);
+    await lupiUser.revealGuesses([
+      { round, guessHash: revealHash, answer: 6, salt },
+    ]);
 
     const revealedGuesses = await lupi.getRevealedGuess();
     expect(revealedGuesses.length).to.equal(9);
@@ -521,7 +574,7 @@ describe("Lupi", async function () {
     await expect(lupi.endGame())
       .to.emit(lupi, "GameResult")
       .withArgs(
-        currentNonce,
+        round,
         users[0].address,
         BigNumber.from("90000000000000000"),
         1
@@ -536,6 +589,7 @@ describe("Lupi", async function () {
     const users = [addr1, addr2];
 
     const currentNonce = await lupi.getCurrentNonce();
+    const round = await lupi.getRound();
 
     for (let j = 0; j < 2; j++) {
       const lupiUser = lupi.connect(users[j]);
@@ -563,7 +617,7 @@ describe("Lupi", async function () {
       for (let i = 1; i < 5; i++) {
         const guessHash = getGuessHash(currentNonce, i, salt);
 
-        await lupiUser.revealGuesses([{ guessHash, answer: i, salt }]);
+        await lupiUser.revealGuesses([{ round, guessHash, answer: i, salt }]);
       }
     }
 
@@ -576,7 +630,7 @@ describe("Lupi", async function () {
 
     await expect(lupi.endGame())
       .to.emit(lupi, "GameResult")
-      .withArgs(currentNonce, nullAddress, 0, 0);
+      .withArgs(round, nullAddress, 0, 0);
   });
 
   it("Should should revert if endGame too early", async function () {
@@ -587,6 +641,7 @@ describe("Lupi", async function () {
     const users = [addr1, addr2];
 
     const currentNonce = await lupi.getCurrentNonce();
+    const round = await lupi.getRound();
 
     for (let j = 0; j < 2; j++) {
       const lupiUser = lupi.connect(users[0]);
@@ -625,10 +680,10 @@ describe("Lupi", async function () {
         const guessHash = getGuessHash(currentNonce, i, salt);
 
         if (j === 0) {
-          await lupiUser.revealGuesses([{ guessHash, answer: i, salt }]);
+          await lupiUser.revealGuesses([{ round, guessHash, answer: i, salt }]);
         } else {
           await expect(
-            lupiUser.revealGuesses([{ guessHash, answer: i, salt }])
+            lupiUser.revealGuesses([{ round, guessHash, answer: i, salt }])
           ).to.be.revertedWith("Already revealed");
         }
       }
@@ -636,7 +691,9 @@ describe("Lupi", async function () {
 
     const revealHash = getGuessHash(currentNonce, 6, salt);
 
-    await lupiUser.revealGuesses([{ guessHash: revealHash, answer: 6, salt }]);
+    await lupiUser.revealGuesses([
+      { round, guessHash: revealHash, answer: 6, salt },
+    ]);
 
     const revealedGuesses = await lupiUser.getRevealedGuess();
 
@@ -675,6 +732,7 @@ describe("Lupi", async function () {
     const startBalance = await addr1.getBalance();
 
     const currentNonce = await lupi.getCurrentNonce();
+    const round = await lupi.getRound();
 
     const lupiUser = lupi.connect(addr1);
     let totalGasUsed: BigNumber = BigNumber.from(0);
@@ -701,7 +759,9 @@ describe("Lupi", async function () {
 
     for (let i = 1; i < 5; i++) {
       const guessHash = getGuessHash(currentNonce, i, salt);
-      const tx = await lupiUser.revealGuesses([{ guessHash, answer: i, salt }]);
+      const tx = await lupiUser.revealGuesses([
+        { round, guessHash, answer: i, salt },
+      ]);
       const { gasUsed } = await tx.wait();
       totalGasUsed = totalGasUsed.add(gasUsed);
     }
@@ -723,12 +783,7 @@ describe("Lupi", async function () {
 
     await expect(lupi.endGame())
       .to.emit(lupi, "GameResult")
-      .withArgs(
-        currentNonce,
-        addr1.address,
-        BigNumber.from("40000000000000000"),
-        1
-      );
+      .withArgs(round, addr1.address, BigNumber.from("40000000000000000"), 1);
 
     /*
     console.log(`totalGasUsed = ${totalGasUsed.toString()}`);
@@ -755,6 +810,7 @@ describe("Lupi", async function () {
     const [_owner, addr1, addr2] = await ethers.getSigners();
 
     const currentNonce = await lupi.getCurrentNonce();
+    const round = await lupi.getRound();
 
     for (let u = 0; u < 2; u++) {
       const users = [addr1, addr2];
@@ -784,7 +840,7 @@ describe("Lupi", async function () {
 
       for (let i = 1; i < 5; i++) {
         const guessHash = getGuessHash(currentNonce, i, salt);
-        await lupiUser.revealGuesses([{ guessHash, answer: i, salt }]);
+        await lupiUser.revealGuesses([{ round, guessHash, answer: i, salt }]);
       }
     }
 
@@ -803,7 +859,7 @@ describe("Lupi", async function () {
 
     await expect(lupi.endGame())
       .to.emit(lupi, "GameResult")
-      .withArgs(currentNonce, nullAddress, 0, 0);
+      .withArgs(round, nullAddress, 0, 0);
 
     expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
 
@@ -834,6 +890,7 @@ describe("Lupi", async function () {
     await tx.wait();
 
     const currentNonce = await lupi.getCurrentNonce();
+    const round = await lupi.getRound();
 
     let totalGasUsed: BigNumber = BigNumber.from(0);
 
@@ -859,7 +916,9 @@ describe("Lupi", async function () {
 
     for (let i = 1; i < 5; i++) {
       const guessHash = getGuessHash(currentNonce, i, salt);
-      const tx = await fake.revealGuesses([{ guessHash, answer: i, salt }]);
+      const tx = await fake.revealGuesses([
+        { round, guessHash, answer: i, salt },
+      ]);
       const { gasUsed } = await tx.wait();
       totalGasUsed = totalGasUsed.add(gasUsed);
     }
@@ -881,18 +940,14 @@ describe("Lupi", async function () {
     await endGameResults.to
       .emit(lupi, "GameResult")
       .withArgs(
-        currentNonce,
+        round,
         fakeCaller.address,
         BigNumber.from("40000000000000000"),
         1
       );
     await endGameResults.to
       .emit(lupi, "AwardDeferred")
-      .withArgs(
-        currentNonce,
-        fakeCaller.address,
-        BigNumber.from("40000000000000000")
-      );
+      .withArgs(round, fakeCaller.address, BigNumber.from("40000000000000000"));
 
     expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
     expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
@@ -901,7 +956,7 @@ describe("Lupi", async function () {
     await expect(fake.withdrawAward(addr1.address))
       .emit(lupi, "AwardWithdrawn")
       .withArgs(
-        currentNonce,
+        round,
         fakeCaller.address,
         addr1.address,
         BigNumber.from("40000000000000000")
@@ -931,6 +986,7 @@ describe("Lupi", async function () {
     await tx.wait();
 
     const currentNonce = await lupi.getCurrentNonce();
+    const round = await lupi.getRound();
 
     let totalGasUsed: BigNumber = BigNumber.from(0);
 
@@ -956,7 +1012,9 @@ describe("Lupi", async function () {
 
     for (let i = 1; i < 5; i++) {
       const guessHash = getGuessHash(currentNonce, i, salt);
-      const tx = await fake.revealGuesses([{ guessHash, answer: i, salt }]);
+      const tx = await fake.revealGuesses([
+        { round, guessHash, answer: i, salt },
+      ]);
       const { gasUsed } = await tx.wait();
       totalGasUsed = totalGasUsed.add(gasUsed);
     }
@@ -978,18 +1036,14 @@ describe("Lupi", async function () {
     await endGameResults.to
       .emit(lupi, "GameResult")
       .withArgs(
-        currentNonce,
+        round,
         fakeCaller.address,
         BigNumber.from("40000000000000000"),
         1
       );
     await endGameResults.to
       .emit(lupi, "AwardDeferred")
-      .withArgs(
-        currentNonce,
-        fakeCaller.address,
-        BigNumber.from("40000000000000000")
-      );
+      .withArgs(round, fakeCaller.address, BigNumber.from("40000000000000000"));
 
     expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
     expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
@@ -1024,6 +1078,7 @@ describe("Lupi", async function () {
     await tx.wait();
 
     const currentNonce = await lupi.getCurrentNonce();
+    const round = await lupi.getRound();
 
     let totalGasUsed: BigNumber = BigNumber.from(0);
 
@@ -1049,7 +1104,9 @@ describe("Lupi", async function () {
 
     for (let i = 1; i < 5; i++) {
       const guessHash = getGuessHash(currentNonce, i, salt);
-      const tx = await fake.revealGuesses([{ guessHash, answer: i, salt }]);
+      const tx = await fake.revealGuesses([
+        { round, guessHash, answer: i, salt },
+      ]);
       const { gasUsed } = await tx.wait();
       totalGasUsed = totalGasUsed.add(gasUsed);
     }
@@ -1071,18 +1128,14 @@ describe("Lupi", async function () {
     await endGameResults.to
       .emit(lupi, "GameResult")
       .withArgs(
-        currentNonce,
+        round,
         fakeCaller.address,
         BigNumber.from("40000000000000000"),
         1
       );
     await endGameResults.to
       .emit(lupi, "AwardDeferred")
-      .withArgs(
-        currentNonce,
-        fakeCaller.address,
-        BigNumber.from("40000000000000000")
-      );
+      .withArgs(round, fakeCaller.address, BigNumber.from("40000000000000000"));
 
     expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
     expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
@@ -1116,6 +1169,7 @@ describe("Lupi", async function () {
     await tx.wait();
 
     const currentNonce = await lupi.getCurrentNonce();
+    const round = await lupi.getRound();
 
     let totalGasUsed: BigNumber = BigNumber.from(0);
 
@@ -1141,7 +1195,9 @@ describe("Lupi", async function () {
 
     for (let i = 1; i < 5; i++) {
       const guessHash = getGuessHash(currentNonce, i, salt);
-      const tx = await fake.revealGuesses([{ guessHash, answer: i, salt }]);
+      const tx = await fake.revealGuesses([
+        { round, guessHash, answer: i, salt },
+      ]);
       const { gasUsed } = await tx.wait();
       totalGasUsed = totalGasUsed.add(gasUsed);
     }
@@ -1163,18 +1219,14 @@ describe("Lupi", async function () {
     await endGameResults.to
       .emit(lupi, "GameResult")
       .withArgs(
-        currentNonce,
+        round,
         fakeCaller.address,
         BigNumber.from("40000000000000000"),
         1
       );
     await endGameResults.to
       .emit(lupi, "AwardDeferred")
-      .withArgs(
-        currentNonce,
-        fakeCaller.address,
-        BigNumber.from("40000000000000000")
-      );
+      .withArgs(round, fakeCaller.address, BigNumber.from("40000000000000000"));
 
     expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
     expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
@@ -1187,20 +1239,16 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_setNextBlockTimestamp", [secondDeadline]);
     await ethers.provider.send("evm_mine", []);
 
-    const secondNonce = await lupi.getCurrentNonce();
+    const secondRound = await lupi.getRound();
 
     const secondEndGameResults = expect(lupi.endGame());
 
     await secondEndGameResults.to
       .emit(lupi, "GameResult")
-      .withArgs(secondNonce, nullAddress, 0, 0);
+      .withArgs(secondRound, nullAddress, 0, 0);
     await secondEndGameResults.to
       .emit(lupi, "AwardForfeited")
-      .withArgs(
-        currentNonce,
-        fakeCaller.address,
-        BigNumber.from("40000000000000000")
-      );
+      .withArgs(round, fakeCaller.address, BigNumber.from("40000000000000000"));
 
     expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
     expect(await lupi.getRolloverBalance()).to.equal(
@@ -1237,6 +1285,7 @@ describe("Lupi", async function () {
     const startBalance = await addr1.getBalance();
 
     const currentNonce = await lupi.getCurrentNonce();
+    const round = await lupi.getRound();
 
     let totalGasUsed: BigNumber = BigNumber.from(0);
 
@@ -1262,7 +1311,9 @@ describe("Lupi", async function () {
 
     for (let i = 1; i < 5; i++) {
       const guessHash = getGuessHash(currentNonce, i, salt);
-      const tx = await fake.revealGuesses([{ guessHash, answer: i, salt }]);
+      const tx = await fake.revealGuesses([
+        { round, guessHash, answer: i, salt },
+      ]);
       const { gasUsed } = await tx.wait();
       totalGasUsed = totalGasUsed.add(gasUsed);
     }
@@ -1286,7 +1337,7 @@ describe("Lupi", async function () {
     await endGameResults.to
       .emit(lupi, "GameResult")
       .withArgs(
-        currentNonce,
+        round,
         fakeCaller.address,
         BigNumber.from("40000000000000000"),
         1

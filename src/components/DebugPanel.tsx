@@ -1,14 +1,24 @@
 import { useState } from "react";
+import { useTickets } from "src/hooks/useTickets";
+import { TicketData } from "src/schema/Ticket";
 import { Box, Button, Text } from "src/ui";
 import { useLupiContract } from "../hooks/useLupiContract";
 import { useWeb3Context } from "../hooks/useWeb3";
 
+const TicketList = (props: { tickets: TicketData[] }) => (
+  <ul>
+    {props.tickets.map((ticket) => (
+      <li key={`${ticket.roundId}${ticket.guess}`}>{ticket.guess}</li>
+    ))}
+  </ul>
+);
+
 export const DebugPanel = () => {
-  const [guess, setGuessValue] = useState("");
-  const [revealedGuess, setRevealedGuessValue] = useState("");
+  const [guess, setGuessValue] = useState(0);
   const { addArbitrumRinkebyChain, addArbitrumOneChain, switchEthereumChain } =
     useWeb3Context();
 
+  const { tickets } = useTickets();
   const {
     finishedGames,
     revealedGuesses,
@@ -24,7 +34,7 @@ export const DebugPanel = () => {
         <Box padding border centerContent>
           <Text header="large">Commit Guess</Text>
           <input
-            onChange={(e) => setGuessValue(e.target.value)}
+            onChange={(e) => setGuessValue(Number.parseInt(e.target.value))}
             placeholder="Commit guess"
           />
           <Button onClick={() => commitGuess(guess)}>Commit Guess</Button>
@@ -60,13 +70,7 @@ export const DebugPanel = () => {
         </Box>
 
         <Box padding border centerContent>
-          <input
-            onChange={(e) => setRevealedGuessValue(e.target.value)}
-            placeholder="Reveal guess"
-          />
-          <Button onClick={() => revealGuess(revealedGuess)}>
-            Reveal Guess
-          </Button>
+          <TicketList tickets={tickets} />
         </Box>
 
         <Box padding border centerContent>

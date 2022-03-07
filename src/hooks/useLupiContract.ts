@@ -5,12 +5,19 @@ import LupiAbi from "../artifacts/contracts/Lupi.sol/Lupi.json";
 import { Lupi } from "typechain-types";
 import { notUndefined } from "../utils";
 import { GameResultEvent } from "typechain-types/Lupi";
+import { TicketData } from "../schema/Ticket";
 
 // Lupi on Rinkeby
 const rinkebylupiAddress = "0xa586B7adE6E07FD3B5f1A5a37882D53c28791aDb";
 const arbRinkebyAddress = "0xaeE8cA8c96BC12Efe3E740A3B50FddDfA8BB2110";
 const hhAddress = process.env.REACT_APP_HARDHAT_ADDRESS;
 // const lupiAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
+
+enum GamePhase {
+  GUESS,
+  REVEAL,
+  ENDGAME,
+}
 
 export const useContractCall = <T>(func?: () => Promise<T> | undefined) => {
   const [state, setState] = useState<T | undefined>(undefined);
@@ -38,10 +45,10 @@ export const useContractCall = <T>(func?: () => Promise<T> | undefined) => {
   return state;
 };
 
-function getGuessHash(currentNonce: string, guess: number, salt: string) {
+function getGuessHash(currentNonce: string, guess: number, salt: Uint8Array) {
   return utils.solidityKeccak256(
     ["bytes32", "uint32", "bytes32"],
-    [currentNonce, guess, salt]
+    [currentNonce, guess, utils.hexlify(salt)]
   );
 }
 
@@ -150,14 +157,16 @@ export const useLupiContract = () => {
   }, [contractSigner]);
 
   const commitGuess = useCallback(
-    async (guess: string) => {
+    async (guess: number): Promise<TicketData | undefined> => {
       if (!transactionRunning.current && contractSigner && contract) {
         transactionRunning.current = true;
         try {
-          const secret = ethers.utils.formatBytes32String("secret");
+          const salt = ethers.utils.randomBytes(32);
 
           const currentNonce = await contract.getCurrentNonce();
-          const guessHash = getGuessHash(currentNonce, parseInt(guess), secret);
+          const roundId = await contract.getRound();
+
+          const guessHash = getGuessHash(currentNonce, guess, salt);
           const overrides = {
             value: ethers.utils.parseEther("0.01"),
           };
@@ -167,6 +176,11 @@ export const useLupiContract = () => {
             overrides
           );
           await transaction.wait();
+          return {
+            roundId,
+            guess,
+            salt,
+          };
         } catch (err) {
           console.log(`commitGuess failed ${err}`, err);
         } finally {
@@ -178,22 +192,28 @@ export const useLupiContract = () => {
   );
 
   const revealGuess = useCallback(
-    async (revealedGuess: string) => {
+    async (revealedGuess: TicketData) => {
       if (!transactionRunning.current && contractSigner && contract) {
         transactionRunning.current = true;
         try {
-          const secret = ethers.utils.formatBytes32String("secret");
           const currentNonce = await contract.getCurrentNonce();
+          const currentRound = await contract.getRound();
+          if (revealedGuess.roundId !== currentRound) {
+            throw new Error(
+              `Reveal for round ${revealedGuess.roundId} not for current round $${currentRound}`
+            );
+          }
           const guessHash = getGuessHash(
             currentNonce,
-            parseInt(revealedGuess),
-            secret
+            revealedGuess.guess,
+            revealedGuess.salt
           );
           const transaction = await contractSigner.revealGuesses([
             {
               guessHash,
-              answer: revealedGuess,
-              salt: secret,
+              round: revealedGuess.roundId,
+              answer: revealedGuess.guess,
+              salt: revealedGuess.salt,
             },
           ]);
           await transaction.wait();

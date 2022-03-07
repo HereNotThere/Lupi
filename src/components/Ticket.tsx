@@ -1,5 +1,5 @@
+import { TicketData } from "src/schema/Ticket";
 import { Box, Text } from "src/ui";
-import { TicketData } from "src/utils/lupiUtils";
 import styled from "styled-components";
 
 export const Ticket = (props: { ticketData: TicketData }) => (
