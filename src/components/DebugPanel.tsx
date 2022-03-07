@@ -68,7 +68,7 @@ export const DebugPanel = () => {
       {/* right container */}
       <Box gap="lg" padding grow>
         <Box padding border centerContent>
-          <Box>Finished Games: {finishedGames}</Box>
+          <Box>Finished Games: {JSON.stringify(finishedGames)}</Box>
         </Box>
 
         <Box padding border centerContent>
