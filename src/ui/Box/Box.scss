@@ -238,6 +238,26 @@ $sizes: (
   }
 }
 
+.Box {
+  &--color {
+    &-text {
+      color: var(--theme-fg);
+    }
+    &-primary {
+      color: var(--theme-p1);
+    }
+    &-text {
+      color: var(--theme-fg);
+    }
+    &-muted {
+      color: var(--theme-n2);
+    }
+    &-background {
+      color: var(--theme-bg);
+    }
+  }
+}
+
 .Box--row {
   &:not(.Grid) {
     flex-wrap: wrap;

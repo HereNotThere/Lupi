@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Box, Button, Text } from "src/ui";
-import { useLupiContract } from "../hooks/use_lupi_contract";
-import { useWeb3Context } from "../hooks/use_web3";
+import { useLupiContract } from "../hooks/useLupiContract";
+import { useWeb3Context } from "../hooks/useWeb3";
 
 export const DebugPanel = () => {
   const [guess, setGuessValue] = useState("");
@@ -68,7 +68,7 @@ export const DebugPanel = () => {
       {/* right container */}
       <Box gap="lg" padding grow>
         <Box padding border centerContent>
-          <Box>Finished Games: {finishedGames}</Box>
+          <Box>Finished Games: {JSON.stringify(finishedGames)}</Box>
         </Box>
 
         <Box padding border centerContent>

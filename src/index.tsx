@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import "./index.scss";
 import App from "./App";
 import { logger } from "./utils/logger";
-import { Web3Provider } from "./hooks/use_web3";
+import { Web3Provider } from "./hooks/useWeb3";
 
 logger.info(`Loading index.tsx`);
 

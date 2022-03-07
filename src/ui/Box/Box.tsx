@@ -12,6 +12,7 @@ const Sizes = {
   sm: "1",
   md: "2",
   lg: "4",
+  xl: "6",
 } as const;
 
 const BorderRadius = {
@@ -23,7 +24,7 @@ const BorderRadius = {
 };
 
 const Backgrounds = {
-  transparent: "transparent",
+  none: "transparent",
   gradient: "gradient",
   muted: "muted",
   muted2: "muted2",
@@ -34,10 +35,19 @@ const AspectRatios = {
 } as const;
 
 const Borders = {
+  none: false,
   after: "after",
   before: "before",
   around: "around",
 } as const;
+
+const ColorTheme = {
+  text: "text",
+  background: "background",
+  primary: "primary",
+  secondary: "secondary",
+  muted: "muted",
+};
 
 type FlexPosition = keyof typeof flexPosition;
 type SizeAttr = keyof typeof Sizes;
@@ -45,6 +55,7 @@ type BorderAttr = keyof typeof Borders;
 type BackgroundAttr = keyof typeof Backgrounds;
 type AspectRatioAttr = keyof typeof AspectRatios;
 type BorderRadiusAttr = keyof typeof BorderRadius;
+type ColorThemeAttrs = keyof typeof ColorTheme;
 
 interface BaseProps {
   // react props
@@ -80,6 +91,7 @@ interface BaseProps {
   gap?: SizeAttr | false;
 
   // decoration
+  color?: ColorThemeAttrs;
   border?: BorderAttr | boolean;
   borderRadius?: BorderRadiusAttr | boolean;
   background?: BackgroundAttr;
@@ -177,7 +189,7 @@ export const Box = forwardRef<HTMLDivElement, Props>((props, ref) => {
       classList.push(`padding`, `h-padding-${Sizes[props.horizontalPadding]}`);
     }
     if (props.verticalPadding) {
-      classList.push(`padding`, `h-padding-${Sizes[props.verticalPadding]}`);
+      classList.push(`padding`, `v-padding-${Sizes[props.verticalPadding]}`);
     }
 
     const itemsSpace =
@@ -206,6 +218,10 @@ export const Box = forwardRef<HTMLDivElement, Props>((props, ref) => {
       classList.push(`aspect-ratio-${AspectRatios[props.aspectRatio]}`);
     }
 
+    if (props.color) {
+      classList.push(`color-${props.color}`);
+    }
+
     const className = classList
       .map((c) => `Box--${c}`)
       .filter(Boolean)
@@ -231,6 +247,7 @@ export const Box = forwardRef<HTMLDivElement, Props>((props, ref) => {
     props.borderRadius,
     props.background,
     props.aspectRatio,
+    props.color,
     props.className,
   ]);
 
