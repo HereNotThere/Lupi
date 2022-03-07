@@ -32,8 +32,15 @@ describe("Lupi", async function () {
     const lupi = await Lupi.deploy();
     await lupi.deployed();
 
+    const blockNum = await ethers.provider.getBlockNumber();
+    const blockAfter = await ethers.provider.getBlock(blockNum);
+    const blockTimestamp = blockAfter.timestamp;
+
     expect(await lupi.getPhase()).to.equal(GamePhase.GUESS);
-    expect(await lupi.getPhaseDeadline()).to.equal(259200);
+    expect((await lupi.getPhaseDeadline()).toNumber()).to.closeTo(
+      blockTimestamp + 259200,
+      100
+    );
 
     expect(await lupi.getRound()).to.equal(1);
   });
@@ -337,6 +344,10 @@ describe("Lupi", async function () {
     const [owner, addr1, addr2] = await ethers.getSigners();
     const users = [addr1, addr2];
 
+    const blockNum = await ethers.provider.getBlockNumber();
+    const blockAfter = await ethers.provider.getBlock(blockNum);
+    const blockTimestamp = blockAfter.timestamp;
+
     const currentNonce = await lupi.getCurrentNonce();
 
     expect(await lupi.getPhase()).to.equal(GamePhase.GUESS);
@@ -386,7 +397,9 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_mine", []);
 
     expect(await lupi.getPhase()).to.equal(GamePhase.REVEAL);
-    expect(await lupi.getPhaseDeadline()).to.equal(86389);
+    expect((await lupi.getPhaseDeadline()).toNumber()).to.equal(
+      blockTimestamp + 5 * 24 * 60 * 60
+    );
 
     for (let j = 0; j < 2; j++) {
       const lupiUser = lupi.connect(users[j]);
@@ -429,7 +442,10 @@ describe("Lupi", async function () {
       );
 
     expect(await lupi.getPhase()).to.equal(GamePhase.GUESS);
-    expect(await lupi.getPhaseDeadline()).to.equal(259200);
+    expect((await lupi.getPhaseDeadline()).toNumber()).to.closeTo(
+      blockTimestamp + 5 * 24 * 60 * 60 + 6 * 24 * 60 * 60,
+      100
+    );
   });
 
   it("1 User should commit 9 guesses (4 duplicate, 1 unique) and make 5 reveals", async function () {
