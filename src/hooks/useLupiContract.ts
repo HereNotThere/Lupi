@@ -9,7 +9,7 @@ import { GameResultEvent } from "typechain-types/Lupi";
 // Lupi on Rinkeby
 const rinkebylupiAddress = "0xa586B7adE6E07FD3B5f1A5a37882D53c28791aDb";
 const arbRinkebyAddress = "0x4951e6c53dE1FBe34baeF5d4Cd9BD3B417D7d577";
-//const lupiAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const hhAddress = process.env.REACT_APP_HARDHAT_ADDRESS;
 // const lupiAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
 
 export const useContractCall = <T>(func?: () => Promise<T> | undefined) => {
@@ -55,7 +55,14 @@ export const useLupiContract = () => {
         return arbRinkebyAddress;
       case "0x4":
         return rinkebylupiAddress;
+      case "0x7a69":
+        console.log(
+          "useLupiContract::useLupiContractconnecting to hardhat",
+          hhAddress
+        );
+        return hhAddress;
       default:
+        console.warn("useLupiContract::connecting to unhandled network");
         return undefined;
     }
   }, [chainId]);
