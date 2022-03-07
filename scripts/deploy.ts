@@ -13,10 +13,6 @@ async function main() {
   // manually to make sure everything is compiled
   // await hre.run('compile');
 
-  // We get the contract to deploy
-  // const Greeter = await ethers.getContractFactory("Greeter");
-  // const greeter = await Greeter.deploy("Hello, Hardhat!");
-
   const Lupi = await ethers.getContractFactory("Lupi");
   const lupi = await Lupi.deploy();
 

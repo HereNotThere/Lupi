@@ -7,7 +7,8 @@ import { notUndefined } from "../utils";
 import { GameResultEvent } from "typechain-types/Lupi";
 
 // Lupi on Rinkeby
-const lupiAddress = "0xa586B7adE6E07FD3B5f1A5a37882D53c28791aDb";
+const rinkebylupiAddress = "0xa586B7adE6E07FD3B5f1A5a37882D53c28791aDb";
+const arbRinkebyAddress = "0x4951e6c53dE1FBe34baeF5d4Cd9BD3B417D7d577";
 //const lupiAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 // const lupiAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
 
@@ -45,23 +46,35 @@ function getGuessHash(currentNonce: string, guess: number, salt: string) {
 }
 
 export const useLupiContract = () => {
-  const { provider } = useWeb3Context();
+  const { provider, chainId } = useWeb3Context();
+
+  const lupiAddress = useMemo(() => {
+    console.log(`chainId ${chainId}`);
+    switch (chainId) {
+      case "0x66eeb":
+        return arbRinkebyAddress;
+      case "0x4":
+        return rinkebylupiAddress;
+      default:
+        return undefined;
+    }
+  }, [chainId]);
 
   const signer = useMemo(() => provider?.getSigner(), [provider]);
   const contract = useMemo(
     () =>
-      provider
+      provider && lupiAddress
         ? (new ethers.Contract(lupiAddress, LupiAbi.abi, provider) as Lupi)
         : undefined,
-    [provider]
+    [provider, lupiAddress]
   );
 
   const contractSigner = useMemo(
     () =>
-      signer
+      signer && lupiAddress
         ? (new ethers.Contract(lupiAddress, LupiAbi.abi, signer) as Lupi)
         : undefined,
-    [signer]
+    [signer, lupiAddress]
   );
 
   const currentBalance = useContractCall(contract?.getCurrentBalance);

@@ -50,6 +50,13 @@ const config: HardhatUserConfig = {
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
+    arbitrumrinkeby: {
+      url: "https://rinkeby.arbitrum.io/rpc",
+      accounts:
+        process.env.ARB_RINKEBY_PRIVATE_KEY !== undefined
+          ? [process.env.ARB_RINKEBY_PRIVATE_KEY]
+          : [],
+    },
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
