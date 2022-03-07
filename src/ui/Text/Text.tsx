@@ -30,12 +30,22 @@ const AlignAttrs = {
 
 type Align = keyof typeof AlignAttrs;
 
+const TextTransformAttrs = {
+  none: "none",
+  lowercase: "lowercase",
+  uppercase: "uppercase",
+  capitalize: "capitalize",
+};
+
+type TextTransform = keyof typeof TextTransformAttrs;
+
 interface BaseProps {
   children?: React.ReactNode;
   className?: string;
   color?: ColorTheme;
   singleLine?: true;
   align?: Align;
+  textTransform?: TextTransform;
 }
 
 interface Props extends BaseProps {
@@ -61,12 +71,16 @@ export const Text = (props: Props) => {
     header,
     singleLine,
     small,
+    textTransform,
     span,
   } = props;
 
   const className = useMemo(() => {
     const classList: string[] = [];
 
+    if (textTransform) {
+      classList.push(`text-transform-${props.textTransform}`);
+    }
     if (align) {
       classList.push(`align-${props.align}`);
     }
