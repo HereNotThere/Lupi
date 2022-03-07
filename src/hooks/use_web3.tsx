@@ -250,6 +250,109 @@ const useWeb3 = () => {
     [ethereum]
   );
 
+  const addArbitrumOneChain = useCallback(async (): Promise<
+    string | undefined
+  > => {
+    try {
+      const signature = await ethereum.request({
+        jsonrpc: "2.0",
+        id: messageId.current++,
+        method: "wallet_addEthereumChain",
+        params: [
+          {
+            chainId: "0xa4b1",
+            rpcUrls: [
+              "https://arb1.arbitrum.io/rpc",
+              "wss://arb1.arbitrum.io/ws",
+            ],
+            chainName: "Arbitrum One",
+            nativeCurrency: {
+              name: "Ether",
+              symbol: "ETH",
+              decimals: 18,
+            },
+            blockExplorerUrls: ["https://arbiscan.io"],
+          },
+        ],
+      });
+
+      logger.info(`wallet_addEthereumChain:\n${signature}`);
+      return signature;
+    } catch (error: any) {
+      logger.error(
+        `Error requesting wallet_addEthereumChain: ${error.message}.
+       Code: ${error.code}. Data: ${error.data}`
+      );
+    }
+  }, [ethereum]);
+
+  const addArbitrumRinkebyChain = useCallback(async (): Promise<
+    string | undefined
+  > => {
+    try {
+      // name,title,shortName,chain,networkId,rpc,faucets,infoURL,explorers,parent.
+
+      const signature = await ethereum.request({
+        jsonrpc: "2.0",
+        id: messageId.current++,
+        method: "wallet_addEthereumChain",
+        params: [
+          {
+            chainName: "Arbitrum Rinkeby",
+            chainId: "0x66EEB",
+            nativeCurrency: {
+              name: "Arbitrum Rinkeby Ether",
+              symbol: "ARETH",
+              decimals: 18,
+            },
+            rpcUrls: [
+              "https://rinkeby.arbitrum.io/rpc",
+              "wss://rinkeby.arbitrum.io/ws",
+            ],
+            blockExplorerUrls: ["https://rinkeby-explorer.arbitrum.io"],
+          },
+        ],
+      });
+
+      logger.info(`wallet_addEthereumChain:\n${signature}`);
+      return signature;
+    } catch (error: any) {
+      logger.error(
+        `Error requesting wallet_addEthereumChain: ${error.message}.
+     Code: ${error.code}. Data: ${error.data}`
+      );
+    }
+  }, [ethereum]);
+
+  /**
+   * chainId: A 0x-prefixed hexadecimal string
+   */
+  const switchEthereumChain = useCallback(
+    async (chainId: string): Promise<string | undefined> => {
+      try {
+        const signature = await ethereum.request({
+          jsonrpc: "2.0",
+          id: messageId.current++,
+          method: "wallet_switchEthereumChain",
+          params: [
+            {
+              chainId,
+            },
+          ],
+        });
+
+        logger.info(`wallet_addEthereumChain:\n${signature}`);
+        return signature;
+      } catch (error: any) {
+        logger.error(
+          `Error requesting wallet_addEthereumChain: ${error.message}.
+   Code: ${error.code}. Data: ${error.data}`
+        );
+      }
+    },
+    [ethereum]
+  );
+
   return {
     providerInstalled,
     provider,
@@ -259,5 +362,8 @@ const useWeb3 = () => {
     accounts,
     chainId,
     walletStatus,
+    addArbitrumOneChain,
+    addArbitrumRinkebyChain,
+    switchEthereumChain,
   } as const;
 };

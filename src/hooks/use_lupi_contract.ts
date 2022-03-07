@@ -93,12 +93,17 @@ export const useLupiContract = () => {
     try {
       let shutdown = false;
       void (async () => {
-        if (contract) {
-          const eventFilter = contract.filters.GameResult(); //.ContractEvent()
-          const events = await contract.queryFilter(eventFilter, 0, "latest");
-          if (!shutdown) {
-            setFinishedGames(events);
+        try {
+          if (contract) {
+            const eventFilter = contract.filters.GameResult(); //.ContractEvent()
+            const events = await contract.queryFilter(eventFilter, 0, "latest");
+            if (!shutdown) {
+              setFinishedGames(events);
+            }
           }
+        } catch (err) {
+          console.warn(`contract filtering by GameResult failed`, err);
+          setFinishedGames([]);
         }
       })();
       return () => {

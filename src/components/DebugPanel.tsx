@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Box, Button, Text } from "src/ui";
 import { useLupiContract } from "../hooks/use_lupi_contract";
+import { useWeb3Context } from "../hooks/use_web3";
 
 export const DebugPanel = () => {
   const [guess, setGuessValue] = useState("");
   const [revealedGuess, setRevealedGuessValue] = useState("");
+  const { addArbitrumRinkebyChain, switchEthereumChain } = useWeb3Context();
 
   const {
     finishedGames,
@@ -25,6 +27,27 @@ export const DebugPanel = () => {
             placeholder="Commit guess"
           />
           <Button onClick={() => commitGuess(guess)}>Commit Guess</Button>
+        </Box>
+
+        <Box>
+          <Button onClick={() => addArbitrumRinkebyChain()}>Add Chain</Button>
+        </Box>
+
+        <Box>
+          <Button onClick={() => switchEthereumChain("0xa4b1")}>
+            Switch to Arbirum
+          </Button>
+        </Box>
+        <Box>
+          <Button onClick={() => switchEthereumChain("0x66EEB")}>
+            Switch to Arbirum Rinkeby
+          </Button>
+        </Box>
+
+        <Box>
+          <Button onClick={() => switchEthereumChain("0x4")}>
+            Switch to Rinkeby
+          </Button>
         </Box>
 
         <Box padding border centerContent>
