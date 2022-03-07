@@ -3,7 +3,7 @@ import { BigNumber, utils } from "ethers";
 import { ethers } from "hardhat";
 import { describe } from "mocha";
 
-import { Lupi__factory } from "../typechain-types/index";
+import { Lupi__factory, FakeCaller__factory } from "../typechain-types/index";
 
 console.log(`index.ts`);
 function getSalt(salt: string) {
@@ -32,8 +32,15 @@ describe("Lupi", async function () {
     const lupi = await Lupi.deploy();
     await lupi.deployed();
 
+    const blockNum = await ethers.provider.getBlockNumber();
+    const blockAfter = await ethers.provider.getBlock(blockNum);
+    const blockTimestamp = blockAfter.timestamp;
+
     expect(await lupi.getPhase()).to.equal(GamePhase.GUESS);
-    expect(await lupi.getPhaseDeadline()).to.equal(259200);
+    expect((await lupi.getPhaseDeadline()).toNumber()).to.closeTo(
+      blockTimestamp + 259200,
+      100
+    );
 
     expect(await lupi.getRound()).to.equal(1);
   });
@@ -337,6 +344,10 @@ describe("Lupi", async function () {
     const [owner, addr1, addr2] = await ethers.getSigners();
     const users = [addr1, addr2];
 
+    const blockNum = await ethers.provider.getBlockNumber();
+    const blockAfter = await ethers.provider.getBlock(blockNum);
+    const blockTimestamp = blockAfter.timestamp;
+
     const currentNonce = await lupi.getCurrentNonce();
 
     expect(await lupi.getPhase()).to.equal(GamePhase.GUESS);
@@ -386,7 +397,9 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_mine", []);
 
     expect(await lupi.getPhase()).to.equal(GamePhase.REVEAL);
-    expect(await lupi.getPhaseDeadline()).to.equal(86389);
+    expect((await lupi.getPhaseDeadline()).toNumber()).to.equal(
+      blockTimestamp + 5 * 24 * 60 * 60
+    );
 
     for (let j = 0; j < 2; j++) {
       const lupiUser = lupi.connect(users[j]);
@@ -429,7 +442,10 @@ describe("Lupi", async function () {
       );
 
     expect(await lupi.getPhase()).to.equal(GamePhase.GUESS);
-    expect(await lupi.getPhaseDeadline()).to.equal(259200);
+    expect((await lupi.getPhaseDeadline()).toNumber()).to.closeTo(
+      blockTimestamp + 5 * 24 * 60 * 60 + 6 * 24 * 60 * 60,
+      100
+    );
   });
 
   it("1 User should commit 9 guesses (4 duplicate, 1 unique) and make 5 reveals", async function () {
@@ -646,7 +662,7 @@ describe("Lupi", async function () {
     };
 
     await expect(lupiUser.commitGuess(guessHash, overrides)).to.be.revertedWith(
-      "Must send at least ticketPrice"
+      "Must send at least TICKET_PRICE"
     );
   });
 
@@ -793,6 +809,496 @@ describe("Lupi", async function () {
 
     expect(await lupi.getRolloverBalance()).to.equal(
       BigNumber.from("80000000000000000")
+    );
+  });
+
+  it("Should should defer payment to another contract if it reverts", async function () {
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
+    const FakeCaller = (await ethers.getContractFactory(
+      "FakeCaller"
+    )) as FakeCaller__factory;
+
+    const lupi = await Lupi.deploy();
+    await lupi.deployed();
+    const fakeCaller = await FakeCaller.deploy(lupi.address, false);
+    await fakeCaller.deployed();
+    const [_owner, addr1, addr2] = await ethers.getSigners();
+
+    const fake = fakeCaller.connect(addr1);
+
+    const overrides = {
+      value: ethers.utils.parseEther("1.00"),
+    };
+
+    const tx = await fake.fund(overrides);
+    await tx.wait();
+
+    const currentNonce = await lupi.getCurrentNonce();
+
+    let totalGasUsed: BigNumber = BigNumber.from(0);
+
+    for (let i = 1; i < 5; i++) {
+      const guessHash = getGuessHash(currentNonce, i, salt);
+
+      const overrides = {
+        value: ethers.utils.parseEther("0.01"),
+      };
+
+      const tx = await fake.commitGuess(guessHash, overrides);
+
+      const { gasUsed } = await tx.wait();
+      totalGasUsed = totalGasUsed.add(gasUsed);
+    }
+
+    const guessDeadline =
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp +
+      4 * 24 * 60 * 60;
+    await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
+    await ethers.provider.send("evm_mine", []);
+
+    for (let i = 1; i < 5; i++) {
+      const guessHash = getGuessHash(currentNonce, i, salt);
+      const tx = await fake.revealGuesses([{ guessHash, answer: i, salt }]);
+      const { gasUsed } = await tx.wait();
+      totalGasUsed = totalGasUsed.add(gasUsed);
+    }
+
+    const revealDeadline =
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp +
+      4 * 24 * 60 * 60;
+    await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
+    await ethers.provider.send("evm_mine", []);
+
+    expect(await lupi.getCurrentBalance()).to.equal(
+      BigNumber.from("40000000000000000")
+    );
+
+    expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
+
+    const endGameResults = expect(lupi.endGame());
+    await endGameResults.to
+      .emit(lupi, "GameResult")
+      .withArgs(
+        currentNonce,
+        fakeCaller.address,
+        BigNumber.from("40000000000000000"),
+        1
+      );
+    await endGameResults.to
+      .emit(lupi, "AwardDeferred")
+      .withArgs(
+        currentNonce,
+        fakeCaller.address,
+        BigNumber.from("40000000000000000")
+      );
+
+    expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
+    expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
+
+    expect(await lupi.getPendingWinner()).to.equal(fake.address);
+    await expect(fake.withdrawAward(addr1.address))
+      .emit(lupi, "AwardWithdrawn")
+      .withArgs(
+        currentNonce,
+        fakeCaller.address,
+        addr1.address,
+        BigNumber.from("40000000000000000")
+      );
+    expect(await lupi.getPendingWinner()).to.equal(nullAddress);
+  });
+
+  it("Should revert withdraw if payee reverts", async function () {
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
+    const FakeCaller = (await ethers.getContractFactory(
+      "FakeCaller"
+    )) as FakeCaller__factory;
+
+    const lupi = await Lupi.deploy();
+    await lupi.deployed();
+    const fakeCaller = await FakeCaller.deploy(lupi.address, false);
+    await fakeCaller.deployed();
+    const [_owner, addr1, addr2] = await ethers.getSigners();
+
+    const fake = fakeCaller.connect(addr1);
+
+    const overrides = {
+      value: ethers.utils.parseEther("1.00"),
+    };
+
+    const tx = await fake.fund(overrides);
+    await tx.wait();
+
+    const currentNonce = await lupi.getCurrentNonce();
+
+    let totalGasUsed: BigNumber = BigNumber.from(0);
+
+    for (let i = 1; i < 5; i++) {
+      const guessHash = getGuessHash(currentNonce, i, salt);
+
+      const overrides = {
+        value: ethers.utils.parseEther("0.01"),
+      };
+
+      const tx = await fake.commitGuess(guessHash, overrides);
+
+      const { gasUsed } = await tx.wait();
+      totalGasUsed = totalGasUsed.add(gasUsed);
+    }
+
+    const guessDeadline =
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp +
+      4 * 24 * 60 * 60;
+    await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
+    await ethers.provider.send("evm_mine", []);
+
+    for (let i = 1; i < 5; i++) {
+      const guessHash = getGuessHash(currentNonce, i, salt);
+      const tx = await fake.revealGuesses([{ guessHash, answer: i, salt }]);
+      const { gasUsed } = await tx.wait();
+      totalGasUsed = totalGasUsed.add(gasUsed);
+    }
+
+    const revealDeadline =
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp +
+      4 * 24 * 60 * 60;
+    await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
+    await ethers.provider.send("evm_mine", []);
+
+    expect(await lupi.getCurrentBalance()).to.equal(
+      BigNumber.from("40000000000000000")
+    );
+
+    expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
+
+    const endGameResults = expect(lupi.endGame());
+    await endGameResults.to
+      .emit(lupi, "GameResult")
+      .withArgs(
+        currentNonce,
+        fakeCaller.address,
+        BigNumber.from("40000000000000000"),
+        1
+      );
+    await endGameResults.to
+      .emit(lupi, "AwardDeferred")
+      .withArgs(
+        currentNonce,
+        fakeCaller.address,
+        BigNumber.from("40000000000000000")
+      );
+
+    expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
+    expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
+
+    expect(await lupi.getPendingWinner()).to.equal(fake.address);
+    await fake.setAcceptPayment(false);
+    await expect(fake.withdrawAward(fake.address)).to.be.revertedWith(
+      "withdrawAward unable to send value"
+    );
+    expect(await lupi.getPendingWinner()).to.equal(fake.address);
+  });
+
+  it("Should revert withdraw if payee sends null address", async function () {
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
+    const FakeCaller = (await ethers.getContractFactory(
+      "FakeCaller"
+    )) as FakeCaller__factory;
+
+    const lupi = await Lupi.deploy();
+    await lupi.deployed();
+    const fakeCaller = await FakeCaller.deploy(lupi.address, false);
+    await fakeCaller.deployed();
+    const [_owner, addr1, addr2] = await ethers.getSigners();
+
+    const fake = fakeCaller.connect(addr1);
+
+    const overrides = {
+      value: ethers.utils.parseEther("1.00"),
+    };
+
+    const tx = await fake.fund(overrides);
+    await tx.wait();
+
+    const currentNonce = await lupi.getCurrentNonce();
+
+    let totalGasUsed: BigNumber = BigNumber.from(0);
+
+    for (let i = 1; i < 5; i++) {
+      const guessHash = getGuessHash(currentNonce, i, salt);
+
+      const overrides = {
+        value: ethers.utils.parseEther("0.01"),
+      };
+
+      const tx = await fake.commitGuess(guessHash, overrides);
+
+      const { gasUsed } = await tx.wait();
+      totalGasUsed = totalGasUsed.add(gasUsed);
+    }
+
+    const guessDeadline =
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp +
+      4 * 24 * 60 * 60;
+    await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
+    await ethers.provider.send("evm_mine", []);
+
+    for (let i = 1; i < 5; i++) {
+      const guessHash = getGuessHash(currentNonce, i, salt);
+      const tx = await fake.revealGuesses([{ guessHash, answer: i, salt }]);
+      const { gasUsed } = await tx.wait();
+      totalGasUsed = totalGasUsed.add(gasUsed);
+    }
+
+    const revealDeadline =
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp +
+      4 * 24 * 60 * 60;
+    await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
+    await ethers.provider.send("evm_mine", []);
+
+    expect(await lupi.getCurrentBalance()).to.equal(
+      BigNumber.from("40000000000000000")
+    );
+
+    expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
+
+    const endGameResults = expect(lupi.endGame());
+    await endGameResults.to
+      .emit(lupi, "GameResult")
+      .withArgs(
+        currentNonce,
+        fakeCaller.address,
+        BigNumber.from("40000000000000000"),
+        1
+      );
+    await endGameResults.to
+      .emit(lupi, "AwardDeferred")
+      .withArgs(
+        currentNonce,
+        fakeCaller.address,
+        BigNumber.from("40000000000000000")
+      );
+
+    expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
+    expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
+
+    expect(await lupi.getPendingWinner()).to.equal(fake.address);
+    await expect(fake.withdrawAward(nullAddress)).to.be.revertedWith(
+      "Not allowed to transfer to address(0)"
+    );
+    expect(await lupi.getPendingWinner()).to.equal(fake.address);
+  });
+
+  it("Should should forfeit payment to another contract if it doesn't claim before next round", async function () {
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
+    const FakeCaller = (await ethers.getContractFactory(
+      "FakeCaller"
+    )) as FakeCaller__factory;
+
+    const lupi = await Lupi.deploy();
+    await lupi.deployed();
+    const fakeCaller = await FakeCaller.deploy(lupi.address, false);
+    await fakeCaller.deployed();
+    const [_owner, addr1, addr2] = await ethers.getSigners();
+
+    const fake = fakeCaller.connect(addr1);
+
+    const overrides = {
+      value: ethers.utils.parseEther("1.00"),
+    };
+
+    const tx = await fake.fund(overrides);
+    await tx.wait();
+
+    const currentNonce = await lupi.getCurrentNonce();
+
+    let totalGasUsed: BigNumber = BigNumber.from(0);
+
+    for (let i = 1; i < 5; i++) {
+      const guessHash = getGuessHash(currentNonce, i, salt);
+
+      const overrides = {
+        value: ethers.utils.parseEther("0.01"),
+      };
+
+      const tx = await fake.commitGuess(guessHash, overrides);
+
+      const { gasUsed } = await tx.wait();
+      totalGasUsed = totalGasUsed.add(gasUsed);
+    }
+
+    const guessDeadline =
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp +
+      4 * 24 * 60 * 60;
+    await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
+    await ethers.provider.send("evm_mine", []);
+
+    for (let i = 1; i < 5; i++) {
+      const guessHash = getGuessHash(currentNonce, i, salt);
+      const tx = await fake.revealGuesses([{ guessHash, answer: i, salt }]);
+      const { gasUsed } = await tx.wait();
+      totalGasUsed = totalGasUsed.add(gasUsed);
+    }
+
+    const revealDeadline =
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp +
+      4 * 24 * 60 * 60;
+    await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
+    await ethers.provider.send("evm_mine", []);
+
+    expect(await lupi.getCurrentBalance()).to.equal(
+      BigNumber.from("40000000000000000")
+    );
+
+    expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
+
+    const endGameResults = expect(lupi.endGame());
+    await endGameResults.to
+      .emit(lupi, "GameResult")
+      .withArgs(
+        currentNonce,
+        fakeCaller.address,
+        BigNumber.from("40000000000000000"),
+        1
+      );
+    await endGameResults.to
+      .emit(lupi, "AwardDeferred")
+      .withArgs(
+        currentNonce,
+        fakeCaller.address,
+        BigNumber.from("40000000000000000")
+      );
+
+    expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
+    expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
+    expect(await lupi.getPendingWinner()).to.equal(fake.address);
+
+    const secondDeadline =
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp +
+      7 * 24 * 60 * 60;
+    await ethers.provider.send("evm_setNextBlockTimestamp", [secondDeadline]);
+    await ethers.provider.send("evm_mine", []);
+
+    const secondNonce = await lupi.getCurrentNonce();
+
+    const secondEndGameResults = expect(lupi.endGame());
+
+    await secondEndGameResults.to
+      .emit(lupi, "GameResult")
+      .withArgs(secondNonce, nullAddress, 0, 0);
+    await secondEndGameResults.to
+      .emit(lupi, "AwardForfeited")
+      .withArgs(
+        currentNonce,
+        fakeCaller.address,
+        BigNumber.from("40000000000000000")
+      );
+
+    expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
+    expect(await lupi.getRolloverBalance()).to.equal(
+      BigNumber.from("40000000000000000")
+    );
+    expect(await lupi.getPendingWinner()).to.equal(nullAddress);
+
+    await expect(fake.withdrawAward(addr1.address)).to.be.revertedWith(
+      "Only the winning address may withdraw"
+    );
+  });
+
+  it("Should should pay to another contract", async function () {
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
+    const FakeCaller = (await ethers.getContractFactory(
+      "FakeCaller"
+    )) as FakeCaller__factory;
+
+    const lupi = await Lupi.deploy();
+    await lupi.deployed();
+    const fakeCaller = await FakeCaller.deploy(lupi.address, true);
+    await fakeCaller.deployed();
+    const [_owner, addr1, addr2] = await ethers.getSigners();
+
+    const fake = fakeCaller.connect(addr1);
+
+    const overrides = {
+      value: ethers.utils.parseEther("1.00"),
+    };
+
+    const tx = await fake.fund(overrides);
+    await tx.wait();
+
+    const startBalance = await addr1.getBalance();
+
+    const currentNonce = await lupi.getCurrentNonce();
+
+    let totalGasUsed: BigNumber = BigNumber.from(0);
+
+    for (let i = 1; i < 5; i++) {
+      const guessHash = getGuessHash(currentNonce, i, salt);
+
+      const overrides = {
+        value: ethers.utils.parseEther("0.01"),
+      };
+
+      const tx = await fake.commitGuess(guessHash, overrides);
+
+      const { gasUsed } = await tx.wait();
+      totalGasUsed = totalGasUsed.add(gasUsed);
+    }
+
+    const guessDeadline =
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp +
+      4 * 24 * 60 * 60;
+    await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
+    await ethers.provider.send("evm_mine", []);
+
+    for (let i = 1; i < 5; i++) {
+      const guessHash = getGuessHash(currentNonce, i, salt);
+      const tx = await fake.revealGuesses([{ guessHash, answer: i, salt }]);
+      const { gasUsed } = await tx.wait();
+      totalGasUsed = totalGasUsed.add(gasUsed);
+    }
+
+    const revealDeadline =
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp +
+      4 * 24 * 60 * 60;
+    await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
+    await ethers.provider.send("evm_mine", []);
+
+    const afterBalance = await addr1.getBalance();
+
+    expect(await lupi.getCurrentBalance()).to.equal(
+      BigNumber.from("40000000000000000")
+    );
+
+    expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
+
+    const endGameResults = expect(lupi.endGame());
+    await endGameResults.to
+      .emit(lupi, "GameResult")
+      .withArgs(
+        currentNonce,
+        fakeCaller.address,
+        BigNumber.from("40000000000000000"),
+        1
+      );
+
+    expect(await lupi.getPendingWinner()).to.equal(nullAddress);
+
+    expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
+    expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
+    expect(BigNumber.from("40000000000000000").sub(totalGasUsed)).to.closeTo(
+      startBalance.sub(afterBalance),
+      "1000000000000000"
     );
   });
 

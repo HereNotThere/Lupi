@@ -38,10 +38,24 @@ const config: HardhatUserConfig = {
     artifacts: "./src/artifacts",
   },
   networks: {
+    rinkeby: {
+      url: `https://rinkeby.infura.io/v3/fb413fbb148a4a63b37698824d8d617a`,
+      accounts:
+        process.env.RINKEBY_PRIVATE_KEY !== undefined
+          ? [process.env.RINKEBY_PRIVATE_KEY]
+          : [],
+    },
     ropsten: {
       url: process.env.ROPSTEN_URL || "",
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    },
+    arbitrumrinkeby: {
+      url: "https://rinkeby.arbitrum.io/rpc",
+      accounts:
+        process.env.ARB_RINKEBY_PRIVATE_KEY !== undefined
+          ? [process.env.ARB_RINKEBY_PRIVATE_KEY]
+          : [],
     },
   },
   gasReporter: {

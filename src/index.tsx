@@ -2,7 +2,10 @@ import React from "react";
 import ReactDOM from "react-dom";
 import "./index.scss";
 import App from "./App";
-import { Web3Provider } from "./hooks/useWeb3Context";
+import { logger } from "./utils/logger";
+import { Web3Provider } from "./hooks/use_web3";
+
+logger.info(`Loading index.tsx`);
 
 ReactDOM.render(
   <React.StrictMode>

@@ -1,19 +1,21 @@
 import { useState } from "react";
 import { Box, Button, Text } from "src/ui";
-import { useContract } from "../hooks/useContract";
+import { useLupiContract } from "../hooks/use_lupi_contract";
+import { useWeb3Context } from "../hooks/use_web3";
 
 export const DebugPanel = () => {
   const [guess, setGuessValue] = useState("");
   const [revealedGuess, setRevealedGuessValue] = useState("");
+  const { addArbitrumRinkebyChain, switchEthereumChain } = useWeb3Context();
 
   const {
-    getFinishedGames,
+    finishedGames,
+    revealedGuesses,
     commitGuess,
     revealGuess,
-    allRevealedGuesses,
-    fetchRevealedGuesses,
     callEndGame,
-  } = useContract(guess, revealedGuess);
+  } = useLupiContract();
+
   return (
     <Box row>
       {/* left container */}
@@ -24,7 +26,28 @@ export const DebugPanel = () => {
             onChange={(e) => setGuessValue(e.target.value)}
             placeholder="Commit guess"
           />
-          <Button onClick={commitGuess}>Commit Guess</Button>
+          <Button onClick={() => commitGuess(guess)}>Commit Guess</Button>
+        </Box>
+
+        <Box>
+          <Button onClick={() => addArbitrumRinkebyChain()}>Add Chain</Button>
+        </Box>
+
+        <Box>
+          <Button onClick={() => switchEthereumChain("0xa4b1")}>
+            Switch to Arbirum
+          </Button>
+        </Box>
+        <Box>
+          <Button onClick={() => switchEthereumChain("0x66EEB")}>
+            Switch to Arbirum Rinkeby
+          </Button>
+        </Box>
+
+        <Box>
+          <Button onClick={() => switchEthereumChain("0x4")}>
+            Switch to Rinkeby
+          </Button>
         </Box>
 
         <Box padding border centerContent>
@@ -32,7 +55,9 @@ export const DebugPanel = () => {
             onChange={(e) => setRevealedGuessValue(e.target.value)}
             placeholder="Reveal guess"
           />
-          <Button onClick={revealGuess}>Reveal Guess</Button>
+          <Button onClick={() => revealGuess(revealedGuess)}>
+            Reveal Guess
+          </Button>
         </Box>
 
         <Box padding border centerContent>
@@ -43,14 +68,11 @@ export const DebugPanel = () => {
       {/* right container */}
       <Box gap="lg" padding grow>
         <Box padding border centerContent>
-          <Button onClick={getFinishedGames}>Get Finished Games</Button>
+          <Box>Finished Games: {finishedGames}</Box>
         </Box>
 
         <Box padding border centerContent>
-          <Button onClick={fetchRevealedGuesses}>Fetch Revealed Guesses</Button>
-          {allRevealedGuesses && (
-            <Box>Revealed Guesses: {allRevealedGuesses}</Box>
-          )}
+          <Box>Revealed Guesses: {revealedGuesses}</Box>
         </Box>
       </Box>
     </Box>

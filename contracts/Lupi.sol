@@ -28,9 +28,8 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 //payables
 
-uint256 constant ticketPrice = 0.01 ether;
-
 contract Lupi is ReentrancyGuard {
+  uint256 private constant TICKET_PRICE = 0.01 ether;
   enum GamePhase {
     GUESS,
     REVEAL,
@@ -44,10 +43,30 @@ contract Lupi is ReentrancyGuard {
     uint32 lowestGuess
   );
 
+  event AwardDeferred(
+    bytes32 indexed nonce,
+    address indexed winner,
+    uint256 amount
+  );
+  event AwardWithdrawn(
+    bytes32 indexed nonce,
+    address indexed winner,
+    address indexed payee,
+    uint256 amount
+  );
+  event AwardForfeited(
+    bytes32 indexed nonce,
+    address indexed winner,
+    uint256 amount
+  );
+
   bytes32 private currentRound;
   uint256 private rollover;
   mapping(bytes32 => Round) private rounds;
-  uint8 round;
+  bytes32 private pendingAwardRound;
+  address private pendingWinner = address(0); // Hold funds for this winner if call fails
+  uint256 private pendingAmount = 0; // Amount held until the next game starts, otherwise forfeit into rollover
+  uint8 private round;
 
   struct Round {
     bytes32 nonce;
@@ -75,6 +94,14 @@ contract Lupi is ReentrancyGuard {
     bytes32 salt;
   }
 
+  function getSaltedHash(
+    bytes32 nonce,
+    uint32 answer,
+    bytes32 salt
+  ) private pure returns (bytes32) {
+    return keccak256(abi.encodePacked(nonce, answer, salt));
+  }
+
   constructor() {
     round = 0;
     newGame();
@@ -82,18 +109,31 @@ contract Lupi is ReentrancyGuard {
 
   function newGame() private {
     round++;
+
+    // If the prior winner failed to receive payment, and failed to collect payment, it is forfeit
+    // at the start of the next round
+    if (pendingWinner != address(0)) {
+      forfeitAward();
+    }
     currentRound = bytes32(uint256(uint160(address(this))) << 96); // Replace with chainlink random
-    rounds[currentRound].guessDeadline = block.timestamp + 5 minutes;
-    rounds[currentRound].revealDeadline = block.timestamp + 10 minutes;
+    // When on Arbitrum Testnet run rounds faster
+    rounds[currentRound].guessDeadline = block.timestamp + block.chainid ==
+      421611
+      ? 45 minutes
+      : 3 days;
+    rounds[currentRound].revealDeadline = block.timestamp + block.chainid ==
+      421611
+      ? 60 minutes
+      : 5 days;
     rounds[currentRound].nonce = currentRound;
   }
 
-  function commitGuess(bytes32 guessHash) public payable nonReentrant {
+  function commitGuess(bytes32 guessHash) external payable nonReentrant {
     require(
       block.timestamp < rounds[currentRound].guessDeadline,
       "Guess deadline has passed"
     );
-    require(msg.value >= ticketPrice, "Must send at least ticketPrice");
+    require(msg.value >= TICKET_PRICE, "Must send at least TICKET_PRICE");
 
     if (rounds[currentRound].committedGuesses[msg.sender].length == 0) {
       rounds[currentRound].players.push(msg.sender);
@@ -101,14 +141,14 @@ contract Lupi is ReentrancyGuard {
     rounds[currentRound].committedGuesses[msg.sender].push(
       CommitedGuess(guessHash, false)
     );
-    rounds[currentRound].balance += ticketPrice;
-    uint256 ethToReturn = msg.value - ticketPrice;
+    rounds[currentRound].balance += TICKET_PRICE;
+    uint256 ethToReturn = msg.value - TICKET_PRICE;
     if (ethToReturn > 0) {
       payable(msg.sender).transfer(ethToReturn);
     }
   }
 
-  function revealGuesses(Reveal[] calldata reveals) public {
+  function revealGuesses(Reveal[] calldata reveals) external {
     require(
       block.timestamp > rounds[currentRound].guessDeadline,
       "revealGuesses guessDeadline hasn't passed"
@@ -125,7 +165,7 @@ contract Lupi is ReentrancyGuard {
     uint256 length = rounds[currentRound].committedGuesses[msg.sender].length;
 
     for (uint256 r = 0; r < reveals.length; r++) {
-      bool found;
+      bool found = false;
       for (uint256 i = 0; i < length; i++) {
         if (
           rounds[currentRound].committedGuesses[msg.sender][i].guessHash ==
@@ -137,13 +177,15 @@ contract Lupi is ReentrancyGuard {
           );
 
           require(
-            getSaltedHash(reveals[r].answer, reveals[r].salt) ==
-              reveals[r].guessHash,
+            getSaltedHash(
+              rounds[currentRound].nonce,
+              reveals[r].answer,
+              reveals[r].salt
+            ) == reveals[r].guessHash,
             "Reveal hash does not match guessHash"
           );
           require(
-            rounds[currentRound].committedGuesses[msg.sender][i].revealed ==
-              false,
+            !rounds[currentRound].committedGuesses[msg.sender][i].revealed,
             "Already revealed"
           );
           rounds[currentRound].committedGuesses[msg.sender][i].revealed = true;
@@ -158,26 +200,17 @@ contract Lupi is ReentrancyGuard {
     }
   }
 
-  function getCurrentNonce() public view returns (bytes32) {
+  function getCurrentNonce() external view returns (bytes32) {
     return (rounds[currentRound].nonce);
   }
 
-  function getSaltedHash(uint32 answer, bytes32 salt)
-    public
-    view
-    returns (bytes32)
-  {
-    return
-      keccak256(abi.encodePacked(rounds[currentRound].nonce, answer, salt));
-  }
-
-  function endGame() public nonReentrant {
+  function endGame() external nonReentrant {
     require(
       block.timestamp > rounds[currentRound].revealDeadline,
       "Still in reveal phase"
     );
     uint32 lowestGuess = 0xffffffff;
-    address winner;
+    address winner = address(0);
 
     for (uint256 i = 0; i < rounds[currentRound].revealedGuesses.length; i++) {
       if (rounds[currentRound].revealedGuesses[i].guess < lowestGuess) {
@@ -203,7 +236,8 @@ contract Lupi is ReentrancyGuard {
       }
     }
 
-    uint256 award;
+    uint256 award = 0;
+    bytes32 nonce = rounds[currentRound].nonce;
 
     if (lowestGuess < 0xffffffff && winner != address(0)) {
       // Winner takes all plus rollover
@@ -213,22 +247,36 @@ contract Lupi is ReentrancyGuard {
       // Balance rolls over to next round
       rollover += rounds[currentRound].balance;
     }
+
+    bytes32 priorRound = currentRound;
+    for (uint256 i = 0; i < rounds[currentRound].players.length; i++) {
+      delete rounds[currentRound].committedGuesses[
+        rounds[currentRound].players[i]
+      ];
+    }
+    delete rounds[currentRound].revealedGuesses;
+    delete rounds[currentRound].players;
+    //slither-disable-next-line mapping-deletion
+    delete rounds[currentRound];
+    newGame();
+    bool success = false;
     if (award > 0 && winner != address(0)) {
-      payable(winner).transfer(award);
+      //slither-disable-next-line reentrancy-eth
+      (success, ) = winner.call{gas: 21000, value: award}("");
     }
     emit GameResult(
-      rounds[currentRound].nonce,
+      nonce,
       winner,
       award,
       lowestGuess < 0xffffffff ? lowestGuess : 0
     );
-
-    delete rounds[currentRound];
-    newGame();
+    if (!success && award > 0 && winner != address(0)) {
+      deferAward(priorRound, winner, award);
+    }
   }
 
   function getCommittedGuessHashes(address player)
-    public
+    external
     view
     returns (bytes32[] memory)
   {
@@ -245,23 +293,77 @@ contract Lupi is ReentrancyGuard {
     return guesses;
   }
 
-  function getPlayers() public view returns (address[] memory) {
+  /**
+   * @dev Deposit balance for a winner when the call in endGame failed.
+   * @param winner The address to which funds may be claimed from.
+   */
+  function deferAward(
+    bytes32 roundNonce,
+    address winner,
+    uint256 amount
+  ) internal {
+    pendingWinner = winner;
+    pendingAmount = amount;
+    pendingAwardRound = roundNonce;
+    emit AwardDeferred(roundNonce, winner, amount);
+  }
+
+  /**
+   * @dev Withdraw deferred balance for a winner when the call in endGame failed.
+   * @param payee The address to which funds will be sent to.
+   */
+  function withdrawAward(address payable payee) external nonReentrant {
+    require(
+      msg.sender == pendingWinner,
+      "Only the winning address may withdraw"
+    );
+    require(payee != address(0), "Not allowed to transfer to address(0)");
+    bytes32 roundNonce = pendingAwardRound;
+    uint256 amount = pendingAmount;
+    address winner = pendingWinner;
+
+    delete pendingAmount;
+    delete pendingWinner;
+    delete pendingAwardRound;
+
+    (bool success, ) = payee.call{value: amount}("");
+    require(success, "withdrawAward unable to send value");
+    emit AwardWithdrawn(roundNonce, winner, payee, amount);
+  }
+
+  /**
+   * @dev Forfeit balance for a winner when the balance wasn't retrieved prior to the
+   * next round starting.
+   */
+  function forfeitAward() internal {
+    rollover += pendingAmount;
+    emit AwardForfeited(pendingAwardRound, pendingWinner, pendingAmount);
+    delete pendingAwardRound;
+    delete pendingWinner;
+    delete pendingAmount;
+  }
+
+  function getPlayers() external view returns (address[] memory) {
     return rounds[currentRound].players;
   }
 
-  function getCurrentBalance() public view returns (uint256) {
+  function getCurrentBalance() external view returns (uint256) {
     return rounds[currentRound].balance;
   }
 
-  function getRolloverBalance() public view returns (uint256) {
+  function getRolloverBalance() external view returns (uint256) {
     return rollover;
   }
 
-  function getRound() public view returns (uint8) {
+  function getRound() external view returns (uint8) {
     return round;
   }
 
-  function getPhase() public view returns (GamePhase) {
+  function getPendingWinner() external view returns (address) {
+    return pendingWinner;
+  }
+
+  function getPhase() external view returns (GamePhase) {
     if (block.timestamp <= rounds[currentRound].guessDeadline) {
       return GamePhase.GUESS;
     } else if (block.timestamp <= rounds[currentRound].revealDeadline) {
@@ -271,17 +373,17 @@ contract Lupi is ReentrancyGuard {
     }
   }
 
-  function getPhaseDeadline() public view returns (uint256) {
+  function getPhaseDeadline() external view returns (uint256) {
     if (block.timestamp <= rounds[currentRound].guessDeadline) {
-      return rounds[currentRound].guessDeadline - block.timestamp;
+      return rounds[currentRound].guessDeadline;
     } else if (block.timestamp <= rounds[currentRound].revealDeadline) {
-      return rounds[currentRound].revealDeadline - block.timestamp;
+      return rounds[currentRound].revealDeadline;
     } else {
       return 0;
     }
   }
 
-  function getRevealedGuess() public view returns (uint256[] memory) {
+  function getRevealedGuess() external view returns (uint256[] memory) {
     uint256[] memory guesses = new uint256[](
       rounds[currentRound].revealedGuesses.length
     );
