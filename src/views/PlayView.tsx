@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
+import { GameStats } from "src/components/GameStats";
 import { NumBox } from "src/components/NumBox";
 import { NumPad } from "src/components/NumPad";
-import { RoundStats } from "src/components/RoundStats";
 import { Ticket } from "src/components/Ticket";
-import { useLupiContract } from "src/hooks/use_lupi_contract";
+import { useLupiContract } from "src/hooks/useLupiContract";
 import { Box, Button, Grid, Text } from "src/ui";
 import {
   generateTicketData,
@@ -18,7 +18,7 @@ export const PlayState = () => {
 
   const validate = useCallback(() => {
     if (validateGuess(inputValue, 999)) {
-      const ticketData = generateTicketData(inputValue, String(round ?? 0));
+      const ticketData = generateTicketData(inputValue, round ?? 0);
       setTicketData(ticketData);
     }
   }, [inputValue, round]);
@@ -105,7 +105,7 @@ const RoundPanel = ({ inputValue }: { inputValue: number }) => {
         Round {round}
       </Text>
       <NumBox value={inputValue} cols={1} />
-      <RoundStats />
+      <GameStats />
     </Grid>
   );
 };

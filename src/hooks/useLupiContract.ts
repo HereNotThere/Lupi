@@ -1,6 +1,6 @@
 import { ethers, utils } from "ethers";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useWeb3Context } from "./use_web3";
+import { useWeb3Context } from "./useWeb3";
 import LupiAbi from "../artifacts/contracts/Lupi.sol/Lupi.json";
 import { Lupi } from "typechain-types";
 import { notUndefined } from "../utils";

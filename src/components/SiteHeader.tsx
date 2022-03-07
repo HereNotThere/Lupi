@@ -1,11 +1,13 @@
 import styled from "styled-components";
 import { Box, Grid, Text } from "../ui";
-import { useWeb3Context } from "src/hooks/use_web3";
-import { useLupiContract } from "src/hooks/use_lupi_contract";
+import { useWeb3Context } from "src/hooks/useWeb3";
+import { useLupiContract } from "src/hooks/useLupiContract";
+import { getShortAddress } from "src/utils/lupiUtils";
 
 export const SiteHeader = () => {
   const { accounts, chainId } = useWeb3Context();
   const { phase } = useLupiContract();
+  const shortAccounts = accounts.map(getShortAddress);
   return (
     <Grid columns={2} padding="md" horizontalPadding="lg" border borderRadius>
       <Box>
@@ -14,6 +16,10 @@ export const SiteHeader = () => {
         </Text>
       </Box>
       <Box row justifyContent="end" alignItems="center" gap="md">
+        <Text color="text" header="small">
+          Account: {shortAccounts}
+        </Text>
+        <Separator />
         <Text color="text" header="small">
           HOW TO PLAY
         </Text>
@@ -28,10 +34,6 @@ export const SiteHeader = () => {
         <Separator />
         <Text color="text" header="small">
           Chain ID: {chainId}
-        </Text>
-        <Separator />
-        <Text color="text" header="small">
-          Account: {accounts}
         </Text>
       </Box>
     </Grid>

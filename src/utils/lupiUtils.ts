@@ -14,3 +14,9 @@ export const validateGuess = (value: number, maxGuess: number) => {
     value <= maxGuess
   );
 };
+
+export const getShortAddress = (address?: string) => {
+  return address && address.length > 16
+    ? `${address.slice(0, 5)}..${address.slice(-4)}`
+    : address;
+};

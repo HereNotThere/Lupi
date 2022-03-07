@@ -1,7 +1,7 @@
-import { useLupiContract } from "src/hooks/use_lupi_contract";
+import { useLupiContract } from "src/hooks/useLupiContract";
 import { Box, Grid, Text } from "src/ui";
 
-export const RoundStats = () => {
+export const GameStats = () => {
   const { guessHashes, currentBalance, rolloverBalance, phaseDeadline } =
     useLupiContract();
   return (
