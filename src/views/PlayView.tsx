@@ -14,7 +14,8 @@ import {
 export const PlayState = () => {
   const [inputValue, setInputValue] = useState(0);
   const [ticketData, setTicketData] = useState<TicketData>();
-  const { round } = useLupiContract();
+  const game = useLupiContract();
+  const { round, commitGuess } = game;
 
   const validate = useCallback(() => {
     if (validateGuess(inputValue, 999)) {
@@ -56,22 +57,49 @@ export const PlayState = () => {
     };
   }, [onKeyPadPress, validate]);
 
+  const submitTicket = useCallback(async () => {
+    console.log(ticketData);
+    const result = await commitGuess(String(inputValue));
+    console.log({ result });
+  }, [commitGuess, inputValue, ticketData]);
+
+  const onSubmitClick = useCallback(() => {
+    submitTicket().catch((e) => console.error(e));
+  }, [submitTicket]);
+
+  const onCancelClick = useCallback(() => {
+    setTicketData(undefined);
+  }, []);
+
   return !ticketData ? (
     <PlayView inputValue={inputValue} onKeyPadPress={onKeyPadPress} />
   ) : (
-    <TicketView ticketData={ticketData} />
+    <TicketView
+      ticketData={ticketData}
+      onSubmitClick={onSubmitClick}
+      onCancelClick={onCancelClick}
+    />
   );
 };
 
-const TicketView = (props: { ticketData: TicketData }) => {
+const TicketView = (props: {
+  ticketData: TicketData;
+  onSubmitClick: () => void;
+  onCancelClick: () => void;
+}) => {
   return (
     <Box grow centerContent gap="md">
       <Ticket ticketData={props.ticketData} />
       <Text>Entry fee: 0.01ETH + gas</Text>
-      <Button padding="md" horizontalPadding="lg">
+      <Button padding="md" horizontalPadding="lg" onClick={props.onSubmitClick}>
         <Text header="large">Submit Ticket</Text>
       </Button>
-      <Button padding="md" horizontalPadding="lg" background="muted2">
+      <Button
+        padding="md"
+        horizontalPadding="lg"
+        background="muted2"
+        onClick={props.onCancelClick}
+      >
         <Text header="large" color="text">
           Back
         </Text>
