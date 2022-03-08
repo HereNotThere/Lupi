@@ -38,7 +38,7 @@ describe("Lupi", async function () {
 
     expect(await lupi.getPhase()).to.equal(GamePhase.GUESS);
     expect((await lupi.getPhaseDeadline()).toNumber()).to.closeTo(
-      blockTimestamp + 259200,
+      blockTimestamp + 2 * 60,
       100
     );
 
@@ -84,7 +84,7 @@ describe("Lupi", async function () {
     const now =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
     await ethers.provider.send("evm_mine", []);
 
@@ -115,7 +115,7 @@ describe("Lupi", async function () {
     const now =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
     await ethers.provider.send("evm_mine", []);
 
@@ -147,7 +147,7 @@ describe("Lupi", async function () {
     const now =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
     await ethers.provider.send("evm_mine", []);
 
@@ -181,7 +181,7 @@ describe("Lupi", async function () {
     const now =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
     await ethers.provider.send("evm_mine", []);
 
@@ -241,7 +241,7 @@ describe("Lupi", async function () {
     const now =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      8 * 24 * 60 * 60;
+      5 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
     await ethers.provider.send("evm_mine", []);
 
@@ -274,7 +274,7 @@ describe("Lupi", async function () {
     const now =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
     await ethers.provider.send("evm_mine", []);
 
@@ -306,7 +306,7 @@ describe("Lupi", async function () {
     const now =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
     await ethers.provider.send("evm_mine", []);
 
@@ -335,7 +335,7 @@ describe("Lupi", async function () {
     const now =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      8 * 24 * 60 * 60;
+      5 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
     await ethers.provider.send("evm_mine", []);
 
@@ -372,7 +372,7 @@ describe("Lupi", async function () {
     const now =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
     await ethers.provider.send("evm_mine", []);
 
@@ -439,13 +439,13 @@ describe("Lupi", async function () {
     const guessDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
     await ethers.provider.send("evm_mine", []);
 
     expect(await lupi.getPhase()).to.equal(GamePhase.REVEAL);
     expect((await lupi.getPhaseDeadline()).toNumber()).to.equal(
-      blockTimestamp + 5 * 24 * 60 * 60
+      blockTimestamp + 4 * 60
     );
 
     for (let j = 0; j < 2; j++) {
@@ -475,7 +475,7 @@ describe("Lupi", async function () {
     const revealDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -493,7 +493,7 @@ describe("Lupi", async function () {
 
     expect(await lupi.getPhase()).to.equal(GamePhase.GUESS);
     expect((await lupi.getPhaseDeadline()).toNumber()).to.closeTo(
-      blockTimestamp + 5 * 24 * 60 * 60 + 6 * 24 * 60 * 60,
+      blockTimestamp + 7 * 60,
       100
     );
   });
@@ -532,7 +532,7 @@ describe("Lupi", async function () {
     const guessDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -567,7 +567,7 @@ describe("Lupi", async function () {
     const revealDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -608,7 +608,7 @@ describe("Lupi", async function () {
     const guessDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -670,7 +670,7 @@ describe("Lupi", async function () {
     const guessDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -753,7 +753,7 @@ describe("Lupi", async function () {
     const guessDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -769,7 +769,7 @@ describe("Lupi", async function () {
     const revealDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -830,7 +830,7 @@ describe("Lupi", async function () {
     const guessDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -847,7 +847,7 @@ describe("Lupi", async function () {
     const revealDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -910,7 +910,7 @@ describe("Lupi", async function () {
     const guessDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -926,7 +926,7 @@ describe("Lupi", async function () {
     const revealDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -1006,7 +1006,7 @@ describe("Lupi", async function () {
     const guessDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -1022,7 +1022,7 @@ describe("Lupi", async function () {
     const revealDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -1098,7 +1098,7 @@ describe("Lupi", async function () {
     const guessDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -1114,7 +1114,7 @@ describe("Lupi", async function () {
     const revealDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -1189,7 +1189,7 @@ describe("Lupi", async function () {
     const guessDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -1205,7 +1205,7 @@ describe("Lupi", async function () {
     const revealDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -1305,7 +1305,7 @@ describe("Lupi", async function () {
     const guessDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
     await ethers.provider.send("evm_mine", []);
 
@@ -1321,7 +1321,7 @@ describe("Lupi", async function () {
     const revealDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +
-      4 * 24 * 60 * 60;
+      3 * 60;
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
