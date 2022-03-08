@@ -220,31 +220,28 @@ export const useLupiContract = () => {
     [contract, contractSigner]
   );
 
-  const revealGuess = useCallback(
-    async (revealedGuess: TicketData) => {
+  const revealGuesses = useCallback(
+    async (tickets: TicketData[]) => {
       if (!transactionRunning.current && contractSigner && contract) {
         transactionRunning.current = true;
         try {
           const currentNonce = await contract.getCurrentNonce();
           const currentRound = await contract.getRound();
-          if (revealedGuess.roundId !== currentRound) {
-            throw new Error(
-              `Reveal for round ${revealedGuess.roundId} not for current round $${currentRound}`
-            );
-          }
-          const guessHash = getGuessHash(
-            currentNonce,
-            revealedGuess.guess,
-            revealedGuess.salt
-          );
-          const transaction = await contractSigner.revealGuesses([
-            {
+          const reveals = tickets.map((t) => {
+            if (t.roundId !== currentRound) {
+              throw new Error(
+                `Reveal for round ${t.roundId} not for current round $${currentRound}`
+              );
+            }
+            const guessHash = getGuessHash(currentNonce, t.guess, t.salt);
+            return {
               guessHash,
-              round: revealedGuess.roundId,
-              answer: revealedGuess.guess,
-              salt: revealedGuess.salt,
-            },
-          ]);
+              round: t.roundId,
+              answer: t.guess,
+              salt: t.salt,
+            };
+          });
+          const transaction = await contractSigner.revealGuesses(reveals);
           await transaction.wait();
         } finally {
           transactionRunning.current = false;
@@ -266,6 +263,6 @@ export const useLupiContract = () => {
     revealedGuesses,
     callEndGame,
     commitGuess,
-    revealGuess,
+    revealGuesses,
   };
 };

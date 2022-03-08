@@ -17,7 +17,6 @@ export const GameState = () => {
   const [ticketPreview, setTicketPreview] = useState<TicketData>();
   const {
     commitGuess,
-    revealGuess,
     callEndGame,
     phase,
     revealedGuesses,
@@ -114,15 +113,6 @@ export const GameState = () => {
       window.removeEventListener("keyup", onKeyUp);
     };
   }, [onKeyPadPress, submitGuess]);
-
-  const onCancelClick = useCallback(() => {
-    setInputValue(0);
-  }, []);
-
-  const onRevealClick = useCallback(
-    async (ticket: TicketData) => await revealGuess(ticket),
-    [revealGuess]
-  );
 
   const onDownloadTicket = useCallback(() => {
     const content = JSON.stringify(allSubmittedTickets);
@@ -290,7 +280,10 @@ const RoundPanel = ({ inputValue }: { inputValue: number }) => {
 
 const RevealView = (props: { ticketList: TicketData[] }) => {
   const { ticketList } = props;
-  const { round } = useLupiContract();
+  const { round, revealGuesses } = useLupiContract();
+  const revealAll = useCallback(async () => {
+    await revealGuesses(ticketList);
+  }, [revealGuesses, ticketList]);
 
   return (
     <Grid columns={2} grow>
@@ -315,7 +308,7 @@ const RevealView = (props: { ticketList: TicketData[] }) => {
                 <Ticket ticketData={ticket} key={ticket.guess} />
               ))}
             </Box>
-            <BigButton>
+            <BigButton onClick={revealAll}>
               Check ticket{ticketList.length > 1 ? "s" : ""}
             </BigButton>
           </>

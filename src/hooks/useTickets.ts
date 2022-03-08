@@ -9,7 +9,7 @@ type AllTickets = {
 
 export const useTickets = () => {
   const [tickets, setTickets] = useState<AllTickets>(() => {
-    const saved = localStorage.getItem("allTickets");
+    const saved = localStorage.getItem("tickets");
     return saved ? JSON.parse(saved) : {};
   });
 
