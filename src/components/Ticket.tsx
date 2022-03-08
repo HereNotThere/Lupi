@@ -3,8 +3,11 @@ import { Box, Text } from "src/ui";
 import { getShortAddress } from "src/utils/lupiUtils";
 import styled from "styled-components";
 
-export const Ticket = (props: { ticketData: TicketData }) => (
-  <GradientCard borderRadius="lg" padding="md">
+export const Ticket = (props: {
+  ticketData: TicketData;
+  className?: string;
+}) => (
+  <GradientCard borderRadius="lg" padding="md" className={props.className}>
     <InsideCard row borderRadius="lg">
       <LeftContainer gap="sm" border="after" padding="md">
         <RotatedText header="small">

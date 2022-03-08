@@ -13,30 +13,32 @@ export interface ButtonProps extends BoxProps {
 }
 
 export const Button = (props: BoxProps) => {
+  const { children, className, ...boxProps } = props;
   return (
     <Box
       as="button"
-      {...props}
-      className={`Button ${props.className ? props.className : ""}`}
+      background="none"
+      {...boxProps}
+      className={`Button ${className ? className : ""}`}
     >
-      {props.children}
+      {children}
     </Box>
   );
 };
 
 export interface TextButtonProps extends ButtonProps {
-  color: keyof typeof ColorThemeAttrs;
-  size: keyof typeof HeaderAttrs;
-  textTransform: keyof typeof TextTransformAttrs;
+  color?: keyof typeof ColorThemeAttrs;
+  size?: keyof typeof HeaderAttrs;
+  textTransform?: keyof typeof TextTransformAttrs;
   children?: React.ReactText;
 }
 
 export const TextButton = (props: TextButtonProps) => {
-  const { color, size, textTransform } = props;
+  const { children, color, size, textTransform, ...buttonProps } = props;
   return (
-    <Button>
+    <Button {...buttonProps}>
       <Text header={size} color={color} textTransform={textTransform}>
-        {props.children}
+        {children}
       </Text>
     </Button>
   );

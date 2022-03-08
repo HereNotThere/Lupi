@@ -103,7 +103,7 @@ export const DebugPanel = () => {
         </Box>
 
         <Box padding border centerContent>
-          <Box>Revealed Guesses: {revealedGuesses}</Box>
+          <Box>Revealed Guesses: {JSON.stringify(revealedGuesses)}</Box>
         </Box>
       </Box>
     </Box>

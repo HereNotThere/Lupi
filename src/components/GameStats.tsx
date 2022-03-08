@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useLupiContract } from "src/hooks/useLupiContract";
+import { GamePhase, useLupiContract } from "src/hooks/useLupiContract";
 import { Box, Grid, Text } from "src/ui";
 import { ethers } from "ethers";
 
@@ -11,7 +11,7 @@ export const GameStats = () => {
     () =>
       phaseDeadline?.toNumber()
         ? new Date(phaseDeadline.toNumber() * 1000).toISOString()
-        : "NaN",
+        : "",
     [phaseDeadline]
   );
 
@@ -32,19 +32,24 @@ export const GameStats = () => {
           {guessHashes?.length ?? 0}
         </Text>
       </Box>
-      <Box padding="sm" border centerContent gap="xs" cols={2}>
-        <Text header="small">The LUPI Reveal</Text>
-        <Text header="regular" color="primary">
-          {"P: " + phaseEndTimestamp}
-        </Text>
-        <Text header="regular" color="primary">
-          {"N: " + new Date().toISOString()}
-        </Text>
-      </Box>
+      {phaseEndTimestamp && (
+        <Box padding="sm" border centerContent gap="xs" cols={2}>
+          <Text header="small">The LUPI Reveal</Text>
+          <Text header="regular" color="primary">
+            {phaseEndTimestamp}
+          </Text>
+        </Box>
+      )}
       <Box padding="sm" border centerContent gap="xs" cols={2}>
         <Text header="small">Phase</Text>
         <Text header="regular" color="primary">
-          {phase}
+          {phase === GamePhase.GUESS
+            ? "Guess"
+            : phase === GamePhase.REVEAL
+            ? "Reveal"
+            : GamePhase.ENDGAME
+            ? "End Game"
+            : "Unknown"}
         </Text>
       </Box>
     </Grid>

@@ -5,6 +5,13 @@ const flexPosition = {
   start: "start",
   end: "end",
   center: "center",
+  stretch: "stretch",
+} as const;
+
+const flexAlign = {
+  ...flexPosition,
+  spaceAround: "space-around",
+  spaceBetween: "space-around",
 } as const;
 
 const Sizes = {
@@ -50,6 +57,7 @@ const ColorTheme = {
 };
 
 type FlexPosition = keyof typeof flexPosition;
+type FlexAlign = keyof typeof flexAlign;
 type SizeAttr = keyof typeof Sizes;
 type BorderAttr = keyof typeof Borders;
 type BackgroundAttr = keyof typeof Backgrounds;
@@ -67,7 +75,7 @@ interface BaseProps {
   row?: boolean;
 
   justifyContent?: FlexPosition;
-  alignContent?: FlexPosition;
+  alignContent?: FlexAlign;
   alignItems?: FlexPosition;
   alignSelf?: FlexPosition;
 
@@ -161,6 +169,9 @@ export const Box = forwardRef<HTMLDivElement, Props>((props, ref) => {
     if (props.alignItems) {
       classList.push(`align-items-${props.alignItems}`);
     }
+    if (props.alignSelf) {
+      classList.push(`align-self-${props.alignSelf}`);
+    }
     if (props.centerContent) {
       classList.push(`center-content`);
     }
@@ -237,6 +248,7 @@ export const Box = forwardRef<HTMLDivElement, Props>((props, ref) => {
     props.justifyContent,
     props.alignContent,
     props.alignItems,
+    props.alignSelf,
     props.centerContent,
     props.overflow,
     props.border,

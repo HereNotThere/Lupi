@@ -1,6 +1,5 @@
-import { Button, Text } from "src/ui";
 import styled, { css } from "styled-components";
-import { BigButton } from "./Buttons";
+import { BigGreenButton } from "./Buttons";
 
 const keys = [
   "1",
@@ -32,9 +31,10 @@ export const NumPad = (props: Props) => {
           aspectRatio="square"
           centerContent
           padding="xs"
+          size="giant"
           value={value}
         >
-          <Text header="giant">{value === "ENTER" ? "⏎" : value}</Text>
+          {value === "ENTER" ? "⏎" : value}
         </StyledNumKey>
       ))}
     </StyledNumPad>
@@ -47,7 +47,7 @@ const StyledNumPad = styled.div`
   gap: var(--bl3);
 `;
 
-const StyledNumKey = styled(BigButton)<{ value: string | number }>`
+const StyledNumKey = styled(BigGreenButton)<{ value: string | number }>`
   ${({ value }) =>
     value === "ENTER" &&
     css`

@@ -65,6 +65,12 @@
     &-center {
       align-content: center;
     }
+    &-space-around {
+      align-content: space-around;
+    }
+    &-space-between {
+      align-content: space-between;
+    }
   }
 
   &--align-items {
@@ -76,6 +82,24 @@
     }
     &-center {
       align-items: center;
+    }
+    &-stretch {
+      align-items: stretch;
+    }
+  }
+
+  &--align-self {
+    &-start {
+      align-self: start;
+    }
+    &-end {
+      align-self: end;
+    }
+    &-center {
+      align-self: center;
+    }
+    &-stretch {
+      align-self: stretch;
     }
   }
 }

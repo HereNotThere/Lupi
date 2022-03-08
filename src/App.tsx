@@ -33,7 +33,11 @@ function App() {
       {/* above the fold container */}
       <Box grow minHeight={`100vh`}>
         <SiteHeader onSelectMenuItem={onSelectMenuItem} />
-        {pageId !== "past-games" ? <GameState /> : <PastGames />}
+        <Box row grow alignContent="center" justifyContent="center">
+          <Box grow maxWidth={1200}>
+            {pageId !== "past-games" ? <GameState /> : <PastGames />}
+          </Box>
+        </Box>
       </Box>
       <Box>
         <DebugPanel />

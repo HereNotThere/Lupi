@@ -1,28 +1,23 @@
+import { BigNumber } from "ethers";
+import { saveAs } from "file-saver";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { BigButton } from "src/components/Buttons";
+import { BigGreenButton, BigGreyButton } from "src/components/Buttons";
 import { GameStats } from "src/components/GameStats";
 import { NumBox } from "src/components/NumBox";
 import { NumPad } from "src/components/NumPad";
 import { Ticket } from "src/components/Ticket";
+import { TicketStack } from "src/components/TicketStack";
 import { GamePhase, useLupiContract } from "src/hooks/useLupiContract";
 import { useTickets } from "src/hooks/useTickets";
 import { useWeb3Context } from "src/hooks/useWeb3";
 import { TicketData } from "src/schema/Ticket";
-import { Box, Button, Grid, Text } from "src/ui";
-import { saveAs } from "file-saver";
-import styled, { css } from "styled-components";
+import { Box, Grid, Text } from "src/ui";
 
 export const GameState = () => {
   const [inputValue, setInputValue] = useState(0);
   const [ticketPreview, setTicketPreview] = useState<TicketData>();
-  const {
-    commitGuess,
-    callEndGame,
-    phase,
-    revealedGuesses,
-    round,
-    phaseDeadline,
-  } = useLupiContract();
+  const { commitGuess, phase, revealedGuesses, round, phaseDeadline } =
+    useLupiContract();
   const { tickets, storeTicket } = useTickets();
   const { chainId } = useWeb3Context();
 
@@ -125,7 +120,7 @@ export const GameState = () => {
     saveAs(blob, filename);
   }, [allSubmittedTickets, round]);
 
-  switch (phase) {
+  switch (false ? 1 : phase) {
     case GamePhase.GUESS: {
       if (ticketPreview) {
         return !ticketPreview.salt ? (
@@ -152,13 +147,10 @@ export const GameState = () => {
       return <RevealView ticketList={ticketList} />;
     }
     case GamePhase.ENDGAME: {
+      console.log(revealedGuesses);
       return (
         <>
-          <Text>
-            {"Time to end the game"}
-            {JSON.stringify(revealedGuesses)}
-          </Text>
-          <Button onClick={() => callEndGame()}>{"EndGame"}</Button>
+          <EndGameView revealedGuesses={revealedGuesses} />
         </>
       );
     }
@@ -177,23 +169,12 @@ const TicketView = (props: {
     <Box grow centerContent gap="md">
       <Ticket ticketData={props.ticketData} />
       <Text>Entry fee: 0.01ETH + gas</Text>
-      <BigButton
-        padding="md"
-        horizontalPadding="lg"
-        onClick={props.onSubmitClick}
-      >
-        <Text header="large">Submit Ticket</Text>
-      </BigButton>
-      <BigButton
-        padding="md"
-        horizontalPadding="lg"
-        background="muted2"
-        onClick={props.onCancelClick}
-      >
-        <Text header="large" color="text">
-          Back
-        </Text>
-      </BigButton>
+      <BigGreenButton onClick={props.onSubmitClick}>
+        Submit Ticket
+      </BigGreenButton>
+      <BigGreyButton background="muted2" onClick={props.onCancelClick}>
+        Back
+      </BigGreyButton>
     </Box>
   );
 };
@@ -206,13 +187,7 @@ const SubmittedTicketView = (props: {
 }) => {
   return (
     <Box grow centerContent gap="lg">
-      <TicketContainer>
-        {props.ticketData.map((t, index) => (
-          <PerspectiveContainer index={index}>
-            <Ticket ticketData={t} />
-          </PerspectiveContainer>
-        ))}
-      </TicketContainer>
+      <TicketStack tickets={props.ticketData}></TicketStack>
       <Box alignItems="center">
         <Text header="large">Your entry was submitted!</Text>
         <Text color="muted" align="center">
@@ -220,24 +195,13 @@ const SubmittedTicketView = (props: {
           If not, download and keep it safe:
         </Text>
       </Box>
-      <Box gap="md">
-        <BigButton
-          padding="md"
-          horizontalPadding="lg"
-          onClick={props.onDownloadClick}
-        >
-          <Text header="large">Download ticket</Text>
-        </BigButton>
-        <BigButton
-          padding="md"
-          horizontalPadding="lg"
-          background="muted2"
-          onClick={props.onBackClick}
-        >
-          <Text header="large" color="text">
-            Submit another
-          </Text>
-        </BigButton>
+      <Box gap="md" alignItems="center">
+        <BigGreenButton onClick={props.onDownloadClick}>
+          {`Download ticket${props.ticketData.length > 1 ? "s" : ""}`}
+        </BigGreenButton>
+        <BigGreyButton onClick={props.onBackClick}>
+          Submit another
+        </BigGreyButton>
       </Box>
       <Box alignItems="center">
         <Text header="large">
@@ -297,20 +261,20 @@ const RevealView = (props: { ticketList: TicketData[] }) => {
         </Grid>
       </Box>
       {/* right column */}
-      <Box grow centerContent>
+      <Box grow centerContent gap="lg">
         {!ticketList.length ? (
-          <Text header="large">No tickets...</Text>
-        ) : (
           <>
             <Text header="large">{"Check if you are the LUPI"}</Text>
-            <Box row>
-              {ticketList.map((ticket) => (
-                <Ticket ticketData={ticket} key={ticket.guess} />
-              ))}
-            </Box>
-            <BigButton onClick={revealAll}>
-              Check ticket{ticketList.length > 1 ? "s" : ""}
-            </BigButton>
+            <BigGreenButton>Upload your tickets</BigGreenButton>
+          </>
+        ) : (
+          <>
+            <TicketStack tickets={ticketList} />
+            <BigGreenButton onClick={revealAll}>
+              {`Check ${ticketList.length > 1 ? ticketList.length : ""} ticket${
+                ticketList.length > 1 ? "s" : ""
+              }`}
+            </BigGreenButton>
           </>
         )}
       </Box>
@@ -318,12 +282,36 @@ const RevealView = (props: { ticketList: TicketData[] }) => {
   );
 };
 
-const TicketContainer = styled(Box)`
-  > *:not(:last-child) {
-    position: absolute;
-  }
-`;
+const EndGameView = (props: { revealedGuesses?: BigNumber[] }) => {
+  const { revealedGuesses } = props;
+  const { round, callEndGame } = useLupiContract();
 
-const PerspectiveContainer = styled(Box)<{ index: number }>`
-  ${({ index }) => css``}
-`;
+  return (
+    <Grid columns={2} grow>
+      {/* left column */}
+      <Box centerContent>
+        <Grid columns={1} gap="md">
+          <Text header="large" align="center">
+            Round {round}
+          </Text>
+          <GameStats />
+        </Grid>
+      </Box>
+      {/* right column */}
+      <Box grow gap="lg" minHeight={400} centerContent>
+        {revealedGuesses?.length ? (
+          <Box row gap="md">
+            {revealedGuesses?.map((g) => (
+              <Text header="large">{g.toNumber()}</Text>
+            ))}
+          </Box>
+        ) : (
+          <></>
+        )}
+        <BigGreyButton onClick={() => callEndGame()}>
+          Call End Game
+        </BigGreyButton>
+      </Box>
+    </Grid>
+  );
+};
