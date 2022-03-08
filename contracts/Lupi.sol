@@ -245,7 +245,6 @@ contract Lupi is ReentrancyGuard {
       rollover += rounds[round].balance;
     }
 
-    uint32 priorRound = round;
     for (uint256 i = 0; i < rounds[round].players.length; i++) {
       delete rounds[round].committedGuesses[rounds[round].players[i]];
     }
@@ -266,7 +265,7 @@ contract Lupi is ReentrancyGuard {
       lowestGuess < 0xffffffff ? lowestGuess : 0
     );
     if (!success && award > 0 && winner != address(0)) {
-      deferAward(priorRound, winner, award);
+      deferAward(lastRound, winner, award);
     }
   }
 

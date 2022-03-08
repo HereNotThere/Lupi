@@ -9,7 +9,7 @@ import { TicketData } from "../schema/Ticket";
 
 // Lupi on Rinkeby
 const rinkebylupiAddress = "0xa586B7adE6E07FD3B5f1A5a37882D53c28791aDb";
-const arbRinkebyAddress = "0xaeE8cA8c96BC12Efe3E740A3B50FddDfA8BB2110";
+const arbRinkebyAddress = "0xc5F00783eC69fF73Db9a6085C49c7F07253872de";
 const hhAddress = process.env.REACT_APP_HARDHAT_ADDRESS;
 // const lupiAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
 
@@ -122,8 +122,36 @@ export const useLupiContract = () => {
       void (async () => {
         try {
           if (contract) {
-            const eventFilter = contract.filters.GameResult(); //.ContractEvent()
-            const events = await contract.queryFilter(eventFilter);
+            console.log(`fetching events`);
+            const minBlock =
+              (await contract.provider.getBlockNumber()) - 100000;
+
+            /*
+            const topicId = utils.id(
+              "GameResult(uint32,address,uint256,uint32)"
+            );
+            const topicNameId = utils.id("GameResult");
+              */
+            const logs = await contract.provider.getLogs({
+              fromBlock: minBlock,
+              toBlock: "latest",
+              address: lupiAddress,
+            });
+            console.log(`logs ${logs}`, logs);
+
+            /*
+              contract.provider.lookupAddress[
+                "GameResult(uint32,address,uint256,uint32)"
+              ](); //.ContractEvent()
+              */
+            const eventFilter = { address: lupiAddress };
+            console.log(`eventFilter ${eventFilter}`, eventFilter);
+            const events = await contract.queryFilter(
+              eventFilter,
+              minBlock,
+              "latest"
+            );
+            console.log(`events ${events}`, events);
             if (!shutdown) {
               setFinishedGames(events);
             }
@@ -139,7 +167,7 @@ export const useLupiContract = () => {
     } catch (err) {
       console.warn(`GameResult failed`);
     }
-  }, [contract]);
+  }, [contract, lupiAddress]);
 
   const transactionRunning = useRef(false);
   const callEndGame = useCallback(async () => {
