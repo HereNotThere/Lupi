@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { BigButton } from "src/components/Buttons";
 import { GameStats } from "src/components/GameStats";
 import { NumBox } from "src/components/NumBox";
@@ -10,6 +10,7 @@ import { useWeb3Context } from "src/hooks/useWeb3";
 import { TicketData } from "src/schema/Ticket";
 import { Box, Button, Grid, Text } from "src/ui";
 import { saveAs } from "file-saver";
+import styled, { css } from "styled-components";
 
 export const GameState = () => {
   const [inputValue, setInputValue] = useState(0);
@@ -158,21 +159,7 @@ export const GameState = () => {
       }
     }
     case GamePhase.REVEAL: {
-      return (
-        <>
-          <Text>{"Time to redeem tickets"}</Text>
-          <ul>
-            {ticketList.map((ticket) => (
-              <TicketView
-                key={`${ticket.roundId}${ticket.guess}`}
-                ticketData={ticket}
-                onSubmitClick={() => onRevealClick(ticket)}
-                onCancelClick={onCancelClick}
-              />
-            ))}
-          </ul>
-        </>
-      );
+      return <RevealView ticketList={ticketList} />;
     }
     case GamePhase.ENDGAME: {
       return (
@@ -229,11 +216,13 @@ const SubmittedTicketView = (props: {
 }) => {
   return (
     <Box grow centerContent gap="lg">
-      <Box row>
-        {props.ticketData.map((t) => (
-          <Ticket ticketData={t} />
+      <TicketContainer>
+        {props.ticketData.map((t, index) => (
+          <PerspectiveContainer index={index}>
+            <Ticket ticketData={t} />
+          </PerspectiveContainer>
         ))}
-      </Box>
+      </TicketContainer>
       <Box alignItems="center">
         <Text header="large">Your entry was submitted!</Text>
         <Text color="muted" align="center">
@@ -298,3 +287,50 @@ const RoundPanel = ({ inputValue }: { inputValue: number }) => {
     </Grid>
   );
 };
+
+const RevealView = (props: { ticketList: TicketData[] }) => {
+  const { ticketList } = props;
+  const { round } = useLupiContract();
+
+  return (
+    <Grid columns={2} grow>
+      {/* left column */}
+      <Box centerContent>
+        <Grid columns={1} gap="md">
+          <Text header="large" align="center">
+            Round {round}
+          </Text>
+          <GameStats />
+        </Grid>
+      </Box>
+      {/* right column */}
+      <Box grow centerContent>
+        {!ticketList.length ? (
+          <Text header="large">No tickets...</Text>
+        ) : (
+          <>
+            <Text header="large">{"Check if you are the LUPI"}</Text>
+            <Box row>
+              {ticketList.map((ticket) => (
+                <Ticket ticketData={ticket} key={ticket.guess} />
+              ))}
+            </Box>
+            <BigButton>
+              Check ticket{ticketList.length > 1 ? "s" : ""}
+            </BigButton>
+          </>
+        )}
+      </Box>
+    </Grid>
+  );
+};
+
+const TicketContainer = styled(Box)`
+  > *:not(:last-child) {
+    position: absolute;
+  }
+`;
+
+const PerspectiveContainer = styled(Box)<{ index: number }>`
+  ${({ index }) => css``}
+`;
