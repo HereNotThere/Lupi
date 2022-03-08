@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import "./Text.scss";
 
-const ColorThemeAttrs = {
+export const ColorThemeAttrs = {
   text: "text",
   background: "background",
   primary: "primary",
@@ -11,7 +11,7 @@ const ColorThemeAttrs = {
 
 type ColorTheme = keyof typeof ColorThemeAttrs;
 
-const HeaderAttrs = {
+export const HeaderAttrs = {
   giant: 1,
   xlarge: 2,
   large: 3,
@@ -30,7 +30,7 @@ const AlignAttrs = {
 
 type Align = keyof typeof AlignAttrs;
 
-const TextTransformAttrs = {
+export const TextTransformAttrs = {
   none: "none",
   lowercase: "lowercase",
   uppercase: "uppercase",

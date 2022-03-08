@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { BigButton } from "src/components/Buttons";
 import { GameStats } from "src/components/GameStats";
 import { NumBox } from "src/components/NumBox";
 import { NumPad } from "src/components/NumPad";
 import { Ticket } from "src/components/Ticket";
-import { useLupiContract, GamePhase } from "src/hooks/useLupiContract";
+import { GamePhase, useLupiContract } from "src/hooks/useLupiContract";
 import { useTickets } from "src/hooks/useTickets";
 import { useWeb3Context } from "src/hooks/useWeb3";
-import { TicketData, validateGuess } from "src/schema/Ticket";
+import { TicketData } from "src/schema/Ticket";
 import { Box, Button, Grid, Text } from "src/ui";
+import { saveAs } from "file-saver";
 
-export const PlayState = () => {
+export const GameState = () => {
   const [inputValue, setInputValue] = useState(0);
+  const [ticketPreview, setTicketPreview] = useState<TicketData>();
   const {
     commitGuess,
     revealGuess,
@@ -18,36 +21,77 @@ export const PlayState = () => {
     phase,
     revealedGuesses,
     round,
+    phaseDeadline,
   } = useLupiContract();
   const { tickets, storeTicket } = useTickets();
   const { chainId } = useWeb3Context();
+
+  const revealDate = useMemo(() => {
+    if (phaseDeadline) {
+      return new Date(phaseDeadline.toNumber() * 1000);
+    }
+  }, [phaseDeadline]);
 
   const ticketList = useMemo(
     () => (chainId && round ? tickets[chainId]?.[round] ?? [] : []),
     [chainId, round, tickets]
   );
+
+  const isValidTicket = (t?: TicketData): t is TicketData =>
+    !!(t?.roundId && t?.guess && t?.salt);
+
+  const allSubmittedTickets = useMemo(() => {
+    return [
+      ...ticketList.filter((t) => t.guess !== ticketPreview?.guess),
+      ticketPreview,
+    ].filter(isValidTicket);
+  }, [ticketList, ticketPreview]);
+
   const submitGuess = useCallback(async () => {
     console.log("submitTicket", inputValue);
     const result = await commitGuess(inputValue);
     console.log(`commitGuess result`, result);
     if (result && chainId && round) {
       storeTicket(chainId, round, result);
+      setTicketPreview(result);
     } else {
       console.warn(`commitGuess failed`, { result });
     }
   }, [chainId, commitGuess, inputValue, round, storeTicket]);
 
+  const onSubmitGuess = useCallback(async () => {
+    await submitGuess();
+  }, [submitGuess]);
+
+  const onPreviewGuess = useCallback(() => {
+    if (round && inputValue > 0) {
+      setTicketPreview({
+        guess: inputValue,
+        roundId: round,
+        salt: "",
+      });
+    } else {
+      throw new Error("invalid input");
+    }
+  }, [inputValue, round]);
+
+  const onBackClick = useCallback(() => {
+    setTicketPreview(undefined);
+    setInputValue(0);
+  }, []);
+
   const onKeyPadPress = useCallback(
     async (char: string) => {
       if (char === "ENTER") {
-        await submitGuess();
+        onPreviewGuess();
+        // await submitGuess();
         return;
       }
       if (char === String(Number.parseInt(char))) {
         setInputValue((v) => (v > 99 ? v : Number.parseInt(`${v}${char}`)));
       }
     },
-    [submitGuess]
+    [onPreviewGuess]
   );
 
   useEffect(() => {
@@ -79,12 +123,41 @@ export const PlayState = () => {
     [revealGuess]
   );
 
+  const onDownloadTicket = useCallback(() => {
+    const content = JSON.stringify(allSubmittedTickets);
+    const filename = `LUPI Tickets Round#${round}.json`;
+
+    const blob = new Blob([content], {
+      type: "application/json;charset=utf-8",
+    });
+
+    saveAs(blob, filename);
+  }, [allSubmittedTickets, round]);
+
   switch (phase) {
-    case GamePhase.GUESS:
-      return (
-        <GuessView inputValue={inputValue} onKeyPadPress={onKeyPadPress} />
-      );
-    case GamePhase.REVEAL:
+    case GamePhase.GUESS: {
+      if (ticketPreview) {
+        return !ticketPreview.salt ? (
+          <TicketView
+            onCancelClick={onBackClick}
+            onSubmitClick={onSubmitGuess}
+            ticketData={ticketPreview}
+          />
+        ) : (
+          <SubmittedTicketView
+            ticketData={allSubmittedTickets}
+            revealDate={revealDate}
+            onDownloadClick={onDownloadTicket}
+            onBackClick={onBackClick}
+          />
+        );
+      } else {
+        return (
+          <GuessView inputValue={inputValue} onKeyPadPress={onKeyPadPress} />
+        );
+      }
+    }
+    case GamePhase.REVEAL: {
       return (
         <>
           <Text>{"Time to redeem tickets"}</Text>
@@ -100,7 +173,8 @@ export const PlayState = () => {
           </ul>
         </>
       );
-    case GamePhase.ENDGAME:
+    }
+    case GamePhase.ENDGAME: {
       return (
         <>
           <Text>
@@ -110,8 +184,10 @@ export const PlayState = () => {
           <Button onClick={() => callEndGame()}>{"EndGame"}</Button>
         </>
       );
-    default:
+    }
+    default: {
       return <Text>Uknown game state</Text>;
+    }
   }
 };
 
@@ -124,10 +200,14 @@ const TicketView = (props: {
     <Box grow centerContent gap="md">
       <Ticket ticketData={props.ticketData} />
       <Text>Entry fee: 0.01ETH + gas</Text>
-      <Button padding="md" horizontalPadding="lg" onClick={props.onSubmitClick}>
+      <BigButton
+        padding="md"
+        horizontalPadding="lg"
+        onClick={props.onSubmitClick}
+      >
         <Text header="large">Submit Ticket</Text>
-      </Button>
-      <Button
+      </BigButton>
+      <BigButton
         padding="md"
         horizontalPadding="lg"
         background="muted2"
@@ -136,7 +216,56 @@ const TicketView = (props: {
         <Text header="large" color="text">
           Back
         </Text>
-      </Button>
+      </BigButton>
+    </Box>
+  );
+};
+
+const SubmittedTicketView = (props: {
+  ticketData: TicketData[];
+  revealDate?: Date;
+  onDownloadClick: () => void;
+  onBackClick: () => void;
+}) => {
+  return (
+    <Box grow centerContent gap="lg">
+      <Box row>
+        {props.ticketData.map((t) => (
+          <Ticket ticketData={t} />
+        ))}
+      </Box>
+      <Box alignItems="center">
+        <Text header="large">Your entry was submitted!</Text>
+        <Text color="muted" align="center">
+          Your ticket should have automatically downloaded. <br />
+          If not, download and keep it safe:
+        </Text>
+      </Box>
+      <Box gap="md">
+        <BigButton
+          padding="md"
+          horizontalPadding="lg"
+          onClick={props.onDownloadClick}
+        >
+          <Text header="large">Download ticket</Text>
+        </BigButton>
+        <BigButton
+          padding="md"
+          horizontalPadding="lg"
+          background="muted2"
+          onClick={props.onBackClick}
+        >
+          <Text header="large" color="text">
+            Submit another
+          </Text>
+        </BigButton>
+      </Box>
+      <Box alignItems="center">
+        <Text header="large">
+          Come back with your ticket to see if you will win
+        </Text>
+        <Text header="giant">{props.revealDate?.toLocaleTimeString()}</Text>
+      </Box>
     </Box>
   );
 };
@@ -159,7 +288,6 @@ const GuessView = (props: {
 
 const RoundPanel = ({ inputValue }: { inputValue: number }) => {
   const { round } = useLupiContract();
-
   return (
     <Grid columns={1} gap="md">
       <Text header="regular" align="center">

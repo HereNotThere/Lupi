@@ -6,6 +6,11 @@ import { ethers } from "ethers";
 export const GameStats = () => {
   const { guessHashes, currentBalance, rolloverBalance, phaseDeadline, phase } =
     useLupiContract();
+
+  console.log({
+    phase,
+    phaseDeadline: new Date((phaseDeadline?.toNumber() ?? 0) * 1000),
+  });
   const phaseEndTimestamp = useMemo(
     () =>
       phaseDeadline?.toNumber()

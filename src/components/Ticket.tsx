@@ -1,12 +1,15 @@
 import { TicketData } from "src/schema/Ticket";
 import { Box, Text } from "src/ui";
+import { getShortAddress } from "src/utils/lupiUtils";
 import styled from "styled-components";
 
 export const Ticket = (props: { ticketData: TicketData }) => (
   <GradientCard borderRadius="lg" padding="md">
     <InsideCard row borderRadius="lg">
       <LeftContainer gap="sm" border="after" padding="md">
-        <RotatedText header="small">0x23535...235k</RotatedText>
+        <RotatedText header="small">
+          {getShortAddress(props.ticketData.salt || "0x00000000")}
+        </RotatedText>
       </LeftContainer>
       <Box gap="xs" padding="md" minWidth={185} alignItems="start">
         <Text header="large" align="center">

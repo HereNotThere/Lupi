@@ -4,7 +4,7 @@ import { MenuId, SiteHeader } from "./components/SiteHeader";
 import { Box } from "./ui";
 import { HowToPlayView } from "./views/HowToPlayPopup";
 import { PastGames } from "./views/PastGames";
-import { PlayState } from "./views/PlayView";
+import { GameState } from "./views/GameView";
 
 function App() {
   const [pageId, setPageId] = useState<MenuId>("current-game");
@@ -33,7 +33,7 @@ function App() {
       {/* above the fold container */}
       <Box grow minHeight={`100vh`}>
         <SiteHeader onSelectMenuItem={onSelectMenuItem} />
-        {pageId !== "past-games" ? <PlayState /> : <PastGames />}
+        {pageId !== "past-games" ? <GameState /> : <PastGames />}
       </Box>
       <Box>
         <DebugPanel />

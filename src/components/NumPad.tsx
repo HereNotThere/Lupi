@@ -1,5 +1,6 @@
 import { Button, Text } from "src/ui";
 import styled, { css } from "styled-components";
+import { BigButton } from "./Buttons";
 
 const keys = [
   "1",
@@ -46,7 +47,7 @@ const StyledNumPad = styled.div`
   gap: var(--bl3);
 `;
 
-const StyledNumKey = styled(Button)<{ value: string | number }>`
+const StyledNumKey = styled(BigButton)<{ value: string | number }>`
   ${({ value }) =>
     value === "ENTER" &&
     css`

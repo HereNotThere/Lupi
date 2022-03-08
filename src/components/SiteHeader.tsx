@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { useWeb3Context } from "src/hooks/useWeb3";
+import { TextButton } from "src/ui/Button/Button";
 import { getShortAddress } from "src/utils/lupiUtils";
 import styled from "styled-components";
 import { Box, Button, Grid, Text } from "../ui";
@@ -57,7 +58,14 @@ export const SiteHeader = (props: Props) => {
             Account: {shortAccounts}
           </Text>
         ) : (
-          <Button onClick={() => requestAccounts()}>Connect Wallet</Button>
+          <TextButton
+            onClick={() => requestAccounts()}
+            color="primary"
+            size="small"
+            textTransform="uppercase"
+          >
+            Connect Wallet
+          </TextButton>
         )}
       </Box>
     </Grid>
