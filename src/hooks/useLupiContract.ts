@@ -33,7 +33,7 @@ export const useContractCall = <T>(func?: () => Promise<T> | undefined) => {
           }
         }
       } catch (err) {
-        console.warn(`useContractCall failed`);
+        console.warn(`useContractCall failed`, err);
         setState(undefined);
       }
     })();

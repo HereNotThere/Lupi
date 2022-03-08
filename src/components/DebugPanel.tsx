@@ -8,7 +8,9 @@ import { useWeb3Context } from "../hooks/useWeb3";
 const TicketList = (props: { tickets: TicketData[] }) => (
   <ul>
     {props.tickets.map((ticket) => (
-      <li key={`${ticket.roundId}${ticket.guess}`}>{ticket.guess}</li>
+      <li key={`${ticket.roundId}${ticket.guess}${ticket.salt}`}>
+        {ticket.guess}
+      </li>
     ))}
   </ul>
 );

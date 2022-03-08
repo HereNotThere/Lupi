@@ -57,6 +57,15 @@ const config: HardhatUserConfig = {
           ? [process.env.ARB_RINKEBY_PRIVATE_KEY]
           : [],
     },
+    hardhat: {
+      mining: {
+        mempool: {
+          order: "fifo",
+        },
+        auto: true,
+        interval: [3000, 6000],
+      },
+    },
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
