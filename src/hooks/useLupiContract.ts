@@ -45,10 +45,10 @@ export const useContractCall = <T>(func?: () => Promise<T> | undefined) => {
   return state;
 };
 
-function getGuessHash(currentNonce: string, guess: number, salt: Uint8Array) {
+function getGuessHash(currentNonce: string, guess: number, salt: string) {
   return utils.solidityKeccak256(
     ["bytes32", "uint32", "bytes32"],
-    [currentNonce, guess, utils.hexlify(salt)]
+    [currentNonce, guess, salt]
   );
 }
 
@@ -123,7 +123,7 @@ export const useLupiContract = () => {
         try {
           if (contract) {
             const eventFilter = contract.filters.GameResult(); //.ContractEvent()
-            const events = await contract.queryFilter(eventFilter, 0, "latest");
+            const events = await contract.queryFilter(eventFilter);
             if (!shutdown) {
               setFinishedGames(events);
             }
@@ -161,7 +161,8 @@ export const useLupiContract = () => {
       if (!transactionRunning.current && contractSigner && contract) {
         transactionRunning.current = true;
         try {
-          const salt = ethers.utils.randomBytes(32);
+          const bytes = ethers.utils.randomBytes(32);
+          const salt = ethers.utils.hexlify(bytes);
 
           const currentNonce = await contract.getCurrentNonce();
           const roundId = await contract.getRound();

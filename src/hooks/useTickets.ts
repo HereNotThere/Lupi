@@ -1,22 +1,47 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import produce from "immer";
+
 import { TicketData } from "src/schema/Ticket";
 
-export const useTickets = () => {
-  //localStorage.setItem("name", JSON.stringify(name));
+type AllTickets = {
+  [chainId: string]: undefined | { [round: number]: undefined | TicketData[] };
+};
 
-  const [tickets, setTickets] = useState<TicketData[]>(() => {
-    // getting stored value
-    const saved = localStorage.getItem("tickets");
-    return saved ? JSON.parse(saved) : [];
+export const useTickets = () => {
+  const [tickets, setTickets] = useState<AllTickets>(() => {
+    const saved = localStorage.getItem("allTickets");
+    return saved ? JSON.parse(saved) : {};
   });
 
   useEffect(() => {
-    // storing input name
     localStorage.setItem("tickets", JSON.stringify(tickets));
   }, [tickets]);
 
+  const storeTicket = useCallback(
+    (chainId: string, round: number, ticket: TicketData) => {
+      setTickets(
+        produce((draft) => {
+          const chainTickets = draft[chainId];
+          if (chainTickets) {
+            const roundTickets = chainTickets[round];
+            if (roundTickets) {
+              roundTickets.push(ticket);
+            } else {
+              chainTickets[round] = [ticket];
+            }
+          } else {
+            const chainTickets: { [chainId: string]: TicketData[] } = {};
+            chainTickets[round] = [ticket];
+            draft[chainId] = chainTickets;
+          }
+        })
+      );
+    },
+    []
+  );
+
   return {
+    storeTicket,
     tickets,
-    setTickets,
   };
 };

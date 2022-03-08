@@ -3,7 +3,7 @@ export type TicketData = ReturnType<typeof generateTicketData>;
 export const generateTicketData = (
   roundId: number,
   guess: number,
-  salt: Uint8Array
+  salt: string
 ) => ({
   roundId,
   guess,

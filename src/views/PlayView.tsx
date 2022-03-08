@@ -1,50 +1,66 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { GameStats } from "src/components/GameStats";
 import { NumBox } from "src/components/NumBox";
 import { NumPad } from "src/components/NumPad";
 import { Ticket } from "src/components/Ticket";
 import { useLupiContract, GamePhase } from "src/hooks/useLupiContract";
 import { useTickets } from "src/hooks/useTickets";
+import { useWeb3Context } from "src/hooks/useWeb3";
 import { TicketData, validateGuess } from "src/schema/Ticket";
 import { Box, Button, Grid, Text } from "src/ui";
 
 export const PlayState = () => {
   const [inputValue, setInputValue] = useState(0);
-  const [guess, setGuess] = useState(0);
-  const { commitGuess, callEndGame, phase, revealedGuesses } =
-    useLupiContract();
-  const { tickets, setTickets } = useTickets();
+  const {
+    commitGuess,
+    revealGuess,
+    callEndGame,
+    phase,
+    revealedGuesses,
+    round,
+  } = useLupiContract();
+  const { tickets, storeTicket } = useTickets();
+  const { chainId } = useWeb3Context();
 
-  const validate = useCallback(() => {
-    if (validateGuess(inputValue, 999)) {
-      setGuess(inputValue);
+  const ticketList = useMemo(
+    () => (chainId && round ? tickets[chainId]?.[round] ?? [] : []),
+    [chainId, round, tickets]
+  );
+  const submitGuess = useCallback(async () => {
+    console.log("submitTicket", inputValue);
+    const result = await commitGuess(inputValue);
+    console.log(`commitGuess result`, result);
+    if (result && chainId && round) {
+      storeTicket(chainId, round, result);
+    } else {
+      console.warn(`commitGuess failed`, { result });
     }
-  }, [inputValue]);
+  }, [chainId, commitGuess, inputValue, round, storeTicket]);
 
   const onKeyPadPress = useCallback(
-    (char: string) => {
+    async (char: string) => {
       if (char === "ENTER") {
-        validate();
+        await submitGuess();
         return;
       }
       if (char === String(Number.parseInt(char))) {
         setInputValue((v) => (v > 99 ? v : Number.parseInt(`${v}${char}`)));
       }
     },
-    [validate]
+    [submitGuess]
   );
 
   useEffect(() => {
-    const onKeyUp = (e: KeyboardEvent) => {
+    const onKeyUp = async (e: KeyboardEvent) => {
       const { key } = e;
       if (key.match(/[0-9]/)) {
-        onKeyPadPress(key);
+        await onKeyPadPress(key);
       }
       if (key === "Backspace") {
         setInputValue((v) => parseInt(v.toString().slice(0, -1)) || 0);
       }
       if (key === "Enter") {
-        validate();
+        await submitGuess();
       }
     };
 
@@ -52,25 +68,16 @@ export const PlayState = () => {
     return () => {
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [onKeyPadPress, validate]);
-
-  const submitTicket = useCallback(async () => {
-    console.log(guess);
-    const result = await commitGuess(inputValue);
-    if (result) {
-      setTickets((tickets) => [...tickets, result]);
-    } else {
-      console.warn(`commitGuess failed`, { result });
-    }
-  }, [commitGuess, guess, inputValue, setTickets]);
-
-  const onSubmitClick = useCallback(() => {
-    submitTicket().catch((e) => console.error(e));
-  }, [submitTicket]);
+  }, [onKeyPadPress, submitGuess]);
 
   const onCancelClick = useCallback(() => {
     setInputValue(0);
   }, []);
+
+  const onRevealClick = useCallback(
+    async (ticket: TicketData) => await revealGuess(ticket),
+    [revealGuess]
+  );
 
   switch (phase) {
     case GamePhase.GUESS:
@@ -82,11 +89,11 @@ export const PlayState = () => {
         <>
           <Text>{"Time to redeem tickets"}</Text>
           <ul>
-            {tickets.map((ticket) => (
+            {ticketList.map((ticket) => (
               <TicketView
                 key={`${ticket.roundId}${ticket.guess}`}
                 ticketData={ticket}
-                onSubmitClick={onSubmitClick}
+                onSubmitClick={() => onRevealClick(ticket)}
                 onCancelClick={onCancelClick}
               />
             ))}

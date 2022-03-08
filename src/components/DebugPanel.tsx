@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTickets } from "src/hooks/useTickets";
 import { TicketData } from "src/schema/Ticket";
 import { Box, Button, Text } from "src/ui";
@@ -15,12 +15,33 @@ const TicketList = (props: { tickets: TicketData[] }) => (
 
 export const DebugPanel = () => {
   const [guess, setGuessValue] = useState(0);
-  const { addArbitrumRinkebyChain, addArbitrumOneChain, switchEthereumChain } =
-    useWeb3Context();
+  const {
+    addArbitrumRinkebyChain,
+    addArbitrumOneChain,
+    switchEthereumChain,
+    chainId,
+  } = useWeb3Context();
 
-  const { tickets } = useTickets();
-  const { finishedGames, revealedGuesses, commitGuess, callEndGame } =
+  const { tickets, storeTicket } = useTickets();
+
+  const { finishedGames, revealedGuesses, commitGuess, callEndGame, round } =
     useLupiContract();
+
+  const ticketList = useMemo(
+    () => (chainId && round ? tickets[chainId]?.[round] ?? [] : []),
+    [chainId, round, tickets]
+  );
+
+  const onClick = useCallback(async () => {
+    console.log("submitTicket", guess);
+    const result = await commitGuess(guess);
+    console.log(`commitGuess result`, result);
+    if (result && chainId && round) {
+      storeTicket(chainId, round, result);
+    } else {
+      console.warn(`commitGuess failed`, { result });
+    }
+  }, [chainId, commitGuess, guess, round, storeTicket]);
 
   return (
     <Box row>
@@ -32,7 +53,7 @@ export const DebugPanel = () => {
             onChange={(e) => setGuessValue(Number.parseInt(e.target.value))}
             placeholder="Commit guess"
           />
-          <Button onClick={() => commitGuess(guess)}>Commit Guess</Button>
+          <Button onClick={onClick}>Commit Guess</Button>
         </Box>
 
         <Box>
@@ -65,7 +86,7 @@ export const DebugPanel = () => {
         </Box>
 
         <Box padding border centerContent>
-          <TicketList tickets={tickets} />
+          <TicketList tickets={ticketList} />
         </Box>
 
         <Box padding border centerContent>
