@@ -18,10 +18,11 @@ type ChainContracts = {
 
 export const useTickets = () => {
   const { chainId } = useWeb3Context();
-  const { lupiAddress, round } = useLupiContractContext();
+  const { contractAddress, round } = useLupiContractContext();
 
   const [tickets, setTickets] = useState<ChainContracts>(() => {
     const saved = localStorage.getItem("tickets");
+    console.log(`getItem tickets`, saved);
     return saved ? JSON.parse(saved) : {};
   });
 
@@ -43,12 +44,12 @@ export const useTickets = () => {
   );
   const storeTicket = useCallback(
     (ticket: TicketData) => {
-      if (chainId && lupiAddress && round) {
+      if (chainId && contractAddress && round) {
         setTickets((t) => {
           const newTickets = produce((draft) => {
             const chainTickets = draft[chainId];
             if (chainTickets) {
-              const contractTickets = chainTickets[lupiAddress];
+              const contractTickets = chainTickets[contractAddress];
               if (contractTickets) {
                 const roundTickets = contractTickets[round];
                 if (roundTickets) {
@@ -60,7 +61,7 @@ export const useTickets = () => {
                 const contractTickets: { [contractId: string]: TicketData[] } =
                   {};
                 contractTickets[round] = [ticket];
-                chainTickets[lupiAddress] = contractTickets;
+                chainTickets[contractAddress] = contractTickets;
               }
             } else {
               const contractTickets: { [contractId: string]: TicketData[] } =
@@ -69,16 +70,24 @@ export const useTickets = () => {
               const chainTickets: {
                 [chainId: string]: { [contractId: string]: TicketData[] };
               } = {};
-              chainTickets[lupiAddress] = contractTickets;
+              chainTickets[contractAddress] = contractTickets;
               draft[chainId] = chainTickets;
             }
           })(t);
           localStorage.setItem("tickets", JSON.stringify(newTickets));
+          console.log(`setItem tickets`, newTickets);
           return newTickets;
         });
+      } else {
+        console.warn(
+          `storeTicket called to early`,
+          chainId,
+          contractAddress,
+          round
+        );
       }
     },
-    [chainId, lupiAddress, round]
+    [chainId, contractAddress, round]
   );
 
   return {
@@ -92,12 +101,12 @@ export const useTicketList = (
 ) => {
   const { chainId } = useWeb3Context();
   const { chainContractTickets } = useTickets();
-  const { lupiAddress, round } = useLupiContractContext();
+  const { contractAddress, round } = useLupiContractContext();
 
   return useMemo(() => {
     const allTickets =
-      chainId && lupiAddress && chainContractTickets
-        ? chainContractTickets(chainId)(lupiAddress) ?? []
+      chainId && contractAddress && chainContractTickets
+        ? chainContractTickets(chainId)(contractAddress) ?? []
         : [];
 
     const roundTickets = round ? allTickets[round] ?? [] : [];
@@ -108,5 +117,5 @@ export const useTicketList = (
         )
       ) ?? [];
     return res;
-  }, [chainId, guessHashes, round, chainContractTickets, lupiAddress]);
+  }, [chainId, guessHashes, round, chainContractTickets, contractAddress]);
 };

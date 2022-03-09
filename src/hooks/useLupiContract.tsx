@@ -65,7 +65,7 @@ export const useLupiContract = () => {
   }, [forceUpdate]);
   const { provider, chainId } = useWeb3Context();
 
-  const lupiAddress = useMemo(() => {
+  const contractAddress = useMemo(() => {
     console.log(`chainId ${chainId}`);
     switch (chainId) {
       case "0x66eeb":
@@ -87,18 +87,18 @@ export const useLupiContract = () => {
   const signer = useMemo(() => provider?.getSigner(), [provider]);
   const contract = useMemo(
     () =>
-      provider && lupiAddress
-        ? (new ethers.Contract(lupiAddress, LupiAbi.abi, provider) as Lupi)
+      provider && contractAddress
+        ? (new ethers.Contract(contractAddress, LupiAbi.abi, provider) as Lupi)
         : undefined,
-    [provider, lupiAddress]
+    [provider, contractAddress]
   );
 
   const contractSigner = useMemo(
     () =>
-      signer && lupiAddress
-        ? (new ethers.Contract(lupiAddress, LupiAbi.abi, signer) as Lupi)
+      signer && contractAddress
+        ? (new ethers.Contract(contractAddress, LupiAbi.abi, signer) as Lupi)
         : undefined,
-    [signer, lupiAddress]
+    [signer, contractAddress]
   );
 
   const currentBalance = useContractCall(contract?.getCurrentBalance, [
@@ -148,7 +148,7 @@ export const useLupiContract = () => {
             const logs = await contract.provider.getLogs({
               fromBlock: minBlock,
               toBlock: "latest",
-              address: lupiAddress,
+              address: contractAddress,
             });
             console.log(`logs ${logs}`, logs);
 
@@ -157,7 +157,7 @@ export const useLupiContract = () => {
                 "GameResult(uint32,address,uint256,uint32)"
               ](); //.ContractEvent()
               */
-            const eventFilter = { address: lupiAddress };
+            const eventFilter = { address: contractAddress };
             console.log(`eventFilter ${eventFilter}`, eventFilter);
             const events = await contract.queryFilter(
               eventFilter,
@@ -180,7 +180,7 @@ export const useLupiContract = () => {
     } catch (err) {
       console.warn(`GameResult failed`, err);
     }
-  }, [contract, lupiAddress]);
+  }, [contract, contractAddress]);
 
   const [invokeCallEndGame, callEndGameState] = useContractTransact0(
     contractSigner?.endGame
@@ -257,7 +257,7 @@ export const useLupiContract = () => {
   );
 
   return {
-    lupiAddress,
+    contractAddress,
     round,
     phase,
     phaseDeadline,
