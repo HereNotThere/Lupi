@@ -15,7 +15,7 @@ import { createGenericContext } from "../utils/createGenericContext";
 
 // Lupi on Rinkeby
 const rinkebylupiAddress = "0xa586B7adE6E07FD3B5f1A5a37882D53c28791aDb";
-const arbRinkebyAddress = "0xc5F00783eC69fF73Db9a6085C49c7F07253872de";
+const arbRinkebyAddress = "0x53aD5C8B3Df311b1458b37dd272342758Ed4c6FD";
 const hhAddress = process.env.REACT_APP_HARDHAT_ADDRESS;
 // const lupiAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
 
