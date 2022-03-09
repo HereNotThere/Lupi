@@ -33,7 +33,9 @@ export const GameState = () => {
     () =>
       (chainId && round ? tickets[chainId]?.[round] ?? [] : []).filter(
         (ticket) =>
-          guessHashes?.find((guess) => guess.guessHash === ticket.guessHash)
+          guessHashes?.find((guess) =>
+            guess.commitedGuesses.find((t) => t.guessHash === ticket.guessHash)
+          )
       ),
     [chainId, guessHashes, round, tickets]
   );

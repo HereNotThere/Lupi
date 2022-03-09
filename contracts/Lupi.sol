@@ -82,6 +82,11 @@ contract Lupi is ReentrancyGuard {
     bool revealed;
   }
 
+  struct AllCommitedGuess {
+    address player;
+    CommitedGuess[] commitedGuesses;
+  }
+
   struct RevealedGuess {
     address player;
     uint32 guess;
@@ -171,7 +176,7 @@ contract Lupi is ReentrancyGuard {
 
     for (uint256 r = 0; r < reveals.length; r++) {
       bool found = false;
-      for (uint256 i = 0; i < length; i++) {
+      for (uint256 i = 0; i < length; ++i) {
         if (
           rounds[round].committedGuesses[msg.sender][i].guessHash ==
           reveals[r].guessHash
@@ -221,7 +226,7 @@ contract Lupi is ReentrancyGuard {
     uint32 lowestGuess = 0xffffffff;
     address winner = address(0);
 
-    for (uint256 i = 0; i < rounds[round].revealedGuesses.length; i++) {
+    for (uint256 i = 0; i < rounds[round].revealedGuesses.length; ++i) {
       if (rounds[round].revealedGuesses[i].guess < lowestGuess) {
         bool unique = true;
         for (uint256 x = 0; x < rounds[round].revealedGuesses.length; x++) {
@@ -254,7 +259,7 @@ contract Lupi is ReentrancyGuard {
       rollover += rounds[round].balance;
     }
 
-    for (uint256 i = 0; i < rounds[round].players.length; i++) {
+    for (uint256 i = 0; i < rounds[round].players.length; ++i) {
       delete rounds[round].committedGuesses[rounds[round].players[i]];
     }
     delete rounds[round].revealedGuesses;
@@ -276,14 +281,6 @@ contract Lupi is ReentrancyGuard {
     if (!success && award > 0 && winner != address(0)) {
       deferAward(lastRound, winner, award);
     }
-  }
-
-  function getCommittedGuessHashes(address player)
-    external
-    view
-    returns (Lupi.CommitedGuess[] memory)
-  {
-    return rounds[round].committedGuesses[player];
   }
 
   /**
@@ -340,6 +337,24 @@ contract Lupi is ReentrancyGuard {
     return rounds[round].players;
   }
 
+  function getCommittedGuessHashes()
+    external
+    view
+    returns (Lupi.AllCommitedGuess[] memory)
+  {
+    Lupi.AllCommitedGuess[] memory ret = new AllCommitedGuess[](
+      rounds[round].players.length
+    );
+    for (uint256 i; i < rounds[round].players.length; ++i) {
+      ret[i].player = rounds[round].players[i];
+      ret[i].commitedGuesses = rounds[round].committedGuesses[
+        rounds[round].players[i]
+      ];
+    }
+
+    return ret;
+  }
+
   function getCurrentBalance() external view returns (uint256) {
     return rounds[round].balance;
   }
@@ -381,7 +396,7 @@ contract Lupi is ReentrancyGuard {
       rounds[round].revealedGuesses.length
     );
 
-    for (uint256 i = 0; i < rounds[round].revealedGuesses.length; i++) {
+    for (uint256 i = 0; i < rounds[round].revealedGuesses.length; ++i) {
       guesses[i] = rounds[round].revealedGuesses[i].guess;
     }
     return guesses;

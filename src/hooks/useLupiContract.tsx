@@ -3,7 +3,6 @@ import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { useWeb3Context } from "./useWeb3";
 import LupiAbi from "../artifacts/contracts/Lupi.sol/Lupi.json";
 import { Lupi } from "typechain-types";
-import { notUndefined } from "../utils";
 import { GameResultEvent } from "typechain-types/Lupi";
 import { TicketData } from "../schema/Ticket";
 import { useContractCall } from "./useContractCall";
@@ -15,7 +14,7 @@ import { createGenericContext } from "../utils/createGenericContext";
 
 // Lupi on Rinkeby
 const rinkebylupiAddress = "0xa586B7adE6E07FD3B5f1A5a37882D53c28791aDb";
-const arbRinkebyAddress = "0x53aD5C8B3Df311b1458b37dd272342758Ed4c6FD";
+const arbRinkebyAddress = "0x36b372b5495A2e991dd832a2d4bb79638629cF10";
 const hhAddress = process.env.REACT_APP_HARDHAT_ADDRESS;
 // const lupiAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
 
@@ -120,27 +119,11 @@ export const useLupiContract = () => {
 
   const getGuessHashes = useCallback(async () => {
     try {
-      const getAllCommittedHashes = players
-        ?.map(
-          async (player) =>
-            (await contract?.getCommittedGuessHashes(player))
-              ?.map((guess) => ({
-                player,
-                guessHash: guess.guessHash,
-                revealed: guess.revealed,
-              }))
-              .filter(notUndefined) ?? []
-        )
-        .filter(notUndefined);
-      const res = getAllCommittedHashes
-        ? await Promise.all(getAllCommittedHashes)
-        : [];
-
-      return res.flatMap((p) => p).filter(notUndefined);
-    } catch {
-      console.warn(`getCommittedGuessHashes failed`);
+      return await contract?.getCommittedGuessHashes();
+    } catch (err) {
+      console.warn(`getCommittedGuessHashes failed`, err);
     }
-  }, [contract, players]);
+  }, [contract]);
 
   const guessHashes = useContractCall(getGuessHashes, [forceRefreshDep]);
 
@@ -195,7 +178,7 @@ export const useLupiContract = () => {
         shutdown = true;
       };
     } catch (err) {
-      console.warn(`GameResult failed`);
+      console.warn(`GameResult failed`, err);
     }
   }, [contract, lupiAddress]);
 

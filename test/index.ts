@@ -366,8 +366,11 @@ describe("Lupi", async function () {
     const players = await lupi.getPlayers();
     expect(players.length).to.equal(1);
 
-    const committedGuessHashes = await lupi.getCommittedGuessHashes(players[0]);
-    expect(committedGuessHashes.length).to.equal(1);
+    const committedGuessHashes = await lupi.getCommittedGuessHashes();
+    expect(
+      committedGuessHashes.find((g) => g.player === players[0])?.commitedGuesses
+        .length
+    ).to.equal(1);
 
     const now =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
@@ -405,8 +408,12 @@ describe("Lupi", async function () {
     const players = await lupi.getPlayers();
     expect(players.length).to.equal(1);
 
-    const committedGuessHashes = await lupi.getCommittedGuessHashes(players[0]);
-    expect(committedGuessHashes.length).to.equal(3);
+    const committedGuessHashes = await lupi.getCommittedGuessHashes();
+
+    expect(
+      committedGuessHashes.find((g) => g.player === players[0])?.commitedGuesses
+        .length
+    ).to.equal(3);
 
     {
       const now =
@@ -473,10 +480,11 @@ describe("Lupi", async function () {
     for (let j = 0; j < 2; j++) {
       const lupiUser = lupi.connect(users[j]);
 
-      const committedGuessHashes = await lupiUser.getCommittedGuessHashes(
-        users[j].address
-      );
-      expect(committedGuessHashes.length).to.equal(5);
+      const committedGuessHashes = await lupiUser.getCommittedGuessHashes();
+      expect(
+        committedGuessHashes.find((g) => g.player === users[j].address)
+          ?.commitedGuesses.length
+      ).to.equal(5);
     }
 
     const lupiUser = lupi.connect(users[0]);
@@ -489,10 +497,11 @@ describe("Lupi", async function () {
 
     await lupiUser.commitGuess(guessHash, overrides);
 
-    const committedGuessHashes = await lupiUser.getCommittedGuessHashes(
-      users[0].address
-    );
-    expect(committedGuessHashes.length).to.equal(6);
+    const committedGuessHashes = await lupiUser.getCommittedGuessHashes();
+    expect(
+      committedGuessHashes.find((g) => g.player === users[0].address)
+        ?.commitedGuesses.length
+    ).to.equal(6);
 
     const guessDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
@@ -611,10 +620,11 @@ describe("Lupi", async function () {
 
     const revealHash = getGuessHash(currentNonce, 6, salt);
 
-    const committedGuessHashes = await lupiUser.getCommittedGuessHashes(
-      users[0].address
-    );
-    expect(committedGuessHashes.length).to.equal(9);
+    const committedGuessHashes = await lupiUser.getCommittedGuessHashes();
+    expect(
+      committedGuessHashes.find((g) => g.player === users[0].address)
+        ?.commitedGuesses.length
+    ).to.equal(9);
 
     await lupiUser.revealGuesses([
       { round, guessHash: revealHash, answer: 6, salt },

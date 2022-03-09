@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useTickets } from "src/hooks/useTickets";
 import { TicketData } from "src/schema/Ticket";
 import { Box, Button, Text } from "src/ui";
+import { Lupi } from "typechain-types";
 import { useLupiContractContext } from "../hooks/useLupiContract";
 import { useWeb3Context } from "../hooks/useWeb3";
 
@@ -16,18 +17,21 @@ const TicketList = (props: { tickets: TicketData[] }) => (
 );
 
 const GuessList = (props: {
-  guesses?: {
-    player: string;
-    guessHash: string;
-    revealed: boolean;
-  }[];
+  guesses?: Lupi.AllCommitedGuessStructOutput[];
 }) => (
   <>
     <Text>Guesses</Text>
     <ul>
-      {props.guesses?.map((guess) => (
-        <li key={`${guess.player}${guess.guessHash}`}>
-          {JSON.stringify(guess)}
+      {props.guesses?.map((player) => (
+        <li key={`${player.player}`}>
+          <ul>
+            Player: {player.player}
+            {player.commitedGuesses.map((guess, i) => (
+              <li key={`${guess.guessHash}`}>
+                Guesses: {JSON.stringify(guess)}
+              </li>
+            ))}
+          </ul>
         </li>
       ))}
     </ul>
@@ -59,7 +63,9 @@ export const DebugPanel = () => {
     () =>
       (chainId && round ? tickets[chainId]?.[round] ?? [] : []).filter(
         (ticket) =>
-          guessHashes?.find((guess) => guess.guessHash === ticket.guessHash)
+          guessHashes?.find((guess) =>
+            guess.commitedGuesses.find((t) => t.guessHash === ticket.guessHash)
+          )
       ),
     [chainId, guessHashes, round, tickets]
   );
