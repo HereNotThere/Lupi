@@ -53,6 +53,13 @@ export { useLupiContractContext, LupiContractContextProvider };
 export type UseLupiContract = ReturnType<typeof useLupiContract>;
 
 export const useLupiContract = () => {
+  const [forceRefreshDep, setUnusedState] = useState({});
+  const forceUpdate = useCallback(() => setUnusedState({}), []);
+
+  useEffect(() => {
+    const refresher = setInterval(() => forceUpdate(), 60 * 1000);
+    return () => clearInterval(refresher);
+  }, [forceUpdate]);
   const { provider, chainId } = useWeb3Context();
 
   const lupiAddress = useMemo(() => {
@@ -91,13 +98,21 @@ export const useLupiContract = () => {
     [signer, lupiAddress]
   );
 
-  const currentBalance = useContractCall(contract?.getCurrentBalance);
-  const rolloverBalance = useContractCall(contract?.getRolloverBalance);
-  const round = useContractCall(contract?.getRound);
-  const phase = useContractCall(contract?.getPhase);
-  const phaseDeadline = useContractCall(contract?.getPhaseDeadline);
-  const players = useContractCall(contract?.getPlayers);
-  const revealedGuesses = useContractCall(contract?.getRevealedGuess);
+  const currentBalance = useContractCall(contract?.getCurrentBalance, [
+    forceRefreshDep,
+  ]);
+  const rolloverBalance = useContractCall(contract?.getRolloverBalance, [
+    forceRefreshDep,
+  ]);
+  const round = useContractCall(contract?.getRound, [forceRefreshDep]);
+  const phase = useContractCall(contract?.getPhase, [forceRefreshDep]);
+  const phaseDeadline = useContractCall(contract?.getPhaseDeadline, [
+    forceRefreshDep,
+  ]);
+  const players = useContractCall(contract?.getPlayers, [forceRefreshDep]);
+  const revealedGuesses = useContractCall(contract?.getRevealedGuess, [
+    forceRefreshDep,
+  ]);
 
   const getGuessHashes = useCallback(async () => {
     try {
@@ -112,7 +127,7 @@ export const useLupiContract = () => {
     }
   }, [contract, players]);
 
-  const guessHashes = useContractCall(getGuessHashes);
+  const guessHashes = useContractCall(getGuessHashes, [forceRefreshDep]);
 
   const [finishedGames, setFinishedGames] = useState<GameResultEvent[]>([]);
 
@@ -174,7 +189,8 @@ export const useLupiContract = () => {
   );
   const callEndGame = useCallback(async (): Promise<void> => {
     await invokeCallEndGame();
-  }, [invokeCallEndGame]);
+    forceUpdate();
+  }, [forceUpdate, invokeCallEndGame]);
 
   const [invokeCommitGuess, commitGuessState] = useContractTransact1(
     contractSigner?.commitGuess
@@ -196,6 +212,8 @@ export const useLupiContract = () => {
           };
 
           const result = await invokeCommitGuess(guessHash, overrides);
+          forceUpdate();
+
           if (result.type === "Completed") {
             return {
               roundId,
@@ -210,7 +228,7 @@ export const useLupiContract = () => {
         }
       }
     },
-    [contract, contractSigner, invokeCommitGuess]
+    [contract, contractSigner, forceUpdate, invokeCommitGuess]
   );
 
   const [invokeRevealGuesses, revealGuessesState] = useContractTransact1(
@@ -238,12 +256,13 @@ export const useLupiContract = () => {
             };
           });
           await invokeRevealGuesses(reveals);
+          forceUpdate();
         } catch (err) {
           console.error(`error in revealGuesses`, err);
         }
       }
     },
-    [contract, contractSigner, invokeRevealGuesses]
+    [contract, contractSigner, forceUpdate, invokeRevealGuesses]
   );
 
   return {

@@ -1,6 +1,9 @@
-import { useEffect, useState } from "react";
+import { DependencyList, useEffect, useState } from "react";
 
-export const useContractCall = <T>(func?: () => Promise<T> | undefined) => {
+export const useContractCall = <T>(
+  func?: () => Promise<T> | undefined,
+  deps?: DependencyList
+) => {
   const [state, setState] = useState<T | undefined>(undefined);
 
   useEffect(() => {
@@ -21,7 +24,9 @@ export const useContractCall = <T>(func?: () => Promise<T> | undefined) => {
     return () => {
       shutdown = true;
     };
-  }, [func]);
+    // Add any additional deps passed to this effect
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [func, ...(deps ?? [])]);
 
   return state;
 };
