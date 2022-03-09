@@ -6,6 +6,7 @@ import { Lupi } from "typechain-types";
 import { notUndefined } from "../utils";
 import { GameResultEvent } from "typechain-types/Lupi";
 import { TicketData } from "../schema/Ticket";
+import { useContractCall } from "./useContractCall";
 
 // Lupi on Rinkeby
 const rinkebylupiAddress = "0xa586B7adE6E07FD3B5f1A5a37882D53c28791aDb";
@@ -18,32 +19,6 @@ export enum GamePhase {
   REVEAL,
   ENDGAME,
 }
-
-export const useContractCall = <T>(func?: () => Promise<T> | undefined) => {
-  const [state, setState] = useState<T | undefined>(undefined);
-
-  useEffect(() => {
-    let shutdown = false;
-    void (async () => {
-      try {
-        if (func) {
-          const round = await func();
-          if (!shutdown) {
-            setState(round);
-          }
-        }
-      } catch (err) {
-        console.warn(`useContractCall failed`, err);
-        setState(undefined);
-      }
-    })();
-    return () => {
-      shutdown = true;
-    };
-  }, [func]);
-
-  return state;
-};
 
 type IdleTransaction = {
   type: "Idle";
