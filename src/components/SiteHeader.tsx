@@ -15,7 +15,15 @@ export const SiteHeader = (props: Props) => {
   const { accounts, chainId, requestAccounts, walletStatus } = useWeb3Context();
   const shortAccounts = accounts.map(getShortAddress);
   return (
-    <Grid columns={2} padding="md" horizontalPadding="lg" border borderRadius>
+    <Grid
+      columns={2}
+      padding="md"
+      horizontalPadding="lg"
+      border
+      borderRadius="lg"
+      minHeight={75}
+      alignItems="center"
+    >
       <Box>
         <MenuItem
           menuId="current-game"
@@ -27,7 +35,7 @@ export const SiteHeader = (props: Props) => {
         </MenuItem>
       </Box>
 
-      <Box row justifyContent="end" alignItems="center" gap="md">
+      <Box row justifyContent="end" gap="md">
         <MenuItem
           menuId={"how-to-play"}
           onMenuItemClick={props.onSelectMenuItem}
