@@ -1,47 +1,112 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import produce from "immer";
 
 import { TicketData } from "src/schema/Ticket";
+import { Lupi } from "typechain-types";
+import { useLupiContractContext } from "./useLupiContract";
+import { useWeb3Context } from "./useWeb3";
 
-type AllTickets = {
-  [chainId: string]: undefined | { [round: number]: undefined | TicketData[] };
+type ContractTickets = {
+  [contractId: string]:
+    | undefined
+    | { [round: number]: undefined | TicketData[] };
+};
+
+type ChainContracts = {
+  [chainId: string]: undefined | ContractTickets;
 };
 
 export const useTickets = () => {
-  const [tickets, setTickets] = useState<AllTickets>(() => {
+  const { chainId } = useWeb3Context();
+  const { lupiAddress, round } = useLupiContractContext();
+
+  const [tickets, setTickets] = useState<ChainContracts>(() => {
     const saved = localStorage.getItem("tickets");
     return saved ? JSON.parse(saved) : {};
   });
 
-  useEffect(() => {
-    localStorage.setItem("tickets", JSON.stringify(tickets));
-  }, [tickets]);
+  const chainContracts = useCallback(
+    (chainId: string) => tickets[chainId],
+    [tickets]
+  );
 
+  const contractTickets = useCallback(
+    (chainId: string) => (contractId: string) =>
+      chainContracts(chainId)?.[contractId],
+    [chainContracts]
+  );
+
+  const chainContractTickets = useCallback(
+    (chainId: string) => (contractId: string) =>
+      contractTickets(chainId)(contractId),
+    [contractTickets]
+  );
   const storeTicket = useCallback(
-    (chainId: string, round: number, ticket: TicketData) => {
-      setTickets(
-        produce((draft) => {
-          const chainTickets = draft[chainId];
-          if (chainTickets) {
-            const roundTickets = chainTickets[round];
-            if (roundTickets) {
-              roundTickets.push(ticket);
+    (ticket: TicketData) => {
+      if (chainId && lupiAddress && round) {
+        setTickets((t) => {
+          const newTickets = produce((draft) => {
+            const chainTickets = draft[chainId];
+            if (chainTickets) {
+              const contractTickets = chainTickets[lupiAddress];
+              if (contractTickets) {
+                const roundTickets = contractTickets[round];
+                if (roundTickets) {
+                  roundTickets.push(ticket);
+                } else {
+                  contractTickets[round] = [ticket];
+                }
+              } else {
+                const contractTickets: { [contractId: string]: TicketData[] } =
+                  {};
+                contractTickets[round] = [ticket];
+                chainTickets[lupiAddress] = contractTickets;
+              }
             } else {
-              chainTickets[round] = [ticket];
+              const contractTickets: { [contractId: string]: TicketData[] } =
+                {};
+              contractTickets[round] = [ticket];
+              const chainTickets: {
+                [chainId: string]: { [contractId: string]: TicketData[] };
+              } = {};
+              chainTickets[lupiAddress] = contractTickets;
+              draft[chainId] = chainTickets;
             }
-          } else {
-            const chainTickets: { [chainId: string]: TicketData[] } = {};
-            chainTickets[round] = [ticket];
-            draft[chainId] = chainTickets;
-          }
-        })
-      );
+          })(t);
+          localStorage.setItem("tickets", JSON.stringify(newTickets));
+          return newTickets;
+        });
+      }
     },
-    []
+    [chainId, lupiAddress, round]
   );
 
   return {
     storeTicket,
-    tickets,
+    chainContractTickets,
   };
+};
+
+export const useTicketList = (
+  guessHashes?: Lupi.AllCommitedGuessStructOutput[]
+) => {
+  const { chainId } = useWeb3Context();
+  const { chainContractTickets } = useTickets();
+  const { lupiAddress, round } = useLupiContractContext();
+
+  return useMemo(() => {
+    const allTickets =
+      chainId && lupiAddress && chainContractTickets
+        ? chainContractTickets(chainId)(lupiAddress) ?? []
+        : [];
+
+    const roundTickets = round ? allTickets[round] ?? [] : [];
+    const res =
+      roundTickets.filter((ticket) =>
+        guessHashes?.find((guess) =>
+          guess.commitedGuesses.find((t) => t.guessHash === ticket.guessHash)
+        )
+      ) ?? [];
+    return res;
+  }, [chainId, guessHashes, round, chainContractTickets, lupiAddress]);
 };

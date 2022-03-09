@@ -257,6 +257,7 @@ export const useLupiContract = () => {
   );
 
   return {
+    lupiAddress,
     round,
     phase,
     phaseDeadline,

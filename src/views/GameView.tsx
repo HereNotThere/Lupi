@@ -8,8 +8,7 @@ import { NumPad } from "src/components/NumPad";
 import { Ticket } from "src/components/Ticket";
 import { TicketStack } from "src/components/TicketStack";
 import { GamePhase, useLupiContractContext } from "src/hooks/useLupiContract";
-import { useTickets } from "src/hooks/useTickets";
-import { useWeb3Context } from "src/hooks/useWeb3";
+import { useTicketList, useTickets } from "src/hooks/useTickets";
 import { TicketData } from "src/schema/Ticket";
 import { Box, Grid, Text } from "src/ui";
 
@@ -18,27 +17,15 @@ export const GameState = () => {
   const [ticketPreview, setTicketPreview] = useState<TicketData>();
   const { commitGuess, phase, revealedGuesses, round, phaseDeadline } =
     useLupiContractContext();
-  const { tickets, storeTicket } = useTickets();
-  const { chainId } = useWeb3Context();
   const { guessHashes } = useLupiContractContext();
+  const { storeTicket } = useTickets();
+  const ticketList = useTicketList(guessHashes);
 
   const revealDate = useMemo(() => {
     if (phaseDeadline) {
       return new Date(phaseDeadline.toNumber() * 1000);
     }
   }, [phaseDeadline]);
-
-  // In development environments where the round can wrap around to 0, we need to filter old ticket data
-  const ticketList = useMemo(
-    () =>
-      (chainId && round ? tickets[chainId]?.[round] ?? [] : []).filter(
-        (ticket) =>
-          guessHashes?.find((guess) =>
-            guess.commitedGuesses.find((t) => t.guessHash === ticket.guessHash)
-          )
-      ),
-    [chainId, guessHashes, round, tickets]
-  );
 
   const isValidTicket = (t?: TicketData): t is TicketData =>
     !!(t?.roundId && t?.guess && t?.salt);
@@ -54,13 +41,13 @@ export const GameState = () => {
     console.log("submitTicket", inputValue);
     const result = await commitGuess(inputValue);
     console.log(`commitGuess result`, result);
-    if (result && chainId && round) {
-      storeTicket(chainId, round, result);
+    if (result) {
+      storeTicket(result);
       setTicketPreview(result);
     } else {
       console.warn(`commitGuess failed`, { result });
     }
-  }, [chainId, commitGuess, inputValue, round, storeTicket]);
+  }, [commitGuess, inputValue, storeTicket]);
 
   const onSubmitGuess = useCallback(async () => {
     await submitGuess();
