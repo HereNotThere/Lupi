@@ -21,7 +21,7 @@ export const useTickets = () => {
   const { contractAddress, round } = useLupiContractContext();
 
   const [tickets, setTickets] = useState<ChainContracts>(() => {
-    const saved = localStorage.getItem("tickets");
+    const saved = window.localStorage.getItem("tickets");
     console.log(`getItem tickets`, saved);
     return saved ? JSON.parse(saved) : {};
   });
@@ -74,8 +74,11 @@ export const useTickets = () => {
               draft[chainId] = chainTickets;
             }
           })(t);
-          localStorage.setItem("tickets", JSON.stringify(newTickets));
-          console.log(`setItem tickets`, newTickets);
+          const jsonTickets = JSON.stringify(newTickets);
+          window.localStorage.setItem("tickets", jsonTickets);
+          console.log(`setItem tickets`, jsonTickets);
+          const saved = window.localStorage.getItem("tickets");
+          console.log(`after setItem`, saved);
           return newTickets;
         });
       } else {
