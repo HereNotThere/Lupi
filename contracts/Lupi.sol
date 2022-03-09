@@ -119,14 +119,14 @@ contract Lupi is ReentrancyGuard {
     rounds[round].guessDeadline =
       block.timestamp +
       (
-        block.chainid == 421611 ? 45 minutes : block.chainid == 31337
+        block.chainid == 421611 ? 10 minutes : block.chainid == 31337
           ? 2 minutes
           : 3 days
       );
     rounds[round].revealDeadline =
       block.timestamp +
       (
-        block.chainid == 421611 ? 60 minutes : block.chainid == 31337
+        block.chainid == 421611 ? 15 minutes : block.chainid == 31337
           ? 4 minutes
           : 4 days
       );
