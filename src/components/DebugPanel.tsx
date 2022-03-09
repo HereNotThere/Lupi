@@ -15,6 +15,25 @@ const TicketList = (props: { tickets: TicketData[] }) => (
   </ul>
 );
 
+const GuessList = (props: {
+  guesses?: {
+    player: string;
+    guessHash: string;
+    revealed: boolean;
+  }[];
+}) => (
+  <>
+    <Text>Guesses</Text>
+    <ul>
+      {props.guesses?.map((guess) => (
+        <li key={`${guess.player}${guess.guessHash}`}>
+          {JSON.stringify(guess)}
+        </li>
+      ))}
+    </ul>
+  </>
+);
+
 export const DebugPanel = () => {
   const [guess, setGuessValue] = useState(0);
   const {
@@ -27,6 +46,7 @@ export const DebugPanel = () => {
   const { tickets, storeTicket } = useTickets();
 
   const {
+    guessHashes,
     finishedGames,
     revealedGuesses,
     commitGuess,
@@ -36,8 +56,12 @@ export const DebugPanel = () => {
   } = useLupiContractContext();
 
   const ticketList = useMemo(
-    () => (chainId && round ? tickets[chainId]?.[round] ?? [] : []),
-    [chainId, round, tickets]
+    () =>
+      (chainId && round ? tickets[chainId]?.[round] ?? [] : []).filter(
+        (ticket) =>
+          guessHashes?.find((guess) => guess.guessHash === ticket.guessHash)
+      ),
+    [chainId, guessHashes, round, tickets]
   );
 
   const onClick = useCallback(async () => {
@@ -96,6 +120,10 @@ export const DebugPanel = () => {
 
         <Box padding border centerContent>
           <TicketList tickets={ticketList} />
+        </Box>
+
+        <Box padding border centerContent>
+          <GuessList guesses={guessHashes} />
         </Box>
 
         <Box padding border centerContent>

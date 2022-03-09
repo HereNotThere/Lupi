@@ -20,6 +20,7 @@ export const GameState = () => {
     useLupiContractContext();
   const { tickets, storeTicket } = useTickets();
   const { chainId } = useWeb3Context();
+  const { guessHashes } = useLupiContractContext();
 
   const revealDate = useMemo(() => {
     if (phaseDeadline) {
@@ -27,9 +28,14 @@ export const GameState = () => {
     }
   }, [phaseDeadline]);
 
+  // In development environments where the round can wrap around to 0, we need to filter old ticket data
   const ticketList = useMemo(
-    () => (chainId && round ? tickets[chainId]?.[round] ?? [] : []),
-    [chainId, round, tickets]
+    () =>
+      (chainId && round ? tickets[chainId]?.[round] ?? [] : []).filter(
+        (ticket) =>
+          guessHashes?.find((guess) => guess.guessHash === ticket.guessHash)
+      ),
+    [chainId, guessHashes, round, tickets]
   );
 
   const isValidTicket = (t?: TicketData): t is TicketData =>
@@ -64,6 +70,7 @@ export const GameState = () => {
         guess: inputValue,
         roundId: round,
         salt: "",
+        guessHash: "",
       });
     } else {
       throw new Error("invalid input");

@@ -25,7 +25,11 @@ export enum GamePhase {
   ENDGAME,
 }
 
-function getGuessHash(currentNonce: string, guess: number, salt: string) {
+export function getGuessHash(
+  currentNonce: string,
+  guess: number,
+  salt: string
+) {
   return utils.solidityKeccak256(
     ["bytes32", "uint32", "bytes32"],
     [currentNonce, guess, salt]
@@ -230,6 +234,7 @@ export const useLupiContract = () => {
               roundId,
               guess,
               salt,
+              guessHash,
             };
           } else {
             return undefined;
@@ -250,17 +255,9 @@ export const useLupiContract = () => {
     async (tickets: TicketData[]) => {
       if (contractSigner && contract) {
         try {
-          const currentNonce = await contract.getCurrentNonce();
-          const currentRound = await contract.getRound();
           const reveals = tickets.map((t) => {
-            if (t.roundId !== currentRound) {
-              throw new Error(
-                `Reveal for round ${t.roundId} not for current round $${currentRound}`
-              );
-            }
-            const guessHash = getGuessHash(currentNonce, t.guess, t.salt);
             return {
-              guessHash,
+              guessHash: t.guessHash,
               round: t.roundId,
               answer: t.guess,
               salt: t.salt,
