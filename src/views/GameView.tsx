@@ -147,7 +147,6 @@ export const GameState = () => {
       return <RevealView ticketList={ticketList} />;
     }
     case GamePhase.ENDGAME: {
-      console.log(revealedGuesses);
       return (
         <>
           <EndGameView revealedGuesses={revealedGuesses} />

@@ -61,7 +61,7 @@ export const DebugPanel = () => {
             onChange={(e) => setGuessValue(Number.parseInt(e.target.value))}
             placeholder="Commit guess"
           />
-          <Text>{JSON.stringify(commitGuessState)}</Text>
+          <Text>{JSON.stringify(commitGuessState.type)}</Text>
           <Button onClick={onClick}>Commit Guess</Button>
         </Box>
 

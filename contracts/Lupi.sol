@@ -280,19 +280,9 @@ contract Lupi is ReentrancyGuard {
   function getCommittedGuessHashes(address player)
     external
     view
-    returns (bytes32[] memory)
+    returns (Lupi.CommitedGuess[] memory)
   {
-    bytes32[] memory guesses = new bytes32[](
-      rounds[round].committedGuesses[player].length
-    );
-    for (
-      uint256 i = 0;
-      i < rounds[round].committedGuesses[player].length;
-      i++
-    ) {
-      guesses[i] = rounds[round].committedGuesses[player][i].guessHash;
-    }
-    return guesses;
+    return rounds[round].committedGuesses[player];
   }
 
   /**

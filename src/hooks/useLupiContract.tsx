@@ -116,12 +116,23 @@ export const useLupiContract = () => {
 
   const getGuessHashes = useCallback(async () => {
     try {
-      const getPlayers = players
-        ?.map((player) => contract?.getCommittedGuessHashes(player))
+      const getAllCommittedHashes = players
+        ?.map(
+          async (player) =>
+            (await contract?.getCommittedGuessHashes(player))
+              ?.map((guess) => ({
+                player,
+                guessHash: guess.guessHash,
+                revealed: guess.revealed,
+              }))
+              .filter(notUndefined) ?? []
+        )
         .filter(notUndefined);
-      const res = getPlayers ? await Promise.all(getPlayers) : undefined;
+      const res = getAllCommittedHashes
+        ? await Promise.all(getAllCommittedHashes)
+        : [];
 
-      return res?.flatMap((p) => p).filter(notUndefined);
+      return res.flatMap((p) => p).filter(notUndefined);
     } catch {
       console.warn(`getCommittedGuessHashes failed`);
     }
