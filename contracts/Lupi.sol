@@ -223,20 +223,21 @@ contract Lupi is ReentrancyGuard {
 
     for (uint256 i = 0; i < rounds[round].revealedGuesses.length; i++) {
       if (rounds[round].revealedGuesses[i].guess < lowestGuess) {
+        bool unique = true;
         for (uint256 x = 0; x < rounds[round].revealedGuesses.length; x++) {
-          if (
-            (rounds[round].revealedGuesses[x].guess ==
-              rounds[round].revealedGuesses[i].guess &&
-              i != x &&
-              rounds[round].revealedGuesses[x].player !=
-              rounds[round].revealedGuesses[i].player)
-          ) {
-            break;
+          if (i != x) {
+            if (
+              rounds[round].revealedGuesses[x].guess ==
+              rounds[round].revealedGuesses[i].guess
+            ) {
+              unique = false;
+              break;
+            }
           }
-          if (x == rounds[round].revealedGuesses.length - 1) {
-            lowestGuess = rounds[round].revealedGuesses[i].guess;
-            winner = rounds[round].revealedGuesses[i].player;
-          }
+        }
+        if (unique) {
+          lowestGuess = rounds[round].revealedGuesses[i].guess;
+          winner = rounds[round].revealedGuesses[i].player;
         }
       }
     }

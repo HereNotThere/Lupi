@@ -635,7 +635,7 @@ describe("Lupi", async function () {
         round,
         users[0].address,
         BigNumber.from("90000000000000000"),
-        1
+        6
       );
   });
 
