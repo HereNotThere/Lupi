@@ -1,10 +1,14 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Ajv from "ajv";
+
 import produce from "immer";
 
 import { TicketData } from "src/schema/Ticket";
 import { Lupi } from "typechain-types";
 import { useLupiContractContext } from "./useLupiContract";
 import { useWeb3Context } from "./useWeb3";
+
+const ajv = new Ajv();
 
 type ContractTickets = {
   [contractId: string]:
@@ -16,15 +20,80 @@ type ChainContracts = {
   [chainId: string]: undefined | ContractTickets;
 };
 
+const schema = {
+  // root
+  type: "object",
+  additionalProperties: {
+    // ChainContracts
+    type: "object",
+    additionalProperties: {
+      // ContractTickets
+      type: "object",
+      additionalProperties: false,
+      patternProperties: {
+        // round
+        "^[0-9]+$": {
+          type: "array",
+          items: {
+            // TicketData
+            type: "object",
+            properties: {
+              guess: {
+                type: "integer",
+              },
+              guessHash: {
+                type: "string",
+              },
+              roundId: {
+                type: "integer",
+              },
+              salt: {
+                type: "string",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+} as const;
+
+const validate = ajv.compile<ChainContracts>(schema);
+
+const parseTickets = (saved: string | null): ChainContracts => {
+  if (saved) {
+    const persistedTickets = JSON.parse(saved);
+    if (validate(persistedTickets)) {
+      return persistedTickets;
+    } else {
+      console.warn(`invalid persisted tickets`);
+      return {};
+    }
+  } else {
+    return {};
+  }
+};
+
 export const useTickets = () => {
   const { chainId } = useWeb3Context();
   const { contractAddress, round } = useLupiContractContext();
 
   const [tickets, setTickets] = useState<ChainContracts>(() => {
     const saved = window.localStorage.getItem("tickets");
-    console.log(`getItem tickets`, saved);
-    return saved ? JSON.parse(saved) : {};
+    return parseTickets(saved);
   });
+
+  // If any instance of this hook updates storage, let the other instances know
+  useEffect(() => {
+    const onStorage = () => {
+      const saved = window.localStorage.getItem("tickets");
+      const parsedTickets = parseTickets(saved);
+      console.log(`onStorage changed`, parsedTickets);
+      setTickets(parsedTickets);
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   const chainContracts = useCallback(
     (chainId: string) => tickets[chainId],
@@ -76,9 +145,6 @@ export const useTickets = () => {
           });
           const jsonTickets = JSON.stringify(newTickets);
           window.localStorage.setItem("tickets", jsonTickets);
-          console.log(`setItem tickets`, jsonTickets);
-          const saved = window.localStorage.getItem("tickets");
-          console.log(`after setItem`, saved);
           return newTickets;
         });
       } else {

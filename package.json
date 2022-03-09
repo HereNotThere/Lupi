@@ -5,6 +5,7 @@
   "private": true,
   "dependencies": {
     "@types/styled-components": "^5.1.24",
+    "ajv": "^8.10.0",
     "file-saver": "^2.0.5",
     "immer": "^9.0.12",
     "pino": "^7.8.0",
