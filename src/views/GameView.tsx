@@ -7,7 +7,7 @@ import { NumBox } from "src/components/NumBox";
 import { NumPad } from "src/components/NumPad";
 import { Ticket } from "src/components/Ticket";
 import { TicketStack } from "src/components/TicketStack";
-import { GamePhase, useLupiContract } from "src/hooks/useLupiContract";
+import { GamePhase, useLupiContractContext } from "src/hooks/useLupiContract";
 import { useTickets } from "src/hooks/useTickets";
 import { useWeb3Context } from "src/hooks/useWeb3";
 import { TicketData } from "src/schema/Ticket";
@@ -17,7 +17,7 @@ export const GameState = () => {
   const [inputValue, setInputValue] = useState(0);
   const [ticketPreview, setTicketPreview] = useState<TicketData>();
   const { commitGuess, phase, revealedGuesses, round, phaseDeadline } =
-    useLupiContract();
+    useLupiContractContext();
   const { tickets, storeTicket } = useTickets();
   const { chainId } = useWeb3Context();
 
@@ -230,7 +230,7 @@ const GuessView = (props: {
 );
 
 const RoundPanel = ({ inputValue }: { inputValue: number }) => {
-  const { round } = useLupiContract();
+  const { round } = useLupiContractContext();
   return (
     <Grid columns={1} gap="md">
       <Text header="regular" align="center">
@@ -244,7 +244,7 @@ const RoundPanel = ({ inputValue }: { inputValue: number }) => {
 
 const RevealView = (props: { ticketList: TicketData[] }) => {
   const { ticketList } = props;
-  const { round, revealGuesses } = useLupiContract();
+  const { round, revealGuesses } = useLupiContractContext();
   const revealAll = useCallback(async () => {
     await revealGuesses(ticketList);
   }, [revealGuesses, ticketList]);
@@ -284,7 +284,7 @@ const RevealView = (props: { ticketList: TicketData[] }) => {
 
 const EndGameView = (props: { revealedGuesses?: BigNumber[] }) => {
   const { revealedGuesses } = props;
-  const { round, callEndGame } = useLupiContract();
+  const { round, callEndGame } = useLupiContractContext();
 
   return (
     <Grid columns={2} grow>

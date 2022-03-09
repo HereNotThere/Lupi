@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useTickets } from "src/hooks/useTickets";
 import { TicketData } from "src/schema/Ticket";
 import { Box, Button, Text } from "src/ui";
-import { useLupiContract } from "../hooks/useLupiContract";
+import { useLupiContractContext } from "../hooks/useLupiContract";
 import { useWeb3Context } from "../hooks/useWeb3";
 
 const TicketList = (props: { tickets: TicketData[] }) => (
@@ -33,7 +33,7 @@ export const DebugPanel = () => {
     commitGuessState,
     callEndGame,
     round,
-  } = useLupiContract();
+  } = useLupiContractContext();
 
   const ticketList = useMemo(
     () => (chainId && round ? tickets[chainId]?.[round] ?? [] : []),

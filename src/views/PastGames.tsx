@@ -1,10 +1,10 @@
-import { useLupiContract } from "src/hooks/useLupiContract";
+import { useLupiContractContext } from "src/hooks/useLupiContract";
 import { Box, Grid, Text } from "src/ui";
 import { getShortAddress } from "src/utils/lupiUtils";
 import { GameResultEvent } from "typechain-types/Lupi";
 
 export const PastGames = () => {
-  const { finishedGames } = useLupiContract();
+  const { finishedGames } = useLupiContractContext();
   return <GameList games={finishedGames}></GameList>;
 };
 

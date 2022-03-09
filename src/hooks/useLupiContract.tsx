@@ -1,5 +1,5 @@
 import { ethers, utils } from "ethers";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { useWeb3Context } from "./useWeb3";
 import LupiAbi from "../artifacts/contracts/Lupi.sol/Lupi.json";
 import { Lupi } from "typechain-types";
@@ -11,6 +11,7 @@ import {
   useContractTransact0,
   useContractTransact1,
 } from "./useContractTransact";
+import { createGenericContext } from "../utils/createGenericContext";
 
 // Lupi on Rinkeby
 const rinkebylupiAddress = "0xa586B7adE6E07FD3B5f1A5a37882D53c28791aDb";
@@ -30,6 +31,26 @@ function getGuessHash(currentNonce: string, guess: number, salt: string) {
     [currentNonce, guess, salt]
   );
 }
+
+const [useLupiContractContext, LupiContractContextProvider] =
+  createGenericContext<UseLupiContract>();
+
+export const LupiContractProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}): JSX.Element => {
+  const lupi = useLupiContract();
+  return (
+    <LupiContractContextProvider value={lupi}>
+      {children}
+    </LupiContractContextProvider>
+  );
+};
+
+export { useLupiContractContext, LupiContractContextProvider };
+
+export type UseLupiContract = ReturnType<typeof useLupiContract>;
 
 export const useLupiContract = () => {
   const { provider, chainId } = useWeb3Context();

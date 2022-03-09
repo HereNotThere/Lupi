@@ -1,11 +1,11 @@
 import { useMemo } from "react";
-import { GamePhase, useLupiContract } from "src/hooks/useLupiContract";
+import { GamePhase, useLupiContractContext } from "src/hooks/useLupiContract";
 import { Box, Grid, Text } from "src/ui";
 import { ethers } from "ethers";
 
 export const GameStats = () => {
   const { guessHashes, currentBalance, rolloverBalance, phaseDeadline, phase } =
-    useLupiContract();
+    useLupiContractContext();
 
   const phaseEndTimestamp = useMemo(
     () =>
