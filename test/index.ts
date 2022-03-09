@@ -383,6 +383,64 @@ describe("Lupi", async function () {
     ]);
   });
 
+  it("Should commit 1, 1, and 2, reveal all, and 2 should win", async function () {
+    const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
+    const lupi = await Lupi.deploy();
+    await lupi.deployed();
+    const currentNonce = await lupi.getCurrentNonce();
+    const round = await lupi.getRound();
+
+    const guessHash1a = getGuessHash(currentNonce, 1, getSalt("a"));
+    const guessHash1b = getGuessHash(currentNonce, 1, getSalt("b"));
+    const guessHash2 = getGuessHash(currentNonce, 2, getSalt("2"));
+
+    const overrides = {
+      value: ethers.utils.parseEther("0.01"),
+    };
+
+    await lupi.commitGuess(guessHash1a, overrides);
+    await lupi.commitGuess(guessHash1b, overrides);
+    await lupi.commitGuess(guessHash2, overrides);
+
+    const players = await lupi.getPlayers();
+    expect(players.length).to.equal(1);
+
+    const committedGuessHashes = await lupi.getCommittedGuessHashes(players[0]);
+    expect(committedGuessHashes.length).to.equal(3);
+
+    {
+      const now =
+        (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+          .timestamp +
+        3 * 60;
+      await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
+      await ethers.provider.send("evm_mine", []);
+    }
+
+    await lupi.revealGuesses([
+      { round, guessHash: guessHash1a, answer: 1, salt: getSalt("a") },
+      { round, guessHash: guessHash1b, answer: 1, salt: getSalt("b") },
+      { round, guessHash: guessHash2, answer: 2, salt: getSalt("2") },
+    ]);
+    {
+      const now =
+        (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+          .timestamp +
+        3 * 60;
+      await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
+      await ethers.provider.send("evm_mine", []);
+    }
+
+    await expect(lupi.endGame())
+      .to.emit(lupi, "GameResult")
+      .withArgs(
+        round,
+        await lupi.signer.getAddress(),
+        BigNumber.from("30000000000000000"),
+        2
+      );
+  });
+
   it("Two users should commit 5 guesses and make 5 reveals, one user should also guess one unique (1)", async function () {
     const Lupi = (await ethers.getContractFactory("Lupi")) as Lupi__factory;
     const lupi = await Lupi.deploy();
