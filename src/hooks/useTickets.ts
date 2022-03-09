@@ -46,7 +46,7 @@ export const useTickets = () => {
     (ticket: TicketData) => {
       if (chainId && contractAddress && round) {
         setTickets((t) => {
-          const newTickets = produce((draft) => {
+          const newTickets = produce(t, (draft) => {
             const chainTickets = draft[chainId];
             if (chainTickets) {
               const contractTickets = chainTickets[contractAddress];
@@ -73,7 +73,7 @@ export const useTickets = () => {
               chainTickets[contractAddress] = contractTickets;
               draft[chainId] = chainTickets;
             }
-          })(t);
+          });
           const jsonTickets = JSON.stringify(newTickets);
           window.localStorage.setItem("tickets", jsonTickets);
           console.log(`setItem tickets`, jsonTickets);
