@@ -26,8 +26,14 @@ export const DebugPanel = () => {
 
   const { tickets, storeTicket } = useTickets();
 
-  const { finishedGames, revealedGuesses, commitGuess, callEndGame, round } =
-    useLupiContract();
+  const {
+    finishedGames,
+    revealedGuesses,
+    commitGuess,
+    commitGuessState,
+    callEndGame,
+    round,
+  } = useLupiContract();
 
   const ticketList = useMemo(
     () => (chainId && round ? tickets[chainId]?.[round] ?? [] : []),
@@ -55,6 +61,7 @@ export const DebugPanel = () => {
             onChange={(e) => setGuessValue(Number.parseInt(e.target.value))}
             placeholder="Commit guess"
           />
+          <Text>{JSON.stringify(commitGuessState)}</Text>
           <Button onClick={onClick}>Commit Guess</Button>
         </Box>
 
