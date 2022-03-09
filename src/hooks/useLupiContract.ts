@@ -1,5 +1,5 @@
 import { ethers, utils } from "ethers";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useWeb3Context } from "./useWeb3";
 import LupiAbi from "../artifacts/contracts/Lupi.sol/Lupi.json";
 import { Lupi } from "typechain-types";
@@ -7,6 +7,10 @@ import { notUndefined } from "../utils";
 import { GameResultEvent } from "typechain-types/Lupi";
 import { TicketData } from "../schema/Ticket";
 import { useContractCall } from "./useContractCall";
+import {
+  useContractTransact0,
+  useContractTransact1,
+} from "./useContractTransact";
 
 // Lupi on Rinkeby
 const rinkebylupiAddress = "0xa586B7adE6E07FD3B5f1A5a37882D53c28791aDb";
@@ -18,152 +22,6 @@ export enum GamePhase {
   GUESS,
   REVEAL,
   ENDGAME,
-}
-
-type IdleTransaction = {
-  type: "Idle";
-};
-type RunningTransaction = {
-  type: "Running";
-  startTime: number;
-};
-type FailedTransaction = {
-  type: "Failed";
-  error: Error;
-};
-type CompletedTransaction = {
-  type: "Completed";
-  startTime: number;
-  endTime: number;
-  result: ethers.ContractReceipt;
-};
-type TransactionState =
-  | IdleTransaction
-  | RunningTransaction
-  | FailedTransaction
-  | CompletedTransaction;
-
-type Overrides =
-  | (ethers.PayableOverrides & {
-      from?: string | Promise<string> | undefined;
-    })
-  | undefined;
-
-type ContractFunction0<R> = (overrides?: Overrides) => Promise<R>;
-type ContractFunction1<T0, R> = (arg0: T0, overrides?: Overrides) => Promise<R>;
-
-function useContractTransact1<T0>(
-  func?: ContractFunction1<T0, ethers.ContractTransaction>
-): [ContractFunction1<T0, TransactionState>, TransactionState] {
-  const [transaction, setTransaction] = useState<TransactionState>({
-    type: "Idle",
-  });
-
-  const transactionRunning = useRef(0);
-
-  const invoke = useCallback(
-    async (arg0: T0, overrides?: Overrides): Promise<TransactionState> => {
-      if (func) {
-        if (transactionRunning.current === 0) {
-          try {
-            transactionRunning.current = Date.now();
-            setTransaction({
-              type: "Running",
-              startTime: transactionRunning.current,
-            });
-            const transaction = overrides
-              ? await func(arg0, overrides)
-              : await func(arg0);
-            const result = await transaction.wait();
-            setTransaction({
-              type: "Completed",
-              startTime: transactionRunning.current,
-              endTime: Date.now(),
-              result,
-            });
-            console.log(`setTransaction Completed`);
-            return {
-              type: "Completed",
-              startTime: transactionRunning.current,
-              endTime: Date.now(),
-              result,
-            };
-          } catch (error) {
-            setTransaction({ type: "Failed", error: error as Error });
-            return { type: "Failed", error: error as Error };
-          } finally {
-            transactionRunning.current = 0;
-          }
-        } else {
-          return {
-            type: "Running",
-            startTime: transactionRunning.current,
-          };
-        }
-      } else {
-        return { type: "Failed", error: new Error("No function provided") };
-      }
-    },
-    [func]
-  );
-  return [invoke, transaction];
-}
-
-function useContractTransact0(
-  func?: ContractFunction0<ethers.ContractTransaction>
-): [ContractFunction0<TransactionState>, TransactionState] {
-  const [transaction, setTransaction] = useState<TransactionState>({
-    type: "Idle",
-  });
-
-  const transactionRunning = useRef(0);
-
-  const invoke = useCallback(
-    async (overrides?: Overrides): Promise<TransactionState> => {
-      if (func) {
-        if (transactionRunning.current === 0) {
-          try {
-            transactionRunning.current = Date.now();
-            setTransaction({
-              type: "Running",
-              startTime: transactionRunning.current,
-            });
-            const transaction = overrides
-              ? await func(overrides)
-              : await func();
-            const result = await transaction.wait();
-            setTransaction({
-              type: "Completed",
-              startTime: transactionRunning.current,
-              endTime: Date.now(),
-              result,
-            });
-            console.log(`setTransaction Completed`);
-            return {
-              type: "Completed",
-              startTime: transactionRunning.current,
-              endTime: Date.now(),
-              result,
-            };
-          } catch (error) {
-            setTransaction({ type: "Failed", error: error as Error });
-            return { type: "Failed", error: error as Error };
-          } finally {
-            transactionRunning.current = 0;
-          }
-        } else {
-          return {
-            type: "Running",
-            startTime: transactionRunning.current,
-          };
-        }
-      } else {
-        return { type: "Failed", error: new Error("No function provided") };
-      }
-    },
-    [func]
-  );
-  return [invoke, transaction];
 }
 
 function getGuessHash(currentNonce: string, guess: number, salt: string) {
