@@ -139,6 +139,9 @@ const TicketPreview = (props: {
     const result = await commitGuess(guess);
     console.log(`commitGuess result`, result);
     if (result) {
+      // Store the ticket even while the transaction is running, will merged with guesses later
+      // to filter out failed transactions. Allows for the case where the user closes the browser
+      // window before a succesful transaction completes
       storeTicket(result.ticket);
       const transactionResult = await result.result;
       onTicketReceived(result.ticket);
