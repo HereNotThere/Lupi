@@ -62,7 +62,11 @@ export const DebugPanel = () => {
     const result = await commitGuess(guess);
     console.log(`commitGuess result`, result);
     if (result) {
-      storeTicket(result);
+      storeTicket(result.ticket);
+      const transactionResult = await result.result;
+      if (transactionResult.type === "Failed") {
+        console.warn(`commitGuess failed`, { result });
+      }
     } else {
       console.warn(`commitGuess failed`, { result });
     }

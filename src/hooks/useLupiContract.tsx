@@ -7,6 +7,7 @@ import { GameResultEvent } from "typechain-types/Lupi";
 import { TicketData } from "../schema/Ticket";
 import { useContractCall } from "./useContractCall";
 import {
+  TransactionState,
   useContractTransact0,
   useContractTransact1,
 } from "./useContractTransact";
@@ -215,7 +216,11 @@ export const useLupiContract = () => {
   );
 
   const commitGuess = useCallback(
-    async (guess: number): Promise<TicketData | undefined> => {
+    async (
+      guess: number
+    ): Promise<
+      { result: Promise<TransactionState>; ticket: TicketData } | undefined
+    > => {
       if (contractSigner && contract) {
         try {
           const bytes = ethers.utils.randomBytes(32);
@@ -229,19 +234,21 @@ export const useLupiContract = () => {
             value: ethers.utils.parseEther("0.01"),
           };
 
-          const result = await invokeCommitGuess(guessHash, overrides);
-          forceUpdate();
+          const result = (async () => {
+            const result = invokeCommitGuess(guessHash, overrides);
+            forceUpdate();
+            return result;
+          })();
 
-          if (result.type === "Completed") {
-            return {
+          return {
+            result,
+            ticket: {
               roundId,
               guess,
               salt,
               guessHash,
-            };
-          } else {
-            return undefined;
-          }
+            },
+          };
         } catch (err) {
           console.log(`commitGuess failed ${err}`, err);
         }

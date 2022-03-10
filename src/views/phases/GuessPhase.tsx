@@ -31,7 +31,6 @@ export const GuessPhase = () => {
     },
     [round]
   );
-
   const onTicketReceived = useCallback((ticket: TicketData) => {
     setTicket(ticket);
   }, []);
@@ -121,7 +120,8 @@ const TicketPreview = (props: {
   onTicketReceived: (ticket: TicketData) => void;
   onCancelClick: () => void;
 }) => {
-  const { ticketData } = props;
+  const { ticketData, onTicketReceived } = props;
+  const { guess } = ticketData;
   const { commitGuessState, commitGuess } = useLupiContractContext();
   const { storeTicket } = useTickets();
 
@@ -129,22 +129,26 @@ const TicketPreview = (props: {
   const submitText = !isComitting ? `Submit Ticket` : ``;
 
   const submitGuess = useCallback(async () => {
-    console.log("submitTicket", ticketData?.guess);
+    console.log("submitTicket", guess);
 
-    if (!ticketData?.guess) {
+    if (!guess) {
       console.log("submitTicket", "invalid guess");
       return;
     }
 
-    const result = await commitGuess(ticketData?.guess);
+    const result = await commitGuess(guess);
     console.log(`commitGuess result`, result);
     if (result) {
-      storeTicket(result);
-      props.onTicketReceived(result);
+      storeTicket(result.ticket);
+      const transactionResult = await result.result;
+      onTicketReceived(result.ticket);
+      if (transactionResult.type === "Failed") {
+        console.warn(`commitGuess failed`, { result });
+      }
     } else {
       console.warn(`commitGuess failed`, { result });
     }
-  }, [commitGuess, props, storeTicket, ticketData?.guess]);
+  }, [commitGuess, guess, onTicketReceived, storeTicket]);
 
   const onSubmitGuess = useCallback(async () => {
     await submitGuess();
