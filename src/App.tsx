@@ -4,7 +4,7 @@ import { MenuId, SiteHeader } from "./components/SiteHeader";
 import { Box } from "./ui";
 import { HowToPlayView } from "./views/HowToPlayPopup";
 import { PastGames } from "./views/PastGames";
-import { GameState } from "./views/GameView";
+import { GamePhases } from "./views/GamePhases";
 
 function App() {
   const [pageId, setPageId] = useState<MenuId>("current-game");
@@ -35,7 +35,7 @@ function App() {
         <SiteHeader onSelectMenuItem={onSelectMenuItem} />
         <Box row grow alignContent="center" justifyContent="center">
           <Box grow maxWidth={1200}>
-            {pageId !== "past-games" ? <GameState /> : <PastGames />}
+            {pageId !== "past-games" ? <GamePhases /> : <PastGames />}
           </Box>
         </Box>
       </Box>

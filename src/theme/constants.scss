@@ -2,6 +2,8 @@ $baseline: 8px;
 
 :root {
   --color-green: #d1f970;
+  --color-red: #ff7262;
+  --color-green-muted: #d1f97079;
   --color-black: #191b21;
   --color-xdark-grey: #252934;
   --color-dark-grey: #383b49;
@@ -15,7 +17,7 @@ $baseline: 8px;
   --theme-fg: var(--color-white);
   // primaries
   --theme-p1: var(--color-green);
-  --theme-p2: var(--color-green);
+  --theme-p2: var(--color-red);
   // nuances
   --theme-n1: var(--color-light-grey);
   --theme-n2: var(--color-grey);

@@ -133,8 +133,11 @@
   }
   /* specific */
   &--background-gradient {
-    background: radial-gradient(50% 50% at 50% 50%, #d1f970 0%, #8fff00 100%);
-    box-shadow: 0 0 20px 0px rgba(209, 249, 112, 0.4);
+    background: radial-gradient(
+      50% 50% at 50% 50%,
+      rgb(209, 249, 112) 0%,
+      rgb(143, 255, 0) 100%
+    );
   }
 }
 

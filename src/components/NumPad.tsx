@@ -1,5 +1,7 @@
+import { AnimatePresence } from "framer-motion";
 import styled, { css } from "styled-components";
 import { BigGreenButton } from "./Buttons";
+import { EnterIcon } from "./Icons";
 
 const keys = [
   "1",
@@ -17,26 +19,31 @@ const keys = [
 
 interface Props {
   onKeyPadPress: (n: string) => void;
+  canSubmit: boolean;
 }
 
 export const NumPad = (props: Props) => {
   return (
     <StyledNumPad>
-      {keys.map((value) => (
-        <StyledNumKey
-          onClick={() => {
-            props.onKeyPadPress(value);
-          }}
-          key={value}
-          aspectRatio="square"
-          centerContent
-          padding="xs"
-          size="giant"
-          value={value}
-        >
-          {value === "ENTER" ? "⏎" : value}
-        </StyledNumKey>
-      ))}
+      <AnimatePresence>
+        {keys.map((value) => (
+          <StyledNumKey
+            onClick={() => {
+              props.onKeyPadPress(value);
+            }}
+            key={value}
+            aspectRatio="square"
+            centerContent
+            padding="xs"
+            size="giant"
+            value={value}
+            icon={value === "ENTER" && <EnterIcon />}
+            disabled={value === "ENTER" && !props.canSubmit}
+          >
+            {value === "ENTER" ? "" : value}
+          </StyledNumKey>
+        ))}
+      </AnimatePresence>
     </StyledNumPad>
   );
 };
@@ -47,7 +54,10 @@ const StyledNumPad = styled.div`
   gap: var(--bl3);
 `;
 
-const StyledNumKey = styled(BigGreenButton)<{ value: string | number }>`
+const StyledNumKey = styled(BigGreenButton)<{
+  value: string | number;
+}>`
+  color: var(--theme-bg);
   ${({ value }) =>
     value === "ENTER" &&
     css`

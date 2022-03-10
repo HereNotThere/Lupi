@@ -130,7 +130,7 @@ interface Props extends BaseProps {
 
 export type BoxProps = Props;
 
-export const Box = forwardRef<HTMLDivElement, Props>((props, ref) => {
+export const Box = forwardRef((props: BoxProps, ref) => {
   const className = useMemo(() => {
     const classList = [];
 
@@ -328,6 +328,7 @@ export const Box = forwardRef<HTMLDivElement, Props>((props, ref) => {
       className,
       style,
       onClick: props.onClick,
+      ref,
     },
     props.children
   );

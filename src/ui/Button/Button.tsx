@@ -1,4 +1,4 @@
-import React from "react";
+import React, { forwardRef } from "react";
 import { Box, Text } from "src/ui";
 import { BoxProps } from "src/ui/Box/Box";
 import {
@@ -10,21 +10,26 @@ import "./Button.scss";
 
 export interface ButtonProps extends BoxProps {
   children?: React.ReactText | React.ReactNode;
+  icon?: React.ReactNode;
+  disabled?: boolean;
+  title?: string;
 }
 
-export const Button = (props: BoxProps) => {
+export const Button = forwardRef((props: ButtonProps, ref) => {
   const { children, className, ...boxProps } = props;
   return (
     <Box
       as="button"
       background="none"
-      {...boxProps}
+      ref={ref}
       className={`Button ${className ? className : ""}`}
+      {...boxProps}
     >
       {children}
+      {props.icon}
     </Box>
   );
-};
+});
 
 export interface TextButtonProps extends ButtonProps {
   color?: keyof typeof ColorThemeAttrs;
@@ -33,13 +38,15 @@ export interface TextButtonProps extends ButtonProps {
   children?: React.ReactText;
 }
 
-export const TextButton = (props: TextButtonProps) => {
+export const TextButton = forwardRef((props: TextButtonProps, ref) => {
   const { children, color, size, textTransform, ...buttonProps } = props;
   return (
-    <Button {...buttonProps}>
-      <Text header={size} color={color} textTransform={textTransform}>
-        {children}
-      </Text>
+    <Button {...buttonProps} ref={ref}>
+      {children && (
+        <Text header={size} color={color} textTransform={textTransform}>
+          {children}
+        </Text>
+      )}
     </Button>
   );
-};
+});
