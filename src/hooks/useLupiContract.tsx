@@ -56,6 +56,23 @@ export { useLupiContractContext, LupiContractContextProvider };
 
 export type UseLupiContract = ReturnType<typeof useLupiContract>;
 
+export const supportedChain = (chainId: string | undefined) => {
+  switch (chainId) {
+    case "0x66eeb":
+      return arbRinkebyAddress;
+    case "0x4":
+      return rinkebylupiAddress;
+    case "0x7a69":
+      console.log(
+        "useLupiContract::useLupiContractconnecting to hardhat",
+        hhAddress
+      );
+      return hhAddress;
+    default:
+      console.warn("useLupiContract::connecting to unhandled network");
+      return undefined;
+  }
+};
 export const useLupiContract = () => {
   const [forceRefreshDep, setUnusedState] = useState({});
   const forceUpdate = useCallback(() => setUnusedState({}), []);
@@ -66,24 +83,7 @@ export const useLupiContract = () => {
   }, [forceUpdate]);
   const { provider, chainId } = useWeb3Context();
 
-  const contractAddress = useMemo(() => {
-    console.log(`chainId ${chainId}`);
-    switch (chainId) {
-      case "0x66eeb":
-        return arbRinkebyAddress;
-      case "0x4":
-        return rinkebylupiAddress;
-      case "0x7a69":
-        console.log(
-          "useLupiContract::useLupiContractconnecting to hardhat",
-          hhAddress
-        );
-        return hhAddress;
-      default:
-        console.warn("useLupiContract::connecting to unhandled network");
-        return undefined;
-    }
-  }, [chainId]);
+  const contractAddress = useMemo(() => supportedChain(chainId), [chainId]);
 
   const signer = useMemo(() => provider?.getSigner(), [provider]);
   const contract = useMemo(
@@ -139,40 +139,27 @@ export const useLupiContract = () => {
   >([]);
 
   useEffect(() => {
-    try {
-      let shutdown = false;
-      void (async () => {
-        try {
-          if (contract) {
-            console.log(`fetching events`);
+    if (contract) {
+      try {
+        let shutdown = false;
+        void (async () => {
+          try {
             const minBlock =
               (await contract.provider.getBlockNumber()) - 100000;
+            if (shutdown) {
+              return;
+            }
 
-            /*
-            const topicId = utils.id(
-              "GameResult(uint32,address,uint256,uint32)"
-            );
-            const topicNameId = utils.id("GameResult");
-              */
-            const logs = await contract.provider.getLogs({
-              fromBlock: minBlock,
-              toBlock: "latest",
-              address: contractAddress,
-            });
-            console.log(`logs ${logs}`, logs);
-
-            /*
-              contract.provider.lookupAddress[
-                "GameResult(uint32,address,uint256,uint32)"
-              ](); //.ContractEvent()
-              */
-            const eventFilter = { address: contractAddress };
-            console.log(`eventFilter ${eventFilter}`, eventFilter);
+            const eventFilter = { address: contract.address };
             const events = await contract.queryFilter<GameResultEvent>(
               eventFilter,
               minBlock,
               "latest"
             );
+            if (shutdown) {
+              return;
+            }
+
             const resolvedEvents = await Promise.all(
               events.map(async (e) => {
                 const block = await e.getBlock();
@@ -185,23 +172,27 @@ export const useLupiContract = () => {
                 };
               })
             );
-            console.log(`events ${resolvedEvents}`, resolvedEvents);
+            if (shutdown) {
+              return;
+            }
+
             if (!shutdown) {
               setFinishedGames(resolvedEvents);
             }
+          } catch (err) {
+            console.warn(`contract filtering by GameResult failed`, err);
+            setFinishedGames([]);
           }
-        } catch (err) {
-          console.warn(`contract filtering by GameResult failed`, err);
-          setFinishedGames([]);
-        }
-      })();
-      return () => {
-        shutdown = true;
-      };
-    } catch (err) {
-      console.warn(`GameResult failed`, err);
+        })();
+
+        return () => {
+          shutdown = true;
+        };
+      } catch (err) {
+        console.warn(`GameResult failed`, err);
+      }
     }
-  }, [contract, contractAddress]);
+  }, [contract, forceRefreshDep]);
 
   const [invokeCallEndGame, callEndGameState] = useContractTransact0(
     contractSigner?.endGame
