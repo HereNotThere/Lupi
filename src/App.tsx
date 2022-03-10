@@ -41,11 +41,14 @@ function App() {
           <LupiContractProvider>
             <Box row grow alignContent="center" justifyContent="center">
               <Box grow maxWidth={1200}>
-                {pageId !== "past-games" ? <GamePhases /> : <PastGames />}
+                {pageId === "past-games" ? (
+                  <PastGames />
+                ) : pageId === "debug" ? (
+                  <DebugPanel />
+                ) : (
+                  <GamePhases />
+                )}
               </Box>
-            </Box>
-            <Box>
-              <DebugPanel />
             </Box>
             {popup ? <HowToPlayView onClose={onPopupClose} /> : <></>}
           </LupiContractProvider>

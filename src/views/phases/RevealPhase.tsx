@@ -1,22 +1,28 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { FileUploader } from "react-drag-drop-files";
 import { BigGreenButton } from "src/components/Buttons";
-import { GameStats } from "src/components/GameStats";
+import { RevealedGuesses } from "src/components/RevealedGuesses";
 import { Spinner } from "src/components/Spinner";
 import { TicketStack } from "src/components/TicketStack";
 import { useLupiContractContext } from "src/hooks/useLupiContract";
-import { useTicketList, useTickets } from "src/hooks/useTickets";
+import {
+  useRevealedTickets,
+  useTicketList,
+  useTickets,
+} from "src/hooks/useTickets";
 import { Box, Grid, Text } from "src/ui";
 import { isValidTicket } from "src/utils/lupiUtils";
 import styled from "styled-components";
 
 export const RevealPhase = () => {
-  const { round, revealGuesses, guessHashes, revealGuessesState } =
+  const { revealGuesses, guessHashes, revealGuessesState } =
     useLupiContractContext();
   const ticketList = useTicketList(guessHashes);
   const revealAll = useCallback(async () => {
     await revealGuesses(ticketList);
   }, [revealGuesses, ticketList]);
+
+  const { userUnrevealed } = useRevealedTickets();
 
   const isChecking = revealGuessesState.type === "Running";
   const submitText = !isChecking
@@ -25,35 +31,27 @@ export const RevealPhase = () => {
       }`
     : "";
   return (
-    <Grid columns={2} grow>
-      {/* left column */}
-      <Box centerContent>
-        <Grid columns={1} gap="md">
-          <Text header="large" align="center">
-            Round {round}
-          </Text>
-          <GameStats />
-        </Grid>
-      </Box>
+    <Grid columns={1} grow>
       {/* right column */}
       <Box grow centerContent gap="lg">
-        {!ticketList.length ? (
-          <>
-            <Text header="large">{"Check if you are the LUPI"}</Text>
-            <TicketDragAndDrop>{`Drop round #${round} tickets here`}</TicketDragAndDrop>
-          </>
-        ) : (
-          <>
-            <TicketStack tickets={ticketList} />
-            <BigGreenButton
-              centerContent
-              onClick={revealAll}
-              icon={isChecking && <Spinner />}
-            >
-              {submitText}
-            </BigGreenButton>
-          </>
+        <TicketStack tickets={ticketList} />
+
+        {!!userUnrevealed.length && (
+          <BigGreenButton
+            centerContent
+            onClick={revealAll}
+            icon={isChecking && <Spinner />}
+          >
+            {submitText}
+          </BigGreenButton>
         )}
+
+        {!ticketList?.length && (
+          <TicketDragAndDrop>{`Drop tickets here`}</TicketDragAndDrop>
+        )}
+        <Box verticalPadding="lg">
+          <RevealedGuesses />
+        </Box>
       </Box>
     </Grid>
   );

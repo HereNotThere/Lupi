@@ -188,3 +188,61 @@ export const useTicketList = (
     return res;
   }, [chainId, guessHashes, round, chainContractTickets, contractAddress]);
 };
+
+export const useRevealedTickets = () => {
+  const { revealedGuesses, guessHashes } = useLupiContractContext();
+  const localTickets = useTicketList(guessHashes);
+
+  const { userRevealed, userUnrevealed } = useMemo(() => {
+    const userTickets = {
+      revealed: [],
+      unrevealed: [],
+    } as {
+      revealed: number[];
+      unrevealed: number[];
+    };
+
+    if (guessHashes?.length) {
+      guessHashes.forEach((hash) => {
+        hash.commitedGuesses.forEach((g) => {
+          const revealed =
+            g.revealed && localTickets.find((t) => t.guessHash === g.guessHash);
+          if (revealed) userTickets.revealed.push(revealed.guess);
+          const unrevealed =
+            !g.revealed &&
+            localTickets.find((t) => t.guessHash === g.guessHash);
+          if (unrevealed) userTickets.unrevealed.push(unrevealed.guess);
+        });
+      });
+    }
+
+    return {
+      userRevealed: userTickets.revealed,
+      userUnrevealed: userTickets.unrevealed,
+    };
+  }, [guessHashes, localTickets]);
+
+  const sortedRevealedGuesses = useMemo(
+    () =>
+      (revealedGuesses ?? []).map((r) => r.toNumber()).sort((a, b) => a - b),
+    [revealedGuesses]
+  );
+
+  const uniques = useMemo(
+    () =>
+      sortedRevealedGuesses.filter(
+        (n) => sortedRevealedGuesses.filter((d) => n === d).length === 1
+      ),
+    [sortedRevealedGuesses]
+  );
+
+  const lupi = uniques[0];
+  const userLuckyNumber = userRevealed.includes(lupi) && lupi;
+
+  return {
+    userUnrevealed,
+    userRevealed,
+    userLuckyNumber,
+    sortedRevealedGuesses,
+  };
+};

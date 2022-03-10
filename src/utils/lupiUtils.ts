@@ -1,3 +1,4 @@
+import { BigNumber, ethers } from "ethers";
 import saveAs from "file-saver";
 import { TicketData } from "src/schema/Ticket";
 
@@ -5,6 +6,13 @@ export const getShortAddress = (address?: string | undefined) => {
   return address && address.length > 16
     ? `${address.slice(0, 5)}..${address.slice(-4)}`
     : address;
+};
+
+export const getHumanDate = (date?: Date) =>
+  date && date !== new Date(0) ? date?.toLocaleTimeString() : "";
+
+export const getEthFromWei = (wei?: BigNumber) => {
+  return (wei && ethers.utils.formatEther(wei)) || 0;
 };
 
 export const isValidTicket = (t?: TicketData): t is TicketData =>

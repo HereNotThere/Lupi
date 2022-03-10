@@ -13,6 +13,7 @@ import { Box, Grid, Text } from "src/ui";
 import {
   createTicketDownload,
   generatePreviewTicket,
+  getHumanDate,
   isValidTicket,
 } from "src/utils/lupiUtils";
 
@@ -192,7 +193,9 @@ const TicketResult = (props: {
 
   const allSubmittedTickets = useMemo(() => {
     return [
-      ...ticketList.filter((t) => t.guess !== ticket?.guess),
+      ...ticketList
+        .filter((t) => t.guess !== ticket?.guess)
+        .sort((a, b) => a.guess - b.guess),
       ticket,
     ].filter(isValidTicket);
   }, [ticketList, ticket]);
@@ -231,7 +234,7 @@ const TicketResult = (props: {
         <Text header="large">
           Come back with your ticket to see if you will win
         </Text>
-        <Text header="giant">{revealDate?.toLocaleTimeString()}</Text>
+        <Text header="giant">{getHumanDate(revealDate)}</Text>
       </Box>
     </Box>
   );
