@@ -127,7 +127,15 @@ export const useLupiContract = () => {
 
   const guessHashes = useContractCall(getGuessHashes, [forceRefreshDep]);
 
-  const [finishedGames, setFinishedGames] = useState<GameResultEvent[]>([]);
+  const [finishedGames, setFinishedGames] = useState<
+    {
+      timestamp: number;
+      round: number;
+      award: string;
+      lowestGuess: string;
+      winner: string;
+    }[]
+  >([]);
 
   useEffect(() => {
     try {
@@ -159,14 +167,26 @@ export const useLupiContract = () => {
               */
             const eventFilter = { address: contractAddress };
             console.log(`eventFilter ${eventFilter}`, eventFilter);
-            const events = await contract.queryFilter(
+            const events = await contract.queryFilter<GameResultEvent>(
               eventFilter,
               minBlock,
               "latest"
             );
-            console.log(`events ${events}`, events);
+            const resolvedEvents = await Promise.all(
+              events.map(async (e) => {
+                const block = await e.getBlock();
+                return {
+                  timestamp: block.timestamp,
+                  round: e.args.round,
+                  award: e.args.award.toString(),
+                  lowestGuess: e.args.lowestGuess.toString(),
+                  winner: e.args.winner,
+                };
+              })
+            );
+            console.log(`events ${resolvedEvents}`, resolvedEvents);
             if (!shutdown) {
-              setFinishedGames(events);
+              setFinishedGames(resolvedEvents);
             }
           }
         } catch (err) {

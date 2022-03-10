@@ -1,7 +1,6 @@
 import { useLupiContractContext } from "src/hooks/useLupiContract";
 import { Box, Grid, Text } from "src/ui";
 import { getShortAddress } from "src/utils/lupiUtils";
-import { GameResultEvent } from "typechain-types/Lupi";
 
 export const PastGames = () => {
   const { finishedGames } = useLupiContractContext();
@@ -9,7 +8,13 @@ export const PastGames = () => {
 };
 
 interface Props {
-  games: GameResultEvent[];
+  games: {
+    timestamp: number;
+    round: number;
+    award: string;
+    lowestGuess: string;
+    winner: string;
+  }[];
 }
 
 export const GameList = (props: Props) => {
@@ -21,13 +26,13 @@ export const GameList = (props: Props) => {
         ></ResultRow>
         {props.games.map((result, index) => (
           <ResultRow
-            key={`${result.args.round}-${index}`}
+            key={`${result.round}-${index}`}
             columns={[
-              result.args.round,
-              "?",
-              result.args.award.toString(),
-              result.args.lowestGuess.toString(),
-              getShortAddress(result.args.winner),
+              result.round,
+              new Date(result.timestamp * 1000).toLocaleString(),
+              result.award.toString(),
+              result.lowestGuess.toString(),
+              getShortAddress(result.winner),
             ]}
           ></ResultRow>
         ))}
