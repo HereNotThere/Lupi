@@ -17,42 +17,46 @@ export const GameList = () => {
   return (
     <Box alignItems="center" verticalPadding="lg">
       {finishedGames ? (
-        <Grid columns={5} maxWidth={1024} gap="lg">
-          <ResultRow
-            self={false}
-            header
-            columns={["Round", "Date", "Pot", "LUPI", "Winner"]}
-          ></ResultRow>
-          {finishedGames
-            .slice()
-            .reverse()
-            .map((result, index) => {
-              const isSelf =
-                accounts[0].toLowerCase() === result.winner.toLowerCase();
-              return (
-                <ResultRow
-                  key={`${result.round}-${index}`}
-                  self={isSelf}
-                  columns={[
-                    result.round,
-                    new Date(result.timestamp * 1000).toLocaleString(),
-                    result.lowestGuess ? (
-                      <EthText
-                        wei={result.award}
-                        color={isSelf ? "primary" : "text"}
-                      />
-                    ) : (
-                      "-"
-                    ),
-                    result.lowestGuess || "-",
-                    result.winner === nullAddress
-                      ? "No winner (pot rolled over)"
-                      : getShortAddress(result.winner),
-                  ]}
-                ></ResultRow>
-              );
-            })}
-        </Grid>
+        finishedGames.length ? (
+          <Grid columns={5} maxWidth={1024} gap="lg">
+            <ResultRow
+              self={false}
+              header
+              columns={["Round", "Date", "Pot", "LUPI", "Winner"]}
+            ></ResultRow>
+            {finishedGames
+              .slice()
+              .reverse()
+              .map((result, index) => {
+                const isSelf =
+                  accounts[0].toLowerCase() === result.winner.toLowerCase();
+                return (
+                  <ResultRow
+                    key={`${result.round}-${index}`}
+                    self={isSelf}
+                    columns={[
+                      result.round,
+                      new Date(result.timestamp * 1000).toLocaleString(),
+                      result.lowestGuess ? (
+                        <EthText
+                          wei={result.award}
+                          color={isSelf ? "primary" : "text"}
+                        />
+                      ) : (
+                        "-"
+                      ),
+                      result.lowestGuess || "-",
+                      result.winner === nullAddress
+                        ? "No winner (pot rolled over)"
+                        : getShortAddress(result.winner),
+                    ]}
+                  ></ResultRow>
+                );
+              })}
+          </Grid>
+        ) : (
+          <Text>No past games just yet</Text>
+        )
       ) : (
         <Text>Please hold on, fetching prior results...</Text>
       )}

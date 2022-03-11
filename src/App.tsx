@@ -44,7 +44,7 @@ function App() {
         <SiteHeader onSelectMenuItem={onSelectMenuItem} />
         {isChainSupported && walletStatus === WalletStatus.Unlocked ? (
           <LupiContractProvider>
-            <Box row grow justifyContent="center">
+            <Box row grow alignContent="center" justifyContent="center">
               <Box grow maxWidth={1200}>
                 {pageId === "past-games" ? <PastGames /> : <GamePhases />}
               </Box>
