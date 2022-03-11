@@ -58,6 +58,8 @@ export type UseLupiContract = ReturnType<typeof useLupiContract>;
 
 export const supportedChain = (chainId: string | undefined) => {
   switch (chainId) {
+    case undefined:
+      return undefined;
     case "0x66eeb":
       return arbRinkebyAddress;
     case "0x4":
@@ -69,7 +71,7 @@ export const supportedChain = (chainId: string | undefined) => {
       );
       return hhAddress;
     default:
-      console.warn("useLupiContract::connecting to unhandled network");
+      console.warn("useLupiContract::connecting to unhandled network", chainId);
       return undefined;
   }
 };
