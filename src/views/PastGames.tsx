@@ -1,3 +1,4 @@
+import { utils } from "ethers";
 import { useLupiContractContext } from "src/hooks/useLupiContract";
 import { useWeb3Context } from "src/hooks/useWeb3";
 import { Box, Grid, Text } from "src/ui";
@@ -29,7 +30,7 @@ export const GameList = () => {
                 columns={[
                   result.round,
                   new Date(result.timestamp * 1000).toLocaleString(),
-                  result.award.toString(),
+                  utils.formatEther(result.award),
                   result.lowestGuess.toString(),
                   result.winner === nullAddress
                     ? "No winner (pot rolled over)"
