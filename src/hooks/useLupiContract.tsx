@@ -184,7 +184,7 @@ export const useLupiContract = () => {
       lowestGuess: string;
       winner: string;
     }[]
-  >([]);
+  >();
 
   useEffect(() => {
     if (contract) {

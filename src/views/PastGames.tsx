@@ -4,45 +4,44 @@ import { Box, Grid, Text } from "src/ui";
 import { getShortAddress } from "src/utils/lupiUtils";
 
 export const PastGames = () => {
-  const { finishedGames } = useLupiContractContext();
-  return <GameList games={finishedGames}></GameList>;
+  return <GameList />;
 };
 
-interface Props {
-  games: {
-    timestamp: number;
-    round: number;
-    award: string;
-    lowestGuess: string;
-    winner: string;
-  }[];
-}
+const nullAddress = "0x0000000000000000000000000000000000000000";
 
-export const GameList = (props: Props) => {
+export const GameList = () => {
+  const { finishedGames } = useLupiContractContext();
+
   const { accounts } = useWeb3Context();
   return (
     <Box alignItems="center" verticalPadding="lg">
-      <Grid columns={5} maxWidth={800} gap="lg">
-        <ResultRow
-          self={false}
-          columns={["Round", "Date", "Pot", "LUPI", "Winner"]}
-        ></ResultRow>
-        {props.games.map((result, index) => {
-          return (
-            <ResultRow
-              key={`${result.round}-${index}`}
-              self={accounts[0].toLowerCase() === result.winner.toLowerCase()}
-              columns={[
-                result.round,
-                new Date(result.timestamp * 1000).toLocaleString(),
-                result.award.toString(),
-                result.lowestGuess.toString(),
-                getShortAddress(result.winner),
-              ]}
-            ></ResultRow>
-          );
-        })}
-      </Grid>
+      {finishedGames ? (
+        <Grid columns={5} maxWidth={1024} gap="lg">
+          <ResultRow
+            self={false}
+            columns={["Round", "Date", "Pot", "LUPI", "Winner"]}
+          ></ResultRow>
+          {finishedGames.map((result, index) => {
+            return (
+              <ResultRow
+                key={`${result.round}-${index}`}
+                self={accounts[0].toLowerCase() === result.winner.toLowerCase()}
+                columns={[
+                  result.round,
+                  new Date(result.timestamp * 1000).toLocaleString(),
+                  result.award.toString(),
+                  result.lowestGuess.toString(),
+                  result.winner === nullAddress
+                    ? "No winner (pot rolled over)"
+                    : getShortAddress(result.winner),
+                ]}
+              ></ResultRow>
+            );
+          })}
+        </Grid>
+      ) : (
+        <Text>Please hold on, fetching prior results...</Text>
+      )}
     </Box>
   );
 };
@@ -59,8 +58,14 @@ const ResultRow = (props: {
 }) => (
   <>
     {props.columns.map((c, index) => (
-      <Box key={`column-${index}`} color={props.self ? "primary" : "text"}>
-        <Text textTransform="uppercase">{c}</Text>
+      <Box
+        key={`column-${index}`}
+        alignItems="center"
+        color={props.self ? "primary" : "text"}
+      >
+        <Text singleLine={true} textTransform="uppercase">
+          {c}
+        </Text>
       </Box>
     ))}
   </>
