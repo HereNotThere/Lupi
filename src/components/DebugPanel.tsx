@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { useTickets, useTicketList } from "src/hooks/useTickets";
 import { TicketData } from "src/schema/Ticket";
 import { Box, Button, Text } from "src/ui";
@@ -41,12 +42,23 @@ const GuessList = (props: {
   </>
 );
 
+const ErrorFallback = ({ error }: { error: Error }) => {
+  return (
+    <div role="alert">
+      <p>Something went wrong:</p>
+      <pre>{error.message}</pre>
+    </div>
+  );
+};
+
 export const DebugPanel = () => {
   const [guess, setGuessValue] = useState(0);
   const { addArbitrumRinkebyChain, addArbitrumOneChain, switchEthereumChain } =
     useWeb3Context();
 
   const {
+    phase,
+    phaseDeadline,
     guessHashes,
     finishedGames,
     revealedGuesses,
@@ -73,71 +85,79 @@ export const DebugPanel = () => {
   }, [commitGuess, guess, storeTicket]);
 
   return (
-    <Box row>
-      {/* left container */}
-      <Box gap="lg" padding grow>
-        <Box padding border centerContent>
-          <Text header="large">Commit Guess</Text>
-          <input
-            onChange={(e) => setGuessValue(Number.parseInt(e.target.value))}
-            placeholder="Commit guess"
-          />
-          <Text>{JSON.stringify(commitGuessState.type)}</Text>
-          <Button onClick={onClick}>Commit Guess</Button>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <Box row>
+        {/* left container */}
+        <Box gap="lg" padding grow>
+          <Box padding border centerContent>
+            <Text header="large">Commit Guess</Text>
+            <input
+              onChange={(e) => setGuessValue(Number.parseInt(e.target.value))}
+              placeholder="Commit guess"
+            />
+            <Text>{JSON.stringify(commitGuessState.type)}</Text>
+            <Button onClick={onClick}>Commit Guess</Button>
+          </Box>
+
+          <Box>
+            <Button onClick={() => addArbitrumRinkebyChain()}>
+              Add addArbitrumRinkebyChain
+            </Button>
+          </Box>
+
+          <Box>
+            <Button onClick={() => addArbitrumOneChain()}>
+              Add addArbitrumOneChain
+            </Button>
+          </Box>
+
+          <Box>
+            <Button onClick={() => switchEthereumChain("0xa4b1")}>
+              Switch to Arbirum
+            </Button>
+          </Box>
+          <Box>
+            <Button onClick={() => switchEthereumChain("0x66EEB")}>
+              Switch to Arbirum Rinkeby
+            </Button>
+          </Box>
+
+          <Box>
+            <Button onClick={() => switchEthereumChain("0x4")}>
+              Switch to Rinkeby
+            </Button>
+          </Box>
+
+          <Box padding border centerContent>
+            <TicketList tickets={ticketList} />
+          </Box>
+
+          <Box padding border centerContent>
+            <GuessList guesses={guessHashes} />
+          </Box>
+
+          <Box padding border centerContent>
+            <Button onClick={callEndGame}>End Game</Button>
+          </Box>
+          <Box padding border centerContent>
+            <>
+              <Text>Phase: {phase}</Text>
+              <Text>Phase deadline: {phaseDeadline?.toString()}</Text>
+            </>
+          </Box>
         </Box>
 
-        <Box>
-          <Button onClick={() => addArbitrumRinkebyChain()}>
-            Add addArbitrumRinkebyChain
-          </Button>
-        </Box>
+        {/* right container */}
+        <Box gap="lg" padding grow>
+          <Box padding border centerContent>
+            <Box>Finished Games: {JSON.stringify(finishedGames)}</Box>
+          </Box>
 
-        <Box>
-          <Button onClick={() => addArbitrumOneChain()}>
-            Add addArbitrumOneChain
-          </Button>
-        </Box>
-
-        <Box>
-          <Button onClick={() => switchEthereumChain("0xa4b1")}>
-            Switch to Arbirum
-          </Button>
-        </Box>
-        <Box>
-          <Button onClick={() => switchEthereumChain("0x66EEB")}>
-            Switch to Arbirum Rinkeby
-          </Button>
-        </Box>
-
-        <Box>
-          <Button onClick={() => switchEthereumChain("0x4")}>
-            Switch to Rinkeby
-          </Button>
-        </Box>
-
-        <Box padding border centerContent>
-          <TicketList tickets={ticketList} />
-        </Box>
-
-        <Box padding border centerContent>
-          <GuessList guesses={guessHashes} />
-        </Box>
-
-        <Box padding border centerContent>
-          <Button onClick={callEndGame}>End Game</Button>
+          <Box padding border centerContent>
+            <Box>Revealed Guesses: {JSON.stringify(revealedGuesses)}</Box>
+          </Box>
         </Box>
       </Box>
-
-      {/* right container */}
-      <Box gap="lg" padding grow>
-        <Box padding border centerContent>
-          <Box>Finished Games: {JSON.stringify(finishedGames)}</Box>
-        </Box>
-
-        <Box padding border centerContent>
-          <Box>Revealed Guesses: {JSON.stringify(revealedGuesses)}</Box>
-        </Box>
-      </Box>
-    </Box>
+    </ErrorBoundary>
   );
 };

@@ -49,7 +49,11 @@ function App() {
                 {pageId === "past-games" ? <PastGames /> : <GamePhases />}
               </Box>
             </Box>
-            {debugPanel && <DebugPanel />}
+            {debugPanel && (
+              <Box maxWidth={1200}>
+                <DebugPanel />
+              </Box>
+            )}
             {popup ? <HowToPlayView onClose={onPopupClose} /> : <></>}
           </LupiContractProvider>
         ) : (
