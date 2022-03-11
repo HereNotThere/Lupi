@@ -1,4 +1,3 @@
-import { utils } from "ethers";
 import { EthText } from "src/components/EthText";
 import { useLupiContractContext } from "src/hooks/useLupiContract";
 import { useWeb3Context } from "src/hooks/useWeb3";

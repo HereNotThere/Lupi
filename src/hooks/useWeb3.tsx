@@ -14,6 +14,19 @@ export const enum WalletStatus {
 
 const [useWeb3Context, Web3ContextProvider] = createGenericContext<UseWeb3>();
 
+type Web3Error = {
+  message?: string;
+  code?: string;
+  data?: string;
+};
+
+function logError(text: string, err: unknown) {
+  const error = err as Web3Error;
+  logger.error(
+    `Error requesting eth_requestAccounts: ${error.message}. Code: ${error.code}. Data: ${error.data}`
+  );
+}
+
 const Web3Provider = ({ children }: { children: ReactNode }): JSX.Element => {
   const web3 = useWeb3();
   return <Web3ContextProvider value={web3}>{children}</Web3ContextProvider>;
@@ -185,10 +198,8 @@ const useWeb3 = () => {
         }
 
         return { accounts, chainId };
-      } catch (error: any) {
-        logger.error(
-          `Error requesting eth_requestAccounts: ${error.message}. Code: ${error.code}. Data: ${error.data}`
-        );
+      } catch (error) {
+        logError("Error requesting eth_requestAccounts", error);
         setWalletStatus(WalletStatus.Error);
         return { accounts: [], chainId: undefined };
       } finally {
@@ -215,11 +226,8 @@ const useWeb3 = () => {
 
         logger.info(`personal_ecRecover:\n${signingWallet}`);
         return signingWallet;
-      } catch (error: any) {
-        logger.error(
-          `Error requesting personal_ecRecover: ${error.message}.
-       Code: ${error.code}. Data: ${error.data}`
-        );
+      } catch (error) {
+        logError("Error requesting personal_ecRecover", error);
       }
     },
     [ethereum]
@@ -240,11 +248,8 @@ const useWeb3 = () => {
 
         logger.info(`personal_sign:\n${signature}`);
         return signature;
-      } catch (error: any) {
-        logger.error(
-          `Error requesting personal_sign: ${error.message}.
-       Code: ${error.code}. Data: ${error.data}`
-        );
+      } catch (error) {
+        logError("Error requesting personal_sign", error);
       }
     },
     [ethereum]
@@ -278,11 +283,8 @@ const useWeb3 = () => {
 
       logger.info(`wallet_addEthereumChain:\n${signature}`);
       return signature;
-    } catch (error: any) {
-      logger.error(
-        `Error requesting wallet_addEthereumChain: ${error.message}.
-       Code: ${error.code}. Data: ${error.data}`
-      );
+    } catch (error) {
+      logError("Error requesting wallet_addEthereumChain", error);
     }
   }, [ethereum]);
 
@@ -316,11 +318,8 @@ const useWeb3 = () => {
 
       logger.info(`wallet_addEthereumChain:\n${signature}`);
       return signature;
-    } catch (error: any) {
-      logger.error(
-        `Error requesting wallet_addEthereumChain: ${error.message}.
-     Code: ${error.code}. Data: ${error.data}`
-      );
+    } catch (error) {
+      logError("Error requesting wallet_addEthereumChain", error);
     }
   }, [ethereum]);
 
@@ -343,11 +342,8 @@ const useWeb3 = () => {
 
         logger.info(`wallet_addEthereumChain:\n${signature}`);
         return signature;
-      } catch (error: any) {
-        logger.error(
-          `Error requesting wallet_addEthereumChain: ${error.message}.
-   Code: ${error.code}. Data: ${error.data}`
-        );
+      } catch (error) {
+        logError("Error requesting wallet_addEthereumChain", error);
       }
     },
     [ethereum]
