@@ -372,6 +372,12 @@ describe("Lupi", async function () {
         .length
     ).to.equal(1);
 
+    const currentState = await lupi.getCurrentState();
+    expect(
+      currentState.commitedGuesses.find((g) => g.player === players[0])
+        ?.commitedGuesses.length
+    ).to.equal(1);
+
     const now =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp +

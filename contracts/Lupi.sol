@@ -218,6 +218,44 @@ contract Lupi is ReentrancyGuard {
     return (rounds[round].nonce);
   }
 
+  function getCurrentState()
+    external
+    view
+    returns (
+      uint256 blockTimestamp,
+      uint32 currentRound,
+      bytes32 nonce,
+      uint256 guessDeadline,
+      uint256 revealDeadline,
+      uint256 balance,
+      Lupi.AllCommitedGuess[] memory commitedGuesses,
+      RevealedGuess[] memory revealedGuesses,
+      address[] memory players
+    )
+  {
+    Lupi.AllCommitedGuess[] memory ret = new AllCommitedGuess[](
+      rounds[round].players.length
+    );
+    for (uint256 i; i < rounds[round].players.length; ++i) {
+      ret[i].player = rounds[round].players[i];
+      ret[i].commitedGuesses = rounds[round].committedGuesses[
+        rounds[round].players[i]
+      ];
+    }
+
+    return (
+      block.timestamp,
+      round,
+      rounds[round].nonce,
+      rounds[round].guessDeadline,
+      rounds[round].revealDeadline,
+      rounds[round].balance,
+      ret,
+      rounds[round].revealedGuesses,
+      rounds[round].players
+    );
+  }
+
   function endGame() external nonReentrant {
     require(
       block.timestamp > rounds[round].revealDeadline,
