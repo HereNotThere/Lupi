@@ -62,6 +62,8 @@ interface Props extends BaseProps {
   small?: true;
 }
 
+export type TextProps = Props;
+
 export const Text = (props: Props) => {
   const {
     children,

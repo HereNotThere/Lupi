@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import { GamePhase, useLupiContractContext } from "src/hooks/useLupiContract";
 import { Box, Grid, Text } from "src/ui";
+import { getHumanDate } from "src/utils/lupiUtils";
 import { Lupi } from "typechain-types";
+import { EthText } from "./EthText";
 
-import { getEthFromWei, getHumanDate } from "src/utils/lupiUtils";
 export const getEntryCount = (
   guessHashes: Lupi.AllCommitedGuessStructOutput[] | undefined,
   showUnrevealed: boolean
@@ -33,7 +34,6 @@ export const GameStats = (props: { noSpace?: boolean }) => {
   );
 
   const wei = currentBalance?.add(rolloverBalance ?? 0);
-  const eth = getEthFromWei(wei);
 
   return (
     <Grid
@@ -53,9 +53,7 @@ export const GameStats = (props: { noSpace?: boolean }) => {
         <Text header="small">
           {phase === GamePhase.ENDGAME ? "Jackpot" : "Current Jackpot"}
         </Text>
-        <Text header="regular" color="primary">
-          {eth} eth
-        </Text>
+        <EthText wei={wei} header="regular" color="primary" />
       </Box>
       <Box
         padding={noSpace ? "md" : "sm"}
@@ -79,7 +77,9 @@ export const GameStats = (props: { noSpace?: boolean }) => {
           cols={2}
         >
           <Text header="small">
-            {phase === GamePhase.GUESS ? "Guess deadline" : "Reveal deadline"}
+            {phase === GamePhase.GUESS
+              ? "Approximate Guess Deadline"
+              : "Approximate Reveal deadline"}
           </Text>
           <Text header="regular" color="primary">
             {phaseEndTimestamp}

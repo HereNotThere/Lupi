@@ -8,8 +8,19 @@ export const getShortAddress = (address?: string | undefined) => {
     : address;
 };
 
-export const getHumanDate = (date?: Date) =>
-  date && date !== new Date(0) ? date?.toLocaleTimeString() : "";
+export const getHumanDate = (date?: Date) => {
+  if (!date) {
+    return "";
+  }
+  return (
+    date.toLocaleDateString("fr-fr", {}) +
+    " " +
+    date.toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  );
+};
 
 export const getEthFromWei = (wei?: BigNumber) => {
   return (wei && ethers.utils.formatEther(wei)) || 0;
