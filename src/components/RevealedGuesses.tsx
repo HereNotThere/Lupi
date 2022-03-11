@@ -100,7 +100,8 @@ export const RevealedGuesses = () => {
           )
         ) : (
           <Text color="muted" align="center">
-            The round is over. Next round starting soon, hang in there.
+            This round is over. Click here to end game and distribute winnings
+            and start a new round.
           </Text>
         )}
       </Box>
