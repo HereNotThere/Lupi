@@ -1,13 +1,28 @@
 import { useMemo } from "react";
 import { GamePhase, useLupiContractContext } from "src/hooks/useLupiContract";
 import { Box, Grid, Text } from "src/ui";
+import { Lupi } from "typechain-types";
 
 import { getEthFromWei, getHumanDate } from "src/utils/lupiUtils";
+export const getEntryCount = (
+  guessHashes: Lupi.AllCommitedGuessStructOutput[] | undefined,
+  showUnrevealed: boolean
+) =>
+  guessHashes?.reduce(
+    (k, u) =>
+      k +
+        u.commitedGuesses.filter((g) => g.revealed || showUnrevealed).length ??
+      0,
+    0
+  );
 
 export const GameStats = (props: { noSpace?: boolean }) => {
   const { noSpace } = props;
   const { guessHashes, currentBalance, rolloverBalance, phaseDeadline, phase } =
     useLupiContractContext();
+
+  const showUnrevealed = phase === GamePhase.GUESS;
+  const entryCount = getEntryCount(guessHashes, showUnrevealed);
 
   const phaseEndTimestamp = useMemo(
     () =>
@@ -48,9 +63,11 @@ export const GameStats = (props: { noSpace?: boolean }) => {
         border={!noSpace}
         centerContent
       >
-        <Text header="small"># entries </Text>
+        <Text header="small">
+          {phase === GamePhase.GUESS ? "Entries" : "Revealed Entries"}
+        </Text>
         <Text header="regular" color="primary">
-          {guessHashes?.length ?? 0}
+          {entryCount}
         </Text>
       </Box>
       {phaseEndTimestamp && (
