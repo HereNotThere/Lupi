@@ -5,7 +5,7 @@ import { getShortAddress } from "src/utils/lupiUtils";
 import styled from "styled-components";
 import { Box, Button, Text } from "../ui";
 
-export type MenuId = "current-game" | "past-games" | "how-to-play" | "debug";
+export type MenuId = "current-game" | "past-games" | "how-to-play";
 
 interface Props {
   onSelectMenuItem: (menuId: string) => void;
