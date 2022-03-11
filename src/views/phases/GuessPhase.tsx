@@ -19,13 +19,13 @@ import {
 
 export const GuessPhase = () => {
   const { round } = useLupiContractContext();
-  const [ticket, setTicket] = useState<TicketData>();
+  const [ticket, setTicket] = useState<TicketData & { isPreview?: boolean }>();
 
   const onPreviewGuess = useCallback(
     (guess: number) => {
       const preview = generatePreviewTicket({ round, guess });
       if (preview) {
-        setTicket(preview);
+        setTicket({ ...preview, isPreview: true });
       } else {
         throw new Error("Invalid ticket data");
       }
@@ -41,7 +41,7 @@ export const GuessPhase = () => {
   }, []);
 
   if (ticket) {
-    return !ticket.salt ? (
+    return ticket.isPreview ? (
       <TicketPreview
         onCancelClick={onBackClick}
         onTicketReceived={onTicketReceived}
