@@ -36,6 +36,13 @@ export function getGuessHash(
   );
 }
 
+function bigNumberToDate(bn: BigNumber) {
+  try {
+    return new Date(bn.toNumber() * 1000).toLocaleString();
+  } catch {
+    return "Invalid date: " + bn.toString();
+  }
+}
 export function contractStateFormatter(
   state:
     | {
@@ -64,12 +71,12 @@ export function contractStateFormatter(
       players,
     } = state;
     return JSON.stringify({
-      blockTimestamp: new Date(blockTimestamp.toNumber() * 1000),
+      blockTimestamp: bigNumberToDate(blockTimestamp),
       currentRound,
       nonce,
-      guessDeadline: new Date(guessDeadline.toNumber() * 1000),
-      revealDeadline: new Date(revealDeadline.toNumber() * 1000),
-      balance: balance.toNumber(),
+      guessDeadline: bigNumberToDate(guessDeadline),
+      revealDeadline: bigNumberToDate(revealDeadline),
+      balance: balance.toString(),
       commitedGuesses,
       revealedGuesses,
       players,

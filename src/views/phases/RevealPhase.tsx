@@ -40,6 +40,7 @@ export const RevealPhase = () => {
           <BigGreenButton
             centerContent
             onClick={revealAll}
+            minWidth={320}
             icon={isChecking && <Spinner />}
           >
             {submitText}

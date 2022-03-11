@@ -244,5 +244,6 @@ export const useRevealedTickets = () => {
     userRevealed,
     userLuckyNumber,
     sortedRevealedGuesses,
+    lupi,
   };
 };

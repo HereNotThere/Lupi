@@ -11,6 +11,7 @@ export const RevealedGuesses = () => {
     userUnrevealed,
     sortedRevealedGuesses,
     userLuckyNumber,
+    lupi,
   } = useRevealedTickets();
   return (
     <Grid centerContent columns={1} border width={640}>
@@ -100,8 +101,10 @@ export const RevealedGuesses = () => {
           )
         ) : (
           <Text color="muted" align="center">
-            This round is over. Click here to end game and distribute winnings
-            and start a new round.
+            This round is over.{" "}
+            {!sortedRevealedGuesses?.length
+              ? "There was no winner, the pot will be rolled over into the next round."
+              : `The winning LUPI was ${lupi}`}
           </Text>
         )}
       </Box>
