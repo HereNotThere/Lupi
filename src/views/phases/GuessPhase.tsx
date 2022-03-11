@@ -145,9 +145,10 @@ const TicketPreview = (props: {
       // window before a succesful transaction completes
       storeTicket(result.ticket);
       const transactionResult = await result.result;
-      onTicketReceived(result.ticket);
       if (transactionResult.type === "Failed") {
         console.warn(`commitGuess failed`, { result });
+      } else if (transactionResult.type === "Completed") {
+        onTicketReceived(result.ticket);
       }
     } else {
       console.warn(`commitGuess failed`, { result });
