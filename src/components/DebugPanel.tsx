@@ -4,7 +4,10 @@ import { useTickets, useTicketList } from "src/hooks/useTickets";
 import { TicketData } from "src/schema/Ticket";
 import { Box, Button, Text } from "src/ui";
 import { Lupi } from "typechain-types";
-import { useLupiContractContext } from "../hooks/useLupiContract";
+import {
+  contractStateFormatter,
+  useLupiContractContext,
+} from "../hooks/useLupiContract";
 import { useWeb3Context } from "../hooks/useWeb3";
 
 const TicketList = (props: { tickets: TicketData[] }) => (
@@ -65,6 +68,7 @@ export const DebugPanel = () => {
     commitGuess,
     commitGuessState,
     callEndGame,
+    contractState,
   } = useLupiContractContext();
   const { storeTicket } = useTickets();
   const ticketList = useTicketList(guessHashes);
@@ -143,6 +147,13 @@ export const DebugPanel = () => {
             <>
               <Text>Phase: {phase}</Text>
               <Text>Phase deadline: {phaseDeadline?.toString()}</Text>
+            </>
+          </Box>
+          <Box padding border centerContent>
+            <>
+              <Text>
+                ContractState: {contractStateFormatter(contractState)}
+              </Text>
             </>
           </Box>
         </Box>

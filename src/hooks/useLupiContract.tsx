@@ -1,4 +1,4 @@
-import { ethers, utils } from "ethers";
+import { BigNumber, ethers, utils } from "ethers";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { useWeb3Context } from "./useWeb3";
 import LupiAbi from "../artifacts/contracts/Lupi.sol/Lupi.json";
@@ -36,6 +36,48 @@ export function getGuessHash(
   );
 }
 
+export function contractStateFormatter(
+  state:
+    | {
+        blockTimestamp: BigNumber;
+        currentRound: number;
+        nonce: string;
+        guessDeadline: BigNumber;
+        revealDeadline: BigNumber;
+        balance: BigNumber;
+        commitedGuesses: Lupi.AllCommitedGuessStructOutput[];
+        revealedGuesses: Lupi.RevealedGuessStructOutput[];
+        players: string[];
+      }
+    | undefined
+) {
+  if (state) {
+    const {
+      blockTimestamp,
+      currentRound,
+      nonce,
+      guessDeadline,
+      revealDeadline,
+      balance,
+      commitedGuesses,
+      revealedGuesses,
+      players,
+    } = state;
+    return JSON.stringify({
+      blockTimestamp: new Date(blockTimestamp.toNumber() * 1000),
+      currentRound,
+      nonce,
+      guessDeadline: new Date(guessDeadline.toNumber() * 1000),
+      revealDeadline: new Date(revealDeadline.toNumber() * 1000),
+      balance: balance.toNumber(),
+      commitedGuesses,
+      revealedGuesses,
+      players,
+    });
+  } else {
+    return undefined;
+  }
+}
 const [useLupiContractContext, LupiContractContextProvider] =
   createGenericContext<UseLupiContract>();
 
@@ -103,6 +145,10 @@ export const useLupiContract = () => {
         : undefined,
     [signer, contractAddress]
   );
+
+  const contractState = useContractCall(contract?.getCurrentState, [
+    forceRefreshDep,
+  ]);
 
   const currentBalance = useContractCall(contract?.getCurrentBalance, [
     forceRefreshDep,
@@ -293,5 +339,6 @@ export const useLupiContract = () => {
     commitGuessState,
     revealGuesses,
     revealGuessesState,
+    contractState,
   };
 };
