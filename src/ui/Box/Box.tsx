@@ -130,7 +130,7 @@ interface Props extends BaseProps {
 
 export type BoxProps = Props;
 
-export const Box = forwardRef((props: BoxProps, ref) => {
+export const Box = forwardRef((props: Props, ref) => {
   const className = useMemo(() => {
     const classList = [];
 

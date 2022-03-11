@@ -1,14 +1,14 @@
 import { motion } from "framer-motion";
-import React from "react";
+import React, { ComponentProps } from "react";
 import { BoxProps } from "src/ui/Box/Box";
-import { TextButton, TextButtonProps } from "src/ui/Button/Button";
+import { TextButton } from "src/ui/Button/Button";
 
 type MotionButtonProps = React.ComponentProps<typeof MotionButton>;
 
 type Props = {
   background?: BoxProps["background"];
   children?: React.ReactText | React.ReactNode;
-} & TextButtonProps;
+} & ComponentProps<typeof MotionButton>;
 
 const BigButton = (props: Props & MotionButtonProps) => {
   const { children, ...buttonProps } = props;
@@ -54,7 +54,7 @@ export const BigGreenButton = (props: Props) => {
   return (
     <BigButton
       color="background"
-      whileTap="tap"
+      whileTap="hover"
       whileHover={props.disabled ? "disabled" : "hover"}
       initial="initial"
       animate={props.disabled ? "disabled" : "animate"}
@@ -69,7 +69,15 @@ export const BigGreenButton = (props: Props) => {
 export const BigGreyButton = (props: Props) => {
   const { children, ...buttonProps } = props;
   return (
-    <BigButton background="muted2" {...buttonProps}>
+    <BigButton
+      background="muted2"
+      whileTap="hover"
+      whileHover={"hover"}
+      initial="normal"
+      animate={"normal"}
+      variants={{ hover: { scale: 1.02 }, normal: { scale: 1 } }}
+      {...buttonProps}
+    >
       {children}
     </BigButton>
   );
