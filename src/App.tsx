@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { ChainWarning } from "./components/ChainWarning";
 import { DebugPanel } from "./components/DebugPanel";
+import { Footer } from "./components/Footer";
 import { MenuId, SiteHeader } from "./components/SiteHeader";
 import { LupiContractProvider, supportedChain } from "./hooks/useLupiContract";
 import { useWeb3Context, WalletStatus } from "./hooks/useWeb3";
@@ -38,9 +39,9 @@ function App() {
   }, []);
 
   return (
-    <Box padding="md" fillSpace>
+    <Box padding="md">
       {/* above the fold container */}
-      <Box grow minHeight={`100vh`}>
+      <Box grow minHeight={`calc(100vh - var(--bl14))`}>
         <SiteHeader onSelectMenuItem={onSelectMenuItem} />
         {isChainSupported && walletStatus === WalletStatus.Unlocked ? (
           <LupiContractProvider>
@@ -54,7 +55,6 @@ function App() {
                 <DebugPanel />
               </Box>
             )}
-            {popup ? <HowToPlayView onClose={onPopupClose} /> : <></>}
           </LupiContractProvider>
         ) : (
           <Box grow centerContent>
@@ -62,6 +62,9 @@ function App() {
           </Box>
         )}
       </Box>
+
+      <Footer />
+      {popup ? <HowToPlayView onClose={onPopupClose} /> : <></>}
     </Box>
   );
 }

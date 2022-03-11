@@ -73,6 +73,11 @@ body {
   color: var(--theme-fg);
 }
 
+a {
+  color: var(--theme-fg);
+  text-decoration: none;
+}
+
 button {
   cursor: pointer;
   position: relative;
