@@ -1,9 +1,9 @@
 import React, { useCallback } from "react";
-import { useWeb3Context } from "src/hooks/useWeb3";
+import { useWeb3Context, WalletStatus } from "src/hooks/useWeb3";
 import { TextButton } from "src/ui/Button/Button";
 import { getShortAddress } from "src/utils/lupiUtils";
 import styled from "styled-components";
-import { Box, Button, Grid, Text } from "../ui";
+import { Box, Button, Text } from "../ui";
 
 export type MenuId = "current-game" | "past-games" | "how-to-play" | "debug";
 
@@ -12,19 +12,20 @@ interface Props {
 }
 
 export const SiteHeader = (props: Props) => {
-  const { accounts, chainId, requestAccounts, walletStatus } = useWeb3Context();
+  const { accounts, requestAccounts, walletStatus } = useWeb3Context();
   const shortAccounts = accounts.map(getShortAddress);
+
   return (
-    <Grid
-      columns={2}
+    <Box
       padding="md"
       horizontalPadding="lg"
       border
       borderRadius="lg"
       minHeight={75}
       alignItems="center"
+      row
     >
-      <Box>
+      <Box shrink>
         <MenuItem
           menuId="current-game"
           onMenuItemClick={props.onSelectMenuItem}
@@ -35,7 +36,7 @@ export const SiteHeader = (props: Props) => {
         </MenuItem>
       </Box>
 
-      <Box row justifyContent="end" gap="md">
+      <Box grow row justifyContent="end" gap="md">
         <MenuItem
           menuId={"how-to-play"}
           onMenuItemClick={props.onSelectMenuItem}
@@ -54,16 +55,18 @@ export const SiteHeader = (props: Props) => {
           </Text>
         </MenuItem>
         <Separator />
-        <Text color="muted" header="small" textTransform="uppercase">
+        {/* <Text color="muted" header="small" textTransform="uppercase">
           Chain ID: {chainId}
         </Text>
         <Separator />
         <Text color="muted" header="small" textTransform="uppercase">
           Wallet Status: {walletStatus}
-        </Text>
-        {accounts.length > 0 ? (
-          <Text color="muted" header="small" textTransform="uppercase">
-            Account: {shortAccounts}
+        </Text> */}
+        {walletStatus === WalletStatus.Unlocked ? (
+          <Text header="small" textTransform="uppercase" color="muted">
+            <Text span color="primary">
+              {shortAccounts[0]}
+            </Text>
           </Text>
         ) : (
           <TextButton
@@ -76,7 +79,7 @@ export const SiteHeader = (props: Props) => {
           </TextButton>
         )}
       </Box>
-    </Grid>
+    </Box>
   );
 };
 
