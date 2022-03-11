@@ -1,4 +1,5 @@
 import { utils } from "ethers";
+import { EthText } from "src/components/EthText";
 import { useLupiContractContext } from "src/hooks/useLupiContract";
 import { useWeb3Context } from "src/hooks/useWeb3";
 import { Box, Grid, Text } from "src/ui";
@@ -23,14 +24,20 @@ export const GameList = () => {
             columns={["Round", "Date", "Pot", "LUPI", "Winner"]}
           ></ResultRow>
           {finishedGames.map((result, index) => {
+            const isSelf =
+              accounts[0].toLowerCase() === result.winner.toLowerCase();
             return (
               <ResultRow
                 key={`${result.round}-${index}`}
-                self={accounts[0].toLowerCase() === result.winner.toLowerCase()}
+                self={isSelf}
                 columns={[
                   result.round,
                   new Date(result.timestamp * 1000).toLocaleString(),
-                  utils.formatEther(result.award),
+                  <EthText
+                    wei={result.award}
+                    header="regular"
+                    color={isSelf ? "primary" : "text"}
+                  />,
                   result.lowestGuess.toString(),
                   result.winner === nullAddress
                     ? "No winner (pot rolled over)"
@@ -52,7 +59,7 @@ const ResultRow = (props: {
   columns: [
     string | number | undefined,
     string | number | undefined,
-    string | number | undefined,
+    JSX.Element | string | undefined,
     string | number | undefined,
     string | number | undefined
   ];
