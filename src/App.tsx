@@ -9,6 +9,10 @@ import { GamePhases } from "./views/GamePhases";
 import { HowToPlayView } from "./views/HowToPlayPopup";
 import { PastGames } from "./views/PastGames";
 
+const debugPanel = Boolean(
+  new URLSearchParams(window.location.search).get("debugPanel")
+);
+
 function App() {
   const [pageId, setPageId] = useState<MenuId>("current-game");
   const [popup, setPopup] = useState(false);
@@ -42,15 +46,10 @@ function App() {
           <LupiContractProvider>
             <Box row grow alignContent="center" justifyContent="center">
               <Box grow maxWidth={1200}>
-                {pageId === "past-games" ? (
-                  <PastGames />
-                ) : pageId === "debug" ? (
-                  <DebugPanel />
-                ) : (
-                  <GamePhases />
-                )}
+                {pageId === "past-games" ? <PastGames /> : <GamePhases />}
               </Box>
             </Box>
+            {debugPanel && <DebugPanel />}
             {popup ? <HowToPlayView onClose={onPopupClose} /> : <></>}
           </LupiContractProvider>
         ) : (

@@ -1,6 +1,6 @@
 import { TicketData } from "src/schema/Ticket";
 import { Box } from "src/ui";
-import styled, { css } from "styled-components";
+import styled from "styled-components";
 import { Ticket } from "./Ticket";
 
 interface Props {
