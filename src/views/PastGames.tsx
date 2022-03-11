@@ -35,7 +35,6 @@ export const GameList = () => {
                   new Date(result.timestamp * 1000).toLocaleString(),
                   <EthText
                     wei={result.award}
-                    header="regular"
                     color={isSelf ? "primary" : "text"}
                   />,
                   result.lowestGuess.toString(),

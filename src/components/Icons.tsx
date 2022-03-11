@@ -22,10 +22,11 @@ export const EnterIcon = () => (
   </svg>
 );
 
-export const EthIcon = forwardRef<SVGSVGElement, IconProps>((props) => (
-  <svg {...props} viewBox="0 0 24 24">
-    <g fill="currentColor">
-      <path d="M11.944 17.97L4.58 13.62 11.943 24l7.37-10.38-7.372 4.35h.003zM12.056 0L4.69 12.223l7.365 4.354 7.365-4.35L12.056 0z" />
-    </g>
+export const EthIcon = forwardRef<SVGSVGElement, IconProps>((props, ref) => (
+  <svg {...props} ref={ref} viewBox="0 0 24 24">
+    <path
+      fill="currentColor"
+      d="M11.944 17.97L4.58 13.62 11.943 24l7.37-10.38-7.372 4.35h.003zM12.056 0L4.69 12.223l7.365 4.354 7.365-4.35L12.056 0z"
+    />
   </svg>
 ));
