@@ -223,8 +223,8 @@ const TicketResult = (props: {
       <Box alignItems="center">
         <Text header="large">Your entry was submitted!</Text>
         <Text color="muted" align="center">
-          Your ticket should have automatically downloaded. <br />
-          If not, download and keep it safe:
+          Your ticket has been stored in your browser local storage. <br />
+          If you'd like to to reveal from another browser, please download it:
         </Text>
       </Box>
       <Box gap="md" alignItems="center">
