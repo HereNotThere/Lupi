@@ -12,8 +12,9 @@ export const getHumanDate = (date?: Date) => {
   if (!date) {
     return "";
   }
+
   return (
-    date.toLocaleDateString("fr-fr", {}) +
+    date.toLocaleDateString() +
     " " +
     date.toLocaleTimeString(undefined, {
       hour: "2-digit",
@@ -29,7 +30,7 @@ export const getFormattedTicketNumber = (value: number) =>
         .join("") + value
     : "000";
 
-export const getEthFromWei = (wei?: BigNumber) => {
+export const getEthFromWei = (wei?: BigNumber | number) => {
   return (wei && ethers.utils.formatEther(wei)) || 0;
 };
 

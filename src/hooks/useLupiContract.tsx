@@ -188,7 +188,7 @@ export const useLupiContract = () => {
       timestamp: number;
       round: number;
       award: BigNumber;
-      lowestGuess: string;
+      lowestGuess: number;
       winner: string;
     }[]
   >();
@@ -222,7 +222,7 @@ export const useLupiContract = () => {
                   timestamp: block.timestamp,
                   round: e.args.round,
                   award: e.args.award,
-                  lowestGuess: e.args.lowestGuess.toString(),
+                  lowestGuess: e.args.lowestGuess,
                   winner: e.args.winner,
                 };
               })
