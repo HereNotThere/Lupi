@@ -19,6 +19,7 @@ import {
 
 export const GuessPhase = () => {
   const { round } = useLupiContractContext();
+
   const [ticket, setTicket] = useState<TicketData & { isPreview?: boolean }>();
 
   const onPreviewGuess = useCallback(
@@ -57,7 +58,9 @@ export const GuessPhase = () => {
 
 const GuessView = (props: { onPreviewGuess: (guess: number) => void }) => {
   const { onPreviewGuess } = props;
-  const { round } = useLupiContractContext();
+  const { round, guessHashes } = useLupiContractContext();
+  const tickets = useTicketList(guessHashes);
+
   const [inputValue, setInputValue] = useState(0);
 
   const onResetGuess = useCallback(() => {
@@ -106,6 +109,7 @@ const GuessView = (props: { onPreviewGuess: (guess: number) => void }) => {
           </Text>
           <NumBox value={inputValue} cols={1} onReset={onResetGuess} />
           <GameStats />
+          <TicketStack tickets={tickets} />
         </Grid>
       </Box>
       {/* right column */}
