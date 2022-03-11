@@ -22,6 +22,13 @@ export const getHumanDate = (date?: Date) => {
   );
 };
 
+export const getFormattedTicketNumber = (value: number) =>
+  value > 0
+    ? Array(Math.max(0, 3 - value.toString().length))
+        .fill("0")
+        .join("") + value
+    : "000";
+
 export const getEthFromWei = (wei?: BigNumber) => {
   return (wei && ethers.utils.formatEther(wei)) || 0;
 };

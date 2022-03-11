@@ -1,20 +1,14 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Box, Button } from "src/ui";
 import { BoxProps } from "src/ui/Box/Box";
+import { getFormattedTicketNumber } from "src/utils/lupiUtils";
 import styled from "styled-components";
 import { CloseIcon } from "./Icons";
-
-const formatValue = (value: number) =>
-  value > 0
-    ? Array(Math.max(0, 3 - value.toString().length))
-        .fill("0")
-        .join("") + value
-    : "000";
 
 export const NumBox = (
   props: { value: number; onReset: () => void } & BoxProps
 ) => {
-  const value = formatValue(props.value);
+  const value = getFormattedTicketNumber(props.value);
   return (
     <StyledNumBox
       border

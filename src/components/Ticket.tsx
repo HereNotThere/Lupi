@@ -1,6 +1,6 @@
 import { TicketData } from "src/schema/Ticket";
 import { Box, Text } from "src/ui";
-import { getShortAddress } from "src/utils/lupiUtils";
+import { getFormattedTicketNumber, getShortAddress } from "src/utils/lupiUtils";
 import styled from "styled-components";
 
 export const Ticket = (props: {
@@ -8,18 +8,24 @@ export const Ticket = (props: {
   className?: string;
 }) => (
   <GradientCard borderRadius="lg" padding="md" className={props.className}>
-    <InsideCard row borderRadius="lg">
+    <InsideCard row borderRadius="lg" gap={false}>
       <LeftContainer gap="sm" border="after" padding="md">
         <RotatedText header="small">
           {getShortAddress(props.ticketData.salt || "0x00000000")}
         </RotatedText>
       </LeftContainer>
-      <Box gap="xs" padding="md" minWidth={185} alignItems="start">
+      <Box
+        gap="xs"
+        padding="md"
+        minWidth={185}
+        alignItems="start"
+        centerContent
+      >
         <Text header="large" align="center">
           Round {props.ticketData.roundId}
         </Text>
         <RoundName header="giant" align="center">
-          {props.ticketData.guess}
+          {getFormattedTicketNumber(props.ticketData.guess)}
         </RoundName>
       </Box>
     </InsideCard>

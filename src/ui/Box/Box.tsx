@@ -54,7 +54,7 @@ const ColorTheme = {
   primary: "primary",
   secondary: "secondary",
   muted: "muted",
-};
+} as const;
 
 type FlexPosition = keyof typeof flexPosition;
 type FlexAlign = keyof typeof flexAlign;
