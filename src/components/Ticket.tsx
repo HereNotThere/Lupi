@@ -1,35 +1,40 @@
+import { forwardRef } from "react";
 import { TicketData } from "src/schema/Ticket";
 import { Box, Text } from "src/ui";
 import { getFormattedTicketNumber, getShortAddress } from "src/utils/lupiUtils";
 import styled from "styled-components";
 
-export const Ticket = (props: {
-  ticketData: TicketData;
-  className?: string;
-}) => (
-  <GradientCard borderRadius="lg" padding="md" className={props.className}>
-    <InsideCard row borderRadius="lg" gap={false}>
-      <LeftContainer gap="sm" border="after" padding="md">
-        <RotatedText header="small">
-          {getShortAddress(props.ticketData.salt || "0x00000000")}
-        </RotatedText>
-      </LeftContainer>
-      <Box
-        gap="xs"
-        padding="md"
-        minWidth={185}
-        alignItems="start"
-        centerContent
-      >
-        <Text header="large" align="center">
-          Round {props.ticketData.roundId}
-        </Text>
-        <RoundName header="giant" align="center">
-          {getFormattedTicketNumber(props.ticketData.guess)}
-        </RoundName>
-      </Box>
-    </InsideCard>
-  </GradientCard>
+export const Ticket = forwardRef(
+  (props: { ticketData: TicketData; className?: string }, ref) => (
+    <GradientCard
+      borderRadius="lg"
+      padding="md"
+      className={props.className}
+      ref={ref}
+    >
+      <InsideCard row borderRadius="lg" gap={false}>
+        <LeftContainer gap="sm" border="after" padding="md">
+          <RotatedText header="small">
+            {getShortAddress(props.ticketData.salt || "0x00000000")}
+          </RotatedText>
+        </LeftContainer>
+        <Box
+          gap="xs"
+          padding="md"
+          minWidth={185}
+          alignItems="start"
+          centerContent
+        >
+          <Text header="large" align="center">
+            Round {props.ticketData.roundId}
+          </Text>
+          <RoundName header="giant" align="center">
+            {getFormattedTicketNumber(props.ticketData.guess)}
+          </RoundName>
+        </Box>
+      </InsideCard>
+    </GradientCard>
+  )
 );
 
 const GradientCard = styled(Box)`

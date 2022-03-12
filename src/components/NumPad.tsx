@@ -1,4 +1,3 @@
-import { AnimatePresence } from "framer-motion";
 import styled, { css } from "styled-components";
 import { BigGreenButton } from "./Buttons";
 import { EnterIcon } from "./Icons";
@@ -25,25 +24,23 @@ interface Props {
 export const NumPad = (props: Props) => {
   return (
     <StyledNumPad>
-      <AnimatePresence>
-        {keys.map((value) => (
-          <StyledNumKey
-            onClick={() => {
-              props.onKeyPadPress(value);
-            }}
-            key={value}
-            aspectRatio="square"
-            centerContent
-            padding="xs"
-            size="giant"
-            value={value}
-            icon={value === "ENTER" && <EnterIcon />}
-            disabled={value === "ENTER" && !props.canSubmit}
-          >
-            {value === "ENTER" ? "" : value}
-          </StyledNumKey>
-        ))}
-      </AnimatePresence>
+      {keys.map((value) => (
+        <StyledNumKey
+          onClick={() => {
+            props.onKeyPadPress(value);
+          }}
+          key={value}
+          aspectRatio="square"
+          centerContent
+          padding="xs"
+          size="giant"
+          value={value}
+          icon={value === "ENTER" && <EnterIcon />}
+          disabled={value === "ENTER" && !props.canSubmit}
+        >
+          {value === "ENTER" ? "" : value}
+        </StyledNumKey>
+      ))}
     </StyledNumPad>
   );
 };

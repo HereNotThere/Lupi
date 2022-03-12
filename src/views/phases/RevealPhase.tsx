@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { FileUploader } from "react-drag-drop-files";
 import { BigGreenButton } from "src/components/Buttons";
+import { FadeBox } from "src/components/FadeBox";
 import { RevealedGuesses } from "src/components/RevealedGuesses";
 import { Spinner } from "src/components/Spinner";
 import { TicketStack } from "src/components/TicketStack";
@@ -34,25 +35,31 @@ export const RevealPhase = () => {
     <Grid columns={1} grow>
       {/* right column */}
       <Box grow centerContent gap="lg">
-        <TicketStack tickets={ticketList} />
+        <FadeBox transitionType="fade">
+          <TicketStack tickets={ticketList} />
+        </FadeBox>
 
         {!!userUnrevealed.length && (
-          <BigGreenButton
-            centerContent
-            onClick={revealAll}
-            minWidth={320}
-            icon={isChecking && <Spinner />}
-          >
-            {submitText}
-          </BigGreenButton>
+          <FadeBox>
+            <BigGreenButton
+              centerContent
+              onClick={revealAll}
+              minWidth={320}
+              icon={isChecking && <Spinner />}
+            >
+              {submitText}
+            </BigGreenButton>
+          </FadeBox>
         )}
 
         {!ticketList?.length && (
-          <TicketDragAndDrop>{`Drop tickets here`}</TicketDragAndDrop>
+          <FadeBox>
+            <TicketDragAndDrop>{`Drop tickets here`}</TicketDragAndDrop>
+          </FadeBox>
         )}
-        <Box verticalPadding="lg">
+        <FadeBox verticalPadding="lg" transitionType="fade">
           <RevealedGuesses />
-        </Box>
+        </FadeBox>
       </Box>
     </Grid>
   );

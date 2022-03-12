@@ -1,8 +1,9 @@
 import { BigGreyButton } from "src/components/Buttons";
+import { FadeBox } from "src/components/FadeBox";
 import { RevealedGuesses } from "src/components/RevealedGuesses";
 import { Spinner } from "src/components/Spinner";
 import { useLupiContractContext } from "src/hooks/useLupiContract";
-import { Box, Grid } from "src/ui";
+import { Box } from "src/ui";
 
 export const EndGamePhase = () => {
   const { callEndGame, callEndGameState } = useLupiContractContext();
@@ -10,9 +11,11 @@ export const EndGamePhase = () => {
   const submitText = !isComitting ? `Start New Game` : ``;
 
   return (
-    <Grid columns={1} grow>
-      <Box grow gap="lg" minHeight={400} centerContent>
+    <Box grow gap="lg" minHeight={400} centerContent>
+      <FadeBox>
         <RevealedGuesses />
+      </FadeBox>
+      <FadeBox>
         <BigGreyButton
           minWidth={320}
           onClick={() => callEndGame()}
@@ -20,7 +23,7 @@ export const EndGamePhase = () => {
         >
           {submitText}
         </BigGreyButton>
-      </Box>
-    </Grid>
+      </FadeBox>
+    </Box>
   );
 };

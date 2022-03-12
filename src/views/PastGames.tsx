@@ -1,4 +1,5 @@
 import { EthText } from "src/components/EthText";
+import { FadeBox, PageTransition } from "src/components/FadeBox";
 import { useLupiContractContext } from "src/hooks/useLupiContract";
 import { useWeb3Context } from "src/hooks/useWeb3";
 import { Box, Grid, Text } from "src/ui";
@@ -15,45 +16,51 @@ export const GameList = () => {
 
   const { accounts } = useWeb3Context();
   return (
-    <Box alignItems="center" verticalPadding="lg">
+    <Box grow centerContent>
       {finishedGames ? (
         finishedGames.length ? (
-          <Grid columns={5} maxWidth={1024} gap="lg">
-            <ResultRow
-              self={false}
-              header
-              columns={["Round", "Date", "Pot", "LUPI", "Winner"]}
-            ></ResultRow>
-            {finishedGames
-              .slice()
-              .reverse()
-              .map((result, index) => {
-                const isSelf =
-                  accounts[0].toLowerCase() === result.winner.toLowerCase();
-                return (
-                  <ResultRow
-                    key={`${result.round}-${index}`}
-                    self={isSelf}
-                    columns={[
-                      result.round,
-                      new Date(result.timestamp * 1000).toLocaleString(),
-                      result.lowestGuess ? (
-                        <EthText
-                          wei={result.award}
-                          color={isSelf ? "primary" : "text"}
-                        />
-                      ) : (
-                        "-"
-                      ),
-                      result.lowestGuess || "-",
-                      result.winner === nullAddress
-                        ? "No winner (pot rolled over)"
-                        : getShortAddress(result.winner),
-                    ]}
-                  ></ResultRow>
-                );
-              })}
-          </Grid>
+          <PageTransition
+            alignItems="center"
+            verticalPadding="lg"
+            transitionType="fast"
+          >
+            <Grid columns={5} maxWidth={1024} gap="lg">
+              <ResultRow
+                self={false}
+                header
+                columns={["Round", "Date", "Pot", "LUPI", "Winner"]}
+              ></ResultRow>
+              {finishedGames
+                .slice()
+                .reverse()
+                .map((result, index) => {
+                  const isSelf =
+                    accounts[0].toLowerCase() === result.winner.toLowerCase();
+                  return (
+                    <ResultRow
+                      key={`${result.round}-${index}`}
+                      self={isSelf}
+                      columns={[
+                        result.round,
+                        new Date(result.timestamp * 1000).toLocaleString(),
+                        result.lowestGuess ? (
+                          <EthText
+                            wei={result.award}
+                            color={isSelf ? "primary" : "text"}
+                          />
+                        ) : (
+                          "-"
+                        ),
+                        result.lowestGuess || "-",
+                        result.winner === nullAddress
+                          ? "No winner (pot rolled over)"
+                          : getShortAddress(result.winner),
+                      ]}
+                    ></ResultRow>
+                  );
+                })}
+            </Grid>
+          </PageTransition>
         ) : (
           <Text>No past games just yet</Text>
         )
@@ -77,7 +84,7 @@ const ResultRow = (props: {
 }) => (
   <>
     {props.columns.map((c, index) => (
-      <Box key={`column-${index}`} color={props.self ? "primary" : "text"}>
+      <FadeBox key={`column-${index}`} color={props.self ? "primary" : "text"}>
         <Text
           singleLine
           textTransform="uppercase"
@@ -85,7 +92,7 @@ const ResultRow = (props: {
         >
           {c}
         </Text>
-      </Box>
+      </FadeBox>
     ))}
   </>
 );

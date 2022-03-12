@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BigGreenButton, BigGreyButton } from "src/components/Buttons";
+import { FadeBox } from "src/components/FadeBox";
 import { GameStats } from "src/components/GameStats";
 import { NumBox } from "src/components/NumBox";
 import { NumPad } from "src/components/NumPad";
@@ -104,18 +105,24 @@ const GuessView = (props: { onPreviewGuess: (guess: number) => void }) => {
       {/* left column */}
       <Box centerContent>
         <Grid columns={1} gap="md">
-          <Text header="regular" align="center">
-            Round {round}
-          </Text>
-          <NumBox value={inputValue} cols={1} onReset={onResetGuess} />
-          <GameStats />
-          <TicketStack tickets={tickets} />
+          <FadeBox>
+            <Text header="regular" align="center">
+              Round {round}
+            </Text>
+            <NumBox value={inputValue} cols={1} onReset={onResetGuess} />
+          </FadeBox>
+          <FadeBox>
+            <GameStats />
+          </FadeBox>
+          <FadeBox>
+            <TicketStack tickets={tickets} />
+          </FadeBox>
         </Grid>
       </Box>
       {/* right column */}
-      <Box grow centerContent>
+      <FadeBox grow centerContent transitionType={"fade"}>
         <NumPad onKeyPadPress={onKeyPadPress} canSubmit={inputValue > 0} />
-      </Box>
+      </FadeBox>
     </Grid>
   );
 };
@@ -164,25 +171,31 @@ const TicketPreview = (props: {
   }, [submitGuess]);
 
   return (
-    <Box grow centerContent gap="md">
+    <FadeBox grow centerContent gap="lg">
       <Ticket ticketData={props.ticketData} />
       <Text>Entry fee: 0.01ETH + gas</Text>
-      <BigGreenButton
-        minWidth={320}
-        color={"background"}
-        onClick={onSubmitGuess}
-        icon={isComitting && <Spinner />}
-      >
-        {submitText}
-      </BigGreenButton>
-      <BigGreyButton
-        minWidth={320}
-        background="muted2"
-        onClick={props.onCancelClick}
-      >
-        Back
-      </BigGreyButton>
-    </Box>
+      <Box gap="md">
+        <FadeBox>
+          <BigGreenButton
+            minWidth={320}
+            color={"background"}
+            onClick={onSubmitGuess}
+            icon={isComitting && <Spinner />}
+          >
+            {submitText}
+          </BigGreenButton>
+        </FadeBox>
+        <FadeBox>
+          <BigGreyButton
+            minWidth={320}
+            background="muted2"
+            onClick={props.onCancelClick}
+          >
+            Back
+          </BigGreyButton>
+        </FadeBox>
+      </Box>
+    </FadeBox>
   );
 };
 
@@ -218,8 +231,8 @@ const TicketResult = (props: {
   }, [phaseDeadline]);
 
   return (
-    <Box grow centerContent gap="lg">
-      <TicketStack tickets={allSubmittedTickets}></TicketStack>
+    <FadeBox grow centerContent gap="lg" transitionType="fade">
+      <TicketStack tickets={allSubmittedTickets} />
       <Box alignItems="center">
         <Text header="large">Your entry was submitted!</Text>
         <Text color="muted" align="center">
@@ -241,6 +254,6 @@ const TicketResult = (props: {
         </Text>
         <Text header="giant">{getHumanDate(revealDate)}</Text>
       </Box>
-    </Box>
+    </FadeBox>
   );
 };
