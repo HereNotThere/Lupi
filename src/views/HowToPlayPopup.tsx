@@ -37,6 +37,7 @@ export const HowToPlayView = (props: { onClose?: () => void }) => (
     variants={backgroundVariants}
     {...animateProps}
     transition={{ duration: 0.4 }}
+    style={{ zIndex: 100 }}
   >
     <MotionBox
       maxWidth={650}

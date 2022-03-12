@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { TicketData } from "src/schema/Ticket";
 import { Box } from "src/ui";
 import styled from "styled-components";
@@ -12,16 +13,41 @@ export const TicketStack = (props: Props) => {
     return <></>;
   }
   return (
-    <Box>
+    <MotionBox
+      initial={"normal"}
+      whileHover={"expand"}
+      animate={"normal"}
+      variants={{}}
+    >
       <PlaceholderTicket ticketData={tickets[0]} numTickets={tickets.length} />
-      {tickets.map((ticket, index, arr) => (
-        <StackedTicket
-          ticketData={ticket}
-          key={ticket.guess}
-          order={arr.length - index}
-        />
-      ))}
-    </Box>
+      {tickets.map((ticket, index, arr) => {
+        const order = arr.length - index - 1;
+        const morder = -arr.length * 0.25 + arr.length - index - 1;
+        return (
+          <StackedTicket
+            ticketData={ticket}
+            key={ticket.guess}
+            order={order}
+            transition={{
+              type: "spring",
+              damping: 30,
+              stiffness: 300,
+            }}
+            variants={{
+              normal: {
+                y: order * -15,
+                scale: 1 - order * 0.015,
+              },
+              expand: {
+                y: morder * -120,
+                // x: order * 15,
+                rotate: order * 5,
+              },
+            }}
+          />
+        );
+      })}
+    </MotionBox>
   );
 };
 
@@ -33,12 +59,15 @@ const PlaceholderTicket = styled(Ticket)<{ numTickets: number }>`
   margin-top: calc(var(--numTickets) * var(--bl2));
 `;
 
-const StackedTicket = styled(Ticket)<{ order: number }>`
+const StackedTicket = styled(motion(Ticket))<{ order: number }>`
+  z-index: 10;
   position: absolute;
   bottom: 0;
   --order: ${({ order }) => order};
-  transform: translateY(calc(var(--order) * var(--bl2) * -1))
-    scale(calc(1 - var(--order) * 0.05));
+  /* transform: translateY(calc(var(--order) * var(--bl2) * -1))
+    scale(calc(1 - var(--order) * 0.05)); */
 
   filter: brightness(calc((1) - var(--order) * 0.15));
 `;
+
+const MotionBox = motion(Box);
