@@ -1,3 +1,4 @@
+import { AnimatePresence } from "framer-motion";
 import { useCallback, useMemo, useState } from "react";
 import { ChainWarning } from "./components/ChainWarning";
 import { DebugPanel } from "./components/DebugPanel";
@@ -64,7 +65,9 @@ function App() {
       </Box>
 
       <Footer />
-      {popup ? <HowToPlayView onClose={onPopupClose} /> : <></>}
+      <AnimatePresence>
+        {popup ? <HowToPlayView onClose={onPopupClose} key="howto" /> : <></>}
+      </AnimatePresence>
     </Box>
   );
 }

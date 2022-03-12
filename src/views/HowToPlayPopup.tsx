@@ -1,15 +1,52 @@
+import { motion } from "framer-motion";
 import { CloseIcon } from "src/components/Icons";
 import { Box, Button, Text } from "src/ui";
 import styled from "styled-components";
 
+const backgroundVariants = {
+  hide: {
+    backgroundColor: `rgba(0, 0, 0, 0.0)`,
+  },
+  show: {
+    backgroundColor: `rgba(0, 0, 0, 0.8)`,
+  },
+};
+
+const popupVariants = {
+  hide: {
+    scale: 0.9,
+    opacity: 0,
+  },
+  show: {
+    scale: 1,
+    opacity: 1,
+  },
+};
+
+const animateProps = {
+  initial: "hide",
+  animate: "show",
+  exit: "hide",
+};
+
 export const HowToPlayView = (props: { onClose?: () => void }) => (
-  <BackgroundBox fillSpace centerContent onClick={props.onClose}>
-    <Box
+  <MotionBox
+    fillSpace
+    centerContent
+    onClick={props.onClose}
+    variants={backgroundVariants}
+    {...animateProps}
+    transition={{ duration: 0.4 }}
+  >
+    <MotionBox
       maxWidth={650}
       background="muted"
       padding="xl"
       borderRadius="sm"
       gap="md"
+      {...animateProps}
+      variants={popupVariants}
+      transition={{ scale: { duration: 0.4 } }}
     >
       <CloseButton background="none" color="text" border={false}>
         <CloseIcon />
@@ -52,13 +89,11 @@ export const HowToPlayView = (props: { onClose?: () => void }) => (
         period. The person who is the LUPI once the ticket checking period is
         over will receive the jackpot directly to their wallet.
       </Text>
-    </Box>
-  </BackgroundBox>
+    </MotionBox>
+  </MotionBox>
 );
 
-const BackgroundBox = styled(Box)`
-  background-color: rgba(0, 0, 0, 0.8);
-`;
+const MotionBox = motion(Box);
 
 const CloseButton = styled(Button)`
   position: absolute;
