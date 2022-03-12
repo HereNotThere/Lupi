@@ -21,19 +21,27 @@ function App() {
   const { chainId, walletStatus } = useWeb3Context();
   const isChainSupported = useMemo(() => supportedChain(chainId), [chainId]);
 
-  const onSelectMenuItem = useCallback((menuId: string) => {
-    switch (menuId) {
-      case "how-to-play": {
-        setPopup(true);
-        return;
+  const onSelectMenuItem = useCallback(
+    (menuId: string) => {
+      switch (menuId) {
+        case "how-to-play": {
+          setPopup(true);
+          return;
+        }
+        case "past-games":
+        case "current-game": {
+          if (pageId !== menuId) {
+            setPageId(menuId);
+          } else {
+            setPageId("current-game");
+          }
+
+          break;
+        }
       }
-      case "past-games":
-      case "current-game": {
-        setPageId(menuId);
-        break;
-      }
-    }
-  }, []);
+    },
+    [pageId]
+  );
 
   const onPopupClose = useCallback(() => {
     setPopup(false);
@@ -43,7 +51,7 @@ function App() {
     <Box padding="md">
       {/* above the fold container */}
       <Box grow minHeight={`calc(100vh - var(--bl14))`}>
-        <SiteHeader onSelectMenuItem={onSelectMenuItem} />
+        <SiteHeader onSelectMenuItem={onSelectMenuItem} pageId={pageId} />
         {isChainSupported && walletStatus === WalletStatus.Unlocked ? (
           <LupiContractProvider>
             <Box row grow alignContent="center" justifyContent="center">

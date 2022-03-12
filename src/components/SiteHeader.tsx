@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import React, { useCallback } from "react";
 import { useWeb3Context, WalletStatus } from "src/hooks/useWeb3";
 import { TextButton } from "src/ui/Button/Button";
@@ -8,15 +9,31 @@ import { Box, Button, Text } from "../ui";
 export type MenuId = "current-game" | "past-games" | "how-to-play";
 
 interface Props {
+  pageId: string;
   onSelectMenuItem: (menuId: string) => void;
 }
 
+const headerVariants = {
+  hide: {
+    opacity: 0,
+  },
+  show: {
+    opacity: 1,
+  },
+};
+const animationProps = {
+  initial: "hide",
+  animate: "show",
+  exit: "hide",
+};
+
 export const SiteHeader = (props: Props) => {
+  const { pageId } = props;
   const { accounts, requestAccounts, walletStatus } = useWeb3Context();
   const shortAccounts = accounts.map(getShortAddress);
 
   return (
-    <Box
+    <MotionBox
       padding="md"
       horizontalPadding="lg"
       border
@@ -24,6 +41,11 @@ export const SiteHeader = (props: Props) => {
       minHeight={75}
       alignItems="center"
       row
+      variants={headerVariants}
+      {...animationProps}
+      transition={{
+        delay: 0.2,
+      }}
     >
       <Box shrink>
         <MenuItem
@@ -48,6 +70,7 @@ export const SiteHeader = (props: Props) => {
         <Separator />
         <MenuItem
           menuId={"past-games"}
+          selected={pageId === "past-games"}
           onMenuItemClick={props.onSelectMenuItem}
         >
           <Text color="text" header="small">
@@ -79,12 +102,16 @@ export const SiteHeader = (props: Props) => {
           </TextButton>
         )}
       </Box>
-    </Box>
+    </MotionBox>
   );
 };
 
+const MotionBox = motion(Box);
+const MotionButton = motion(Button);
+
 const MenuItem = (props: {
   menuId: MenuId;
+  selected?: boolean;
   children?: React.ReactNode;
 
   onMenuItemClick: (menuItem: string) => void;
@@ -93,9 +120,13 @@ const MenuItem = (props: {
     props.onMenuItemClick(props.menuId);
   }, [props]);
   return (
-    <Button onClick={onClick} background="none">
+    <MotionButton
+      onClick={onClick}
+      background="none"
+      color={props.selected ? "primary" : undefined}
+    >
       {props.children}
-    </Button>
+    </MotionButton>
   );
 };
 
