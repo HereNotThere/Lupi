@@ -11,7 +11,7 @@ export const Footer = () => (
     </Box>
     <Box row gap="md">
       <Text>
-        <a href="https://github.com/HereNotThere" title="GitHub">
+        <a href="https://github.com/HereNotThere/Lupi" title="GitHub">
           <InlineGitHubIcon />
         </a>
       </Text>
