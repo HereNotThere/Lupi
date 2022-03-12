@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BigGreenButton, BigGreyButton } from "src/components/Buttons";
+import { EthText } from "src/components/EthText";
 import { FadeBox } from "src/components/FadeBox";
 import { GameStats } from "src/components/GameStats";
 import { NumBox } from "src/components/NumBox";
@@ -173,7 +174,9 @@ const TicketPreview = (props: {
   return (
     <FadeBox grow centerContent gap="lg">
       <Ticket ticketData={props.ticketData} />
-      <Text>Entry fee: 0.01ETH + gas</Text>
+      <Text singleLine header="regular">
+        Entry fee: <EthText span eth={0.01} /> + gas
+      </Text>
       <Box gap="md">
         <FadeBox>
           <BigGreenButton
