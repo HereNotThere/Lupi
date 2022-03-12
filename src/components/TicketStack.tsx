@@ -15,7 +15,7 @@ export const TicketStack = (props: Props) => {
   return (
     <MotionBox
       initial={"normal"}
-      whileHover={"expand"}
+      whileHover={tickets?.length > 1 ? "expand" : "normal"}
       animate={"normal"}
       variants={{}}
     >
@@ -56,7 +56,7 @@ const PlaceholderTicket = styled(Ticket)<{ numTickets: number }>`
   display: block;
   visibility: hidden;
   --numTickets: ${({ numTickets }) => numTickets};
-  margin-top: calc(var(--numTickets) * var(--bl2));
+  margin-top: calc((var(--numTickets) - 1) * 15px);
 `;
 
 const StackedTicket = styled(motion(Ticket))<{ order: number }>`
@@ -64,9 +64,6 @@ const StackedTicket = styled(motion(Ticket))<{ order: number }>`
   position: absolute;
   bottom: 0;
   --order: ${({ order }) => order};
-  /* transform: translateY(calc(var(--order) * var(--bl2) * -1))
-    scale(calc(1 - var(--order) * 0.05)); */
-
   filter: brightness(calc((1) - var(--order) * 0.15));
 `;
 

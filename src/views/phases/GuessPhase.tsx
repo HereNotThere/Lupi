@@ -115,9 +115,16 @@ const GuessView = (props: { onPreviewGuess: (guess: number) => void }) => {
           <FadeBox>
             <GameStats />
           </FadeBox>
-          <FadeBox>
-            <TicketStack tickets={tickets} />
-          </FadeBox>
+          {!!tickets.length && (
+            <FadeBox>
+              <Box verticalPadding="md">
+                <Text header="regular" align="center">
+                  Your tickets
+                </Text>
+                <TicketStack tickets={tickets} />
+              </Box>
+            </FadeBox>
+          )}
         </Grid>
       </Box>
       {/* right column */}
