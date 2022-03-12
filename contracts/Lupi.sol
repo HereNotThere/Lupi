@@ -18,7 +18,6 @@
 
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 // if everyone reveals game is over
@@ -30,11 +29,6 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract Lupi is ReentrancyGuard {
   uint256 private constant TICKET_PRICE = 0.01 ether;
-  enum GamePhase {
-    GUESS,
-    REVEAL,
-    ENDGAME
-  }
 
   event GameResult(
     uint32 indexed round,
@@ -371,32 +365,6 @@ contract Lupi is ReentrancyGuard {
     delete pendingAmount;
   }
 
-  function getPlayers() external view returns (address[] memory) {
-    return rounds[round].players;
-  }
-
-  function getCommittedGuessHashes()
-    external
-    view
-    returns (Lupi.AllCommitedGuess[] memory)
-  {
-    Lupi.AllCommitedGuess[] memory ret = new AllCommitedGuess[](
-      rounds[round].players.length
-    );
-    for (uint256 i; i < rounds[round].players.length; ++i) {
-      ret[i].player = rounds[round].players[i];
-      ret[i].commitedGuesses = rounds[round].committedGuesses[
-        rounds[round].players[i]
-      ];
-    }
-
-    return ret;
-  }
-
-  function getCurrentBalance() external view returns (uint256) {
-    return rounds[round].balance;
-  }
-
   function getRolloverBalance() external view returns (uint256) {
     return rollover;
   }
@@ -407,36 +375,5 @@ contract Lupi is ReentrancyGuard {
 
   function getPendingWinner() external view returns (address) {
     return pendingWinner;
-  }
-
-  function getPhase() external view returns (GamePhase) {
-    if (block.timestamp <= rounds[round].guessDeadline) {
-      return GamePhase.GUESS;
-    } else if (block.timestamp <= rounds[round].revealDeadline) {
-      return GamePhase.REVEAL;
-    } else {
-      return GamePhase.ENDGAME;
-    }
-  }
-
-  function getPhaseDeadline() external view returns (uint256) {
-    if (block.timestamp <= rounds[round].guessDeadline) {
-      return rounds[round].guessDeadline;
-    } else if (block.timestamp <= rounds[round].revealDeadline) {
-      return rounds[round].revealDeadline;
-    } else {
-      return 0;
-    }
-  }
-
-  function getRevealedGuess() external view returns (uint256[] memory) {
-    uint256[] memory guesses = new uint256[](
-      rounds[round].revealedGuesses.length
-    );
-
-    for (uint256 i = 0; i < rounds[round].revealedGuesses.length; ++i) {
-      guesses[i] = rounds[round].revealedGuesses[i].guess;
-    }
-    return guesses;
   }
 }

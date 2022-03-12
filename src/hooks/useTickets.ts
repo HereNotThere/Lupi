@@ -223,8 +223,7 @@ export const useRevealedTickets = () => {
   }, [guessHashes, localTickets]);
 
   const sortedRevealedGuesses = useMemo(
-    () =>
-      (revealedGuesses ?? []).map((r) => r.toNumber()).sort((a, b) => a - b),
+    () => (revealedGuesses ?? []).map((r) => r.guess).sort((a, b) => a - b),
     [revealedGuesses]
   );
 

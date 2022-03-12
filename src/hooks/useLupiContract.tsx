@@ -23,6 +23,7 @@ export enum GamePhase {
   GUESS,
   REVEAL,
   ENDGAME,
+  UNKNOWN,
 }
 
 export function getGuessHash(
@@ -157,32 +158,54 @@ export const useLupiContract = () => {
     forceRefreshDep,
   ]);
 
-  const currentBalance = useContractCall(contract?.getCurrentBalance, [
-    forceRefreshDep,
-  ]);
+  const currentBalance = useMemo(
+    () => contractState?.balance,
+    [contractState?.balance]
+  );
   const rolloverBalance = useContractCall(contract?.getRolloverBalance, [
     forceRefreshDep,
   ]);
   const round = useContractCall(contract?.getRound, [forceRefreshDep]);
-  const phase = useContractCall(contract?.getPhase, [forceRefreshDep]);
-  const phaseDeadline = useContractCall(contract?.getPhaseDeadline, [
-    forceRefreshDep,
-  ]);
-  const players = useContractCall(contract?.getPlayers, [forceRefreshDep]);
-  const revealedGuesses = useContractCall(contract?.getRevealedGuess, [
-    forceRefreshDep,
-  ]);
 
-  const getGuessHashes = useCallback(async () => {
-    try {
-      return await contract?.getCommittedGuessHashes();
-    } catch (err) {
-      console.warn(`getCommittedGuessHashes failed`, err);
+  const phase = useMemo(() => {
+    if (contractState) {
+      const { blockTimestamp, guessDeadline, revealDeadline } = contractState;
+      if (blockTimestamp.lte(guessDeadline)) {
+        return GamePhase.GUESS;
+      } else if (blockTimestamp.lte(revealDeadline)) {
+        return GamePhase.REVEAL;
+      } else {
+        return GamePhase.ENDGAME;
+      }
+    } else {
+      return GamePhase.UNKNOWN;
     }
-  }, [contract]);
+  }, [contractState]);
 
-  const guessHashes = useContractCall(getGuessHashes, [forceRefreshDep]);
+  const phaseDeadline = useMemo(() => {
+    if (contractState) {
+      const { blockTimestamp, guessDeadline, revealDeadline } = contractState;
+      if (blockTimestamp.lte(guessDeadline)) {
+        return guessDeadline;
+      } else if (blockTimestamp.lte(revealDeadline)) {
+        return revealDeadline;
+      } else {
+        return BigNumber.from(0);
+      }
+    } else {
+      return BigNumber.from(0);
+    }
+  }, [contractState]);
 
+  const revealedGuesses = useMemo(
+    () => contractState?.revealedGuesses,
+    [contractState]
+  );
+
+  const guessHashes = useMemo(
+    () => contractState?.commitedGuesses,
+    [contractState?.commitedGuesses]
+  );
   const [finishedGames, setFinishedGames] = useState<
     {
       timestamp: number;
@@ -336,7 +359,6 @@ export const useLupiContract = () => {
     phaseDeadline,
     currentBalance,
     rolloverBalance,
-    players,
     guessHashes,
     finishedGames,
     revealedGuesses,
