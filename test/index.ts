@@ -2,8 +2,13 @@ import { expect } from "chai";
 import { BigNumber, utils } from "ethers";
 import { ethers } from "hardhat";
 import { describe } from "mocha";
+import { LupiInterface } from "typechain-types/Lupi";
 
-import { Lupi__factory, FakeCaller__factory } from "../typechain-types/index";
+import {
+  Lupi,
+  Lupi__factory,
+  FakeCaller__factory,
+} from "../typechain-types/index";
 
 console.log(`index.ts`);
 function getSalt(salt: string) {
@@ -24,6 +29,39 @@ const enum GamePhase {
   GUESS,
   REVEAL,
   ENDGAME,
+  UNKNOWN,
+}
+
+type LupiContract = Awaited<ReturnType<Lupi__factory["deploy"]>>; //length .lupi.getCurrentState>;
+type ContractState = Awaited<ReturnType<LupiContract["getCurrentState"]>>;
+function getPhase(contractState: ContractState) {
+  if (contractState) {
+    const { blockTimestamp, guessDeadline, revealDeadline } = contractState;
+    if (blockTimestamp.lte(guessDeadline)) {
+      return GamePhase.GUESS;
+    } else if (blockTimestamp.lte(revealDeadline)) {
+      return GamePhase.REVEAL;
+    } else {
+      return GamePhase.ENDGAME;
+    }
+  } else {
+    return GamePhase.UNKNOWN;
+  }
+}
+
+function getPhaseDeadline(contractState: ContractState) {
+  if (contractState) {
+    const { blockTimestamp, guessDeadline, revealDeadline } = contractState;
+    if (blockTimestamp.lte(guessDeadline)) {
+      return guessDeadline;
+    } else if (blockTimestamp.lte(revealDeadline)) {
+      return revealDeadline;
+    } else {
+      return BigNumber.from(0);
+    }
+  } else {
+    return BigNumber.from(0);
+  }
 }
 
 describe("Lupi", async function () {
@@ -36,11 +74,10 @@ describe("Lupi", async function () {
     const blockAfter = await ethers.provider.getBlock(blockNum);
     const blockTimestamp = blockAfter.timestamp;
 
-    expect(await lupi.getPhase()).to.equal(GamePhase.GUESS);
-    expect((await lupi.getPhaseDeadline()).toNumber()).to.closeTo(
-      blockTimestamp + 2 * 60,
-      100
-    );
+    expect(getPhase(await lupi.getCurrentState())).to.equal(GamePhase.GUESS);
+    expect(
+      getPhaseDeadline(await lupi.getCurrentState()).toNumber()
+    ).to.closeTo(blockTimestamp + 2 * 60, 100);
 
     expect(await lupi.getRound()).to.equal(1);
   });
@@ -363,18 +400,17 @@ describe("Lupi", async function () {
 
     await lupi.commitGuess(guessHash, overrides);
 
-    const players = await lupi.getPlayers();
-    expect(players.length).to.equal(1);
+    const state = await lupi.getCurrentState();
+    expect(state.players.length).to.equal(1);
 
-    const committedGuessHashes = await lupi.getCommittedGuessHashes();
     expect(
-      committedGuessHashes.find((g) => g.player === players[0])?.commitedGuesses
-        .length
+      state.commitedGuesses.find((g) => g.player === state.players[0])
+        ?.commitedGuesses.length
     ).to.equal(1);
 
     const currentState = await lupi.getCurrentState();
     expect(
-      currentState.commitedGuesses.find((g) => g.player === players[0])
+      currentState.commitedGuesses.find((g) => g.player === state.players[0])
         ?.commitedGuesses.length
     ).to.equal(1);
 
@@ -411,14 +447,12 @@ describe("Lupi", async function () {
     await lupi.commitGuess(guessHash1b, overrides);
     await lupi.commitGuess(guessHash2, overrides);
 
-    const players = await lupi.getPlayers();
-    expect(players.length).to.equal(1);
-
-    const committedGuessHashes = await lupi.getCommittedGuessHashes();
+    const state = await lupi.getCurrentState();
+    expect(state.players.length).to.equal(1);
 
     expect(
-      committedGuessHashes.find((g) => g.player === players[0])?.commitedGuesses
-        .length
+      state.commitedGuesses.find((g) => g.player === state.players[0])
+        ?.commitedGuesses.length
     ).to.equal(3);
 
     {
@@ -468,7 +502,7 @@ describe("Lupi", async function () {
     const currentNonce = await lupi.getCurrentNonce();
     const round = await lupi.getRound();
 
-    expect(await lupi.getPhase()).to.equal(GamePhase.GUESS);
+    expect(getPhase(await lupi.getCurrentState())).to.equal(GamePhase.GUESS);
 
     for (let j = 0; j < 2; j++) {
       const lupiUser = lupi.connect(users[j]);
@@ -486,9 +520,9 @@ describe("Lupi", async function () {
     for (let j = 0; j < 2; j++) {
       const lupiUser = lupi.connect(users[j]);
 
-      const committedGuessHashes = await lupiUser.getCommittedGuessHashes();
+      const state = await lupiUser.getCurrentState();
       expect(
-        committedGuessHashes.find((g) => g.player === users[j].address)
+        state.commitedGuesses.find((g) => g.player === users[j].address)
           ?.commitedGuesses.length
       ).to.equal(5);
     }
@@ -503,9 +537,9 @@ describe("Lupi", async function () {
 
     await lupiUser.commitGuess(guessHash, overrides);
 
-    const committedGuessHashes = await lupiUser.getCommittedGuessHashes();
+    const state = await lupiUser.getCurrentState();
     expect(
-      committedGuessHashes.find((g) => g.player === users[0].address)
+      state.commitedGuesses.find((g) => g.player === users[0].address)
         ?.commitedGuesses.length
     ).to.equal(6);
 
@@ -516,8 +550,8 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_setNextBlockTimestamp", [guessDeadline]);
     await ethers.provider.send("evm_mine", []);
 
-    expect(await lupi.getPhase()).to.equal(GamePhase.REVEAL);
-    expect((await lupi.getPhaseDeadline()).toNumber()).to.equal(
+    expect(getPhase(await lupi.getCurrentState())).to.equal(GamePhase.REVEAL);
+    expect(getPhaseDeadline(await lupi.getCurrentState()).toNumber()).to.equal(
       blockTimestamp + 4 * 60
     );
 
@@ -542,7 +576,7 @@ describe("Lupi", async function () {
       { round, guessHash: revealHash, answer: 1, salt },
     ]);
 
-    const revealedGuesses = await lupi.getRevealedGuess();
+    const revealedGuesses = (await lupi.getCurrentState()).revealedGuesses;
     expect(revealedGuesses.length).to.equal(11);
 
     const revealDeadline =
@@ -552,8 +586,8 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
-    expect(await lupi.getPhase()).to.equal(GamePhase.ENDGAME);
-    expect(await lupi.getPhaseDeadline()).to.equal(0);
+    expect(getPhase(await lupi.getCurrentState())).to.equal(GamePhase.ENDGAME);
+    expect(getPhaseDeadline(await lupi.getCurrentState())).to.equal(0);
 
     await expect(lupi.endGame())
       .to.emit(lupi, "GameResult")
@@ -564,11 +598,10 @@ describe("Lupi", async function () {
         1
       );
 
-    expect(await lupi.getPhase()).to.equal(GamePhase.GUESS);
-    expect((await lupi.getPhaseDeadline()).toNumber()).to.closeTo(
-      blockTimestamp + 7 * 60,
-      100
-    );
+    expect(getPhase(await lupi.getCurrentState())).to.equal(GamePhase.GUESS);
+    expect(
+      getPhaseDeadline(await lupi.getCurrentState()).toNumber()
+    ).to.closeTo(blockTimestamp + 7 * 60, 100);
   });
 
   it("1 User should commit 9 guesses (4 duplicate, 1 unique) and make 5 reveals", async function () {
@@ -626,9 +659,9 @@ describe("Lupi", async function () {
 
     const revealHash = getGuessHash(currentNonce, 6, salt);
 
-    const committedGuessHashes = await lupiUser.getCommittedGuessHashes();
+    const state = await lupiUser.getCurrentState();
     expect(
-      committedGuessHashes.find((g) => g.player === users[0].address)
+      state.commitedGuesses.find((g) => g.player === users[0].address)
         ?.commitedGuesses.length
     ).to.equal(9);
 
@@ -636,7 +669,7 @@ describe("Lupi", async function () {
       { round, guessHash: revealHash, answer: 6, salt },
     ]);
 
-    const revealedGuesses = await lupi.getRevealedGuess();
+    const revealedGuesses = (await lupi.getCurrentState()).revealedGuesses;
     expect(revealedGuesses.length).to.equal(9);
     const revealDeadline =
       (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
@@ -769,7 +802,7 @@ describe("Lupi", async function () {
       { round, guessHash: revealHash, answer: 6, salt },
     ]);
 
-    const revealedGuesses = await lupiUser.getRevealedGuess();
+    const revealedGuesses = (await lupiUser.getCurrentState()).revealedGuesses;
 
     expect(revealedGuesses.length).to.equal(9);
 
@@ -849,7 +882,7 @@ describe("Lupi", async function () {
 
     const afterBalance = await addr1.getBalance();
 
-    expect(await lupi.getCurrentBalance()).to.equal(
+    expect((await lupi.getCurrentState()).balance).to.equal(
       BigNumber.from("40000000000000000")
     );
 
@@ -869,7 +902,9 @@ describe("Lupi", async function () {
         .toString()}`
     );
     */
-    expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
+    expect((await lupi.getCurrentState()).balance).to.equal(
+      BigNumber.from("0")
+    );
     expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
     expect(BigNumber.from("40000000000000000").sub(totalGasUsed)).to.closeTo(
       startBalance.sub(afterBalance),
@@ -925,7 +960,7 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
-    expect(await lupi.getCurrentBalance()).to.equal(
+    expect((await lupi.getCurrentState()).balance).to.equal(
       BigNumber.from("80000000000000000")
     );
 
@@ -935,7 +970,9 @@ describe("Lupi", async function () {
       .to.emit(lupi, "GameResult")
       .withArgs(round, nullAddress, 0, 0);
 
-    expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
+    expect((await lupi.getCurrentState()).balance).to.equal(
+      BigNumber.from("0")
+    );
 
     expect(await lupi.getRolloverBalance()).to.equal(
       BigNumber.from("80000000000000000")
@@ -1004,7 +1041,7 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
-    expect(await lupi.getCurrentBalance()).to.equal(
+    expect((await lupi.getCurrentState()).balance).to.equal(
       BigNumber.from("40000000000000000")
     );
 
@@ -1023,7 +1060,9 @@ describe("Lupi", async function () {
       .emit(lupi, "AwardDeferred")
       .withArgs(round, fakeCaller.address, BigNumber.from("40000000000000000"));
 
-    expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
+    expect((await lupi.getCurrentState()).balance).to.equal(
+      BigNumber.from("0")
+    );
     expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
 
     expect(await lupi.getPendingWinner()).to.equal(fake.address);
@@ -1100,7 +1139,7 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
-    expect(await lupi.getCurrentBalance()).to.equal(
+    expect((await lupi.getCurrentState()).balance).to.equal(
       BigNumber.from("40000000000000000")
     );
 
@@ -1119,7 +1158,9 @@ describe("Lupi", async function () {
       .emit(lupi, "AwardDeferred")
       .withArgs(round, fakeCaller.address, BigNumber.from("40000000000000000"));
 
-    expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
+    expect((await lupi.getCurrentState()).balance).to.equal(
+      BigNumber.from("0")
+    );
     expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
 
     expect(await lupi.getPendingWinner()).to.equal(fake.address);
@@ -1192,7 +1233,7 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
-    expect(await lupi.getCurrentBalance()).to.equal(
+    expect((await lupi.getCurrentState()).balance).to.equal(
       BigNumber.from("40000000000000000")
     );
 
@@ -1211,7 +1252,9 @@ describe("Lupi", async function () {
       .emit(lupi, "AwardDeferred")
       .withArgs(round, fakeCaller.address, BigNumber.from("40000000000000000"));
 
-    expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
+    expect((await lupi.getCurrentState()).balance).to.equal(
+      BigNumber.from("0")
+    );
     expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
 
     expect(await lupi.getPendingWinner()).to.equal(fake.address);
@@ -1283,7 +1326,7 @@ describe("Lupi", async function () {
     await ethers.provider.send("evm_setNextBlockTimestamp", [revealDeadline]);
     await ethers.provider.send("evm_mine", []);
 
-    expect(await lupi.getCurrentBalance()).to.equal(
+    expect((await lupi.getCurrentState()).balance).to.equal(
       BigNumber.from("40000000000000000")
     );
 
@@ -1302,7 +1345,9 @@ describe("Lupi", async function () {
       .emit(lupi, "AwardDeferred")
       .withArgs(round, fakeCaller.address, BigNumber.from("40000000000000000"));
 
-    expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
+    expect((await lupi.getCurrentState()).balance).to.equal(
+      BigNumber.from("0")
+    );
     expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
     expect(await lupi.getPendingWinner()).to.equal(fake.address);
 
@@ -1324,7 +1369,9 @@ describe("Lupi", async function () {
       .emit(lupi, "AwardForfeited")
       .withArgs(round, fakeCaller.address, BigNumber.from("40000000000000000"));
 
-    expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
+    expect((await lupi.getCurrentState()).balance).to.equal(
+      BigNumber.from("0")
+    );
     expect(await lupi.getRolloverBalance()).to.equal(
       BigNumber.from("40000000000000000")
     );
@@ -1401,7 +1448,7 @@ describe("Lupi", async function () {
 
     const afterBalance = await addr1.getBalance();
 
-    expect(await lupi.getCurrentBalance()).to.equal(
+    expect((await lupi.getCurrentState()).balance).to.equal(
       BigNumber.from("40000000000000000")
     );
 
@@ -1419,7 +1466,9 @@ describe("Lupi", async function () {
 
     expect(await lupi.getPendingWinner()).to.equal(nullAddress);
 
-    expect(await lupi.getCurrentBalance()).to.equal(BigNumber.from("0"));
+    expect((await lupi.getCurrentState()).balance).to.equal(
+      BigNumber.from("0")
+    );
     expect(await lupi.getRolloverBalance()).to.equal(BigNumber.from("0"));
     expect(BigNumber.from("40000000000000000").sub(totalGasUsed)).to.closeTo(
       startBalance.sub(afterBalance),
