@@ -8,18 +8,20 @@ export const getShortAddress = (address?: string | undefined) => {
     : address;
 };
 
-export const getHumanDate = (date?: Date) => {
+export const getHumanDate = (date?: Date, dismissTime = false) => {
   if (!date) {
     return "";
   }
 
   return (
     date.toLocaleDateString() +
-    " " +
-    date.toLocaleTimeString(undefined, {
-      hour: "2-digit",
-      minute: "2-digit",
-    })
+    (!dismissTime
+      ? " " +
+        date.toLocaleTimeString(undefined, {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "")
   );
 };
 

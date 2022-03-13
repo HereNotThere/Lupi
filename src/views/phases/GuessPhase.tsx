@@ -9,6 +9,7 @@ import { Spinner } from "src/components/Spinner";
 import { Ticket } from "src/components/Ticket";
 import { TicketStack } from "src/components/TicketStack";
 import { useLupiContractContext } from "src/hooks/useLupiContract";
+import { useResponsive } from "src/hooks/useResponsive";
 import { useTicketList, useTickets } from "src/hooks/useTickets";
 import { TicketData } from "src/schema/Ticket";
 import { Box, Grid, Text } from "src/ui";
@@ -59,6 +60,7 @@ export const GuessPhase = () => {
 };
 
 const GuessView = (props: { onPreviewGuess: (guess: number) => void }) => {
+  const { isSmall } = useResponsive();
   const { onPreviewGuess } = props;
   const { round, guessHashes } = useLupiContractContext();
   const tickets = useTicketList(guessHashes);
@@ -102,36 +104,39 @@ const GuessView = (props: { onPreviewGuess: (guess: number) => void }) => {
   }, [inputValue, onKeyPadPress, onPreviewGuess]);
 
   return (
-    <Grid columns={2} grow>
+    <Box row={!isSmall} grow reverse={isSmall} gap={isSmall ? "lg" : false}>
       {/* left column */}
-      <Box centerContent>
-        <Grid columns={1} gap="md">
-          <FadeBox>
-            <Text header="regular" align="center">
-              Round {round}
-            </Text>
+      <Box centerContent grow gap="md">
+        <FadeBox>
+          <Text header="regular" align="center">
+            Round {round}
+          </Text>
+          {!isSmall && (
             <NumBox value={inputValue} cols={1} onReset={onResetGuess} />
-          </FadeBox>
-          <FadeBox>
-            <GameStats />
-          </FadeBox>
-          {!!tickets.length && (
-            <FadeBox>
-              <Box verticalPadding="md">
-                <Text header="regular" align="center">
-                  Your tickets
-                </Text>
-                <TicketStack tickets={tickets} />
-              </Box>
-            </FadeBox>
           )}
-        </Grid>
+        </FadeBox>
+        <FadeBox width={isSmall ? "100%" : undefined}>
+          <GameStats />
+        </FadeBox>
+        {!!tickets.length && (
+          <FadeBox>
+            <Box verticalPadding="md">
+              <Text header="regular" align="center">
+                Your tickets
+              </Text>
+              <TicketStack tickets={tickets} />
+            </Box>
+          </FadeBox>
+        )}
       </Box>
       {/* right column */}
-      <FadeBox grow centerContent transitionType={"fade"}>
+      <FadeBox grow centerContent transitionType={"fade"} gap="lg">
+        {isSmall && (
+          <NumBox value={inputValue} cols={1} onReset={onResetGuess} />
+        )}
         <NumPad onKeyPadPress={onKeyPadPress} canSubmit={inputValue > 0} />
       </FadeBox>
-    </Grid>
+    </Box>
   );
 };
 
@@ -259,10 +264,12 @@ const TicketResult = (props: {
         </BigGreyButton>
       </Box>
       <Box alignItems="center">
-        <Text header="large">
+        <Text header="large" align="center">
           Come back with your ticket to see if you will win
         </Text>
-        <Text header="giant">{getHumanDate(revealDate)}</Text>
+        <Text header="xlarge" align="center">
+          {getHumanDate(revealDate)}
+        </Text>
       </Box>
     </FadeBox>
   );

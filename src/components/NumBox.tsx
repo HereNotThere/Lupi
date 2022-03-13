@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useResponsive } from "src/hooks/useResponsive";
 import { Box, Button } from "src/ui";
 import { BoxProps } from "src/ui/Box/Box";
 import { getFormattedTicketNumber } from "src/utils/lupiUtils";
@@ -8,14 +9,15 @@ import { CloseIcon } from "./Icons";
 export const NumBox = (
   props: { value: number; onReset: () => void } & BoxProps
 ) => {
+  const { isSmall } = useResponsive();
   const value = getFormattedTicketNumber(props.value);
   return (
     <StyledNumBox
       border
       borderRadius="lg"
-      padding="lg"
+      padding={isSmall ? "sm" : "lg"}
       background="muted"
-      aspectRatio="square"
+      aspectRatio={isSmall ? undefined : "square"}
       centerContent
       width={280}
       {...props}

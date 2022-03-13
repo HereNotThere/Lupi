@@ -73,6 +73,7 @@ interface BaseProps {
 
   // flex container
   row?: boolean;
+  reverse?: boolean;
 
   justifyContent?: FlexPosition;
   alignContent?: FlexAlign;
@@ -136,8 +137,14 @@ export const Box = forwardRef((props: Props, ref) => {
 
     if (props.row) {
       classList.push("row");
+      if (props.reverse) {
+        classList.push("row-reverse");
+      }
     } else {
       classList.push("column");
+      if (props.reverse) {
+        classList.push("column-reverse");
+      }
     }
 
     if (props.cols) {

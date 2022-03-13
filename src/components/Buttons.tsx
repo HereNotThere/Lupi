@@ -54,7 +54,7 @@ export const BigGreenButton = (props: Props) => {
   return (
     <BigButton
       color="background"
-      whileTap="hover"
+      whileTap={props.disabled ? "disabled" : "hover"}
       whileHover={props.disabled ? "disabled" : "hover"}
       initial="initial"
       animate={props.disabled ? "disabled" : "animate"}
