@@ -1,3 +1,5 @@
+import { useResponsive } from "src/hooks/useResponsive";
+import { Grid } from "src/ui";
 import styled, { css } from "styled-components";
 import { BigGreenButton } from "./Buttons";
 import { EnterIcon } from "./Icons";
@@ -22,8 +24,13 @@ interface Props {
 }
 
 export const NumPad = (props: Props) => {
+  const { isSmall } = useResponsive();
   return (
-    <StyledNumPad>
+    <Grid
+      columns={isSmall ? 4 : 3}
+      gap={isSmall ? "sm" : "md"}
+      width={isSmall ? "100%" : undefined}
+    >
       {keys.map((value) => (
         <StyledNumKey
           onClick={() => {
@@ -32,24 +39,20 @@ export const NumPad = (props: Props) => {
           key={value}
           aspectRatio="square"
           centerContent
-          padding="xs"
-          size="giant"
+          horizontalPadding={isSmall ? undefined : "xs"}
+          size={isSmall ? "xlarge" : "giant"}
           value={value}
           icon={value === "ENTER" && <EnterIcon />}
           disabled={value === "ENTER" && !props.canSubmit}
+          height={isSmall ? undefined : 100}
+          borderRadius={isSmall ? "sm" : "md"}
         >
           {value === "ENTER" ? "" : value}
         </StyledNumKey>
       ))}
-    </StyledNumPad>
+    </Grid>
   );
 };
-
-const StyledNumPad = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 120px);
-  gap: var(--bl3);
-`;
 
 const StyledNumKey = styled(BigGreenButton)<{
   value: string | number;
@@ -58,7 +61,7 @@ const StyledNumKey = styled(BigGreenButton)<{
   ${({ value }) =>
     value === "ENTER" &&
     css`
-      grid-column: 2 / span 2;
-      aspect-ratio: auto; ;
+      grid-column: span 2;
+      aspect-ratio: auto;
     `}
 `;

@@ -1,10 +1,9 @@
 import { motion } from "framer-motion";
 import React, { useCallback } from "react";
-import { useWeb3Context, WalletStatus } from "src/hooks/useWeb3";
-import { TextButton } from "src/ui/Button/Button";
-import { getShortAddress } from "src/utils/lupiUtils";
+import { useResponsive } from "src/hooks/useResponsive";
 import styled from "styled-components";
 import { Box, Button, Text } from "../ui";
+import { ConnectWallet } from "./ConnectWallet";
 
 export type MenuId = "current-game" | "past-games" | "how-to-play";
 
@@ -29,8 +28,11 @@ const animationProps = {
 
 export const SiteHeader = (props: Props) => {
   const { pageId } = props;
-  const { accounts, requestAccounts, walletStatus } = useWeb3Context();
-  const shortAccounts = accounts.map(getShortAddress);
+
+  const { isSmall } = useResponsive();
+
+  if (isSmall) {
+  }
 
   return (
     <MotionBox
@@ -47,7 +49,7 @@ export const SiteHeader = (props: Props) => {
         delay: 0.2,
       }}
     >
-      <Box shrink>
+      <Box>
         <MenuItem
           menuId="current-game"
           onMenuItemClick={props.onSelectMenuItem}
@@ -58,50 +60,34 @@ export const SiteHeader = (props: Props) => {
         </MenuItem>
       </Box>
 
-      <Box grow row justifyContent="end" gap="md">
-        <MenuItem
-          menuId={"how-to-play"}
-          onMenuItemClick={props.onSelectMenuItem}
-        >
-          <Text color="text" header="small">
-            HOW TO PLAY
-          </Text>
-        </MenuItem>
-        <Separator />
-        <MenuItem
-          menuId={"past-games"}
-          selected={pageId === "past-games"}
-          onMenuItemClick={props.onSelectMenuItem}
-        >
-          <Text color="text" header="small">
-            PAST LUPIS
-          </Text>
-        </MenuItem>
-        <Separator />
-        {/* <Text color="muted" header="small" textTransform="uppercase">
-          Chain ID: {chainId}
-        </Text>
-        <Separator />
-        <Text color="muted" header="small" textTransform="uppercase">
-          Wallet Status: {walletStatus}
-        </Text> */}
-        {walletStatus === WalletStatus.Unlocked ? (
-          <Text header="small" textTransform="uppercase" color="muted">
-            <Text span color="primary">
-              {shortAccounts[0]}
-            </Text>
-          </Text>
-        ) : (
-          <TextButton
-            onClick={() => requestAccounts()}
-            color="primary"
-            size="small"
-            textTransform="uppercase"
+      {isSmall ? (
+        <Box grow row justifyContent="end" gap="md" alignItems="center">
+          <ConnectWallet textProps={{ color: "muted" }} />
+        </Box>
+      ) : (
+        <Box grow row justifyContent="end" gap="md">
+          <MenuItem
+            menuId={"how-to-play"}
+            onMenuItemClick={props.onSelectMenuItem}
           >
-            Connect Wallet
-          </TextButton>
-        )}
-      </Box>
+            <Text color="text" header="small">
+              HOW TO PLAY
+            </Text>
+          </MenuItem>
+          <Separator />
+          <MenuItem
+            menuId={"past-games"}
+            selected={pageId === "past-games"}
+            onMenuItemClick={props.onSelectMenuItem}
+          >
+            <Text color="text" header="small">
+              PAST LUPIS
+            </Text>
+          </MenuItem>
+          <Separator />
+          <ConnectWallet textProps={{ header: "small" }} />
+        </Box>
+      )}
     </MotionBox>
   );
 };

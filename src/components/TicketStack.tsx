@@ -16,6 +16,7 @@ export const TicketStack = (props: Props) => {
     <MotionBox
       initial={"normal"}
       whileHover={tickets?.length > 1 ? "expand" : "normal"}
+      whileTap={tickets?.length > 1 ? "expand" : "normal"}
       animate={"normal"}
       variants={{}}
     >

@@ -48,7 +48,7 @@ function App() {
   }, []);
 
   return (
-    <Box padding="md">
+    <Box padding="md" gap="lg">
       {/* above the fold container */}
       <Box grow minHeight={`calc(100vh - var(--bl14))`}>
         <SiteHeader onSelectMenuItem={onSelectMenuItem} pageId={pageId} />
@@ -71,8 +71,7 @@ function App() {
           </Box>
         )}
       </Box>
-
-      <Footer />
+      <Footer onSelectMenuItem={onSelectMenuItem} />
       <AnimatePresence>
         {popup ? <HowToPlayView onClose={onPopupClose} key="howto" /> : <></>}
       </AnimatePresence>

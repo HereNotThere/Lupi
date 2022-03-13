@@ -11,8 +11,14 @@
   &--column {
     flex-flow: column;
   }
+  &--column-reverse {
+    flex-flow: column-reverse;
+  }
   &--row {
     flex-flow: row;
+  }
+  &--row-reverse {
+    flex-flow: row-reverse;
   }
 }
 
@@ -258,6 +264,19 @@ $sizes: (
         /* skip item spacing if an element has borders  */
         > *:not(.Box--border-after) + *:not(.Box--border-before) {
           margin-top: calc(var(--baseline) * #{$bl});
+          margin-left: 0;
+        }
+      }
+    }
+  }
+}
+.Box--column-reverse {
+  &:not(.Grid) {
+    @each $name, $bl in $sizes {
+      &.Box--gap-#{$name} {
+        /* skip item spacing if an element has borders  */
+        > *:not(.Box--border-after) + *:not(.Box--border-before) {
+          margin-bottom: calc(var(--baseline) * #{$bl});
           margin-left: 0;
         }
       }

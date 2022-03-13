@@ -1,10 +1,12 @@
 import { GamePhase, useLupiContractContext } from "src/hooks/useLupiContract";
+import { useResponsive } from "src/hooks/useResponsive";
 import { useRevealedTickets } from "src/hooks/useTickets";
 import { Box, Grid, Text } from "src/ui";
 import { GameStats } from "./GameStats";
 
 export const RevealedGuesses = () => {
   const { phase, round } = useLupiContractContext();
+  const { isSmall } = useResponsive();
 
   const {
     userRevealed,
@@ -14,7 +16,7 @@ export const RevealedGuesses = () => {
     lupi,
   } = useRevealedTickets();
   return (
-    <Grid centerContent columns={1} border width={640}>
+    <Grid centerContent columns={1} border width={isSmall ? "100%" : 640}>
       <Box padding="md" centerContent border="after">
         {phase === GamePhase.REVEAL ? (
           <Text header="large" textTransform="uppercase">
