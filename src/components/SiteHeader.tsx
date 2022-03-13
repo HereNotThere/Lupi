@@ -31,9 +31,6 @@ export const SiteHeader = (props: Props) => {
 
   const { isSmall } = useResponsive();
 
-  if (isSmall) {
-  }
-
   return (
     <MotionBox
       padding="md"
