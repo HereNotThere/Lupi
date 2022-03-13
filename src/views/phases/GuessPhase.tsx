@@ -12,7 +12,7 @@ import { useLupiContractContext } from "src/hooks/useLupiContract";
 import { useResponsive } from "src/hooks/useResponsive";
 import { useTicketList, useTickets } from "src/hooks/useTickets";
 import { TicketData } from "src/schema/Ticket";
-import { Box, Grid, Text } from "src/ui";
+import { Box, Text } from "src/ui";
 import {
   createTicketDownload,
   generatePreviewTicket,

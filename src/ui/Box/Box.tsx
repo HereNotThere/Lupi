@@ -268,6 +268,7 @@ export const Box = forwardRef((props: Props, ref) => {
     props.aspectRatio,
     props.color,
     props.className,
+    props.reverse,
   ]);
 
   const {
