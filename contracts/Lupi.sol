@@ -63,12 +63,12 @@ contract Lupi is ReentrancyGuard {
 
   struct Round {
     bytes32 nonce;
-    uint256 guessDeadline;
-    uint256 revealDeadline;
     uint256 balance;
     mapping(address => CommitedGuess[]) committedGuesses;
     RevealedGuess[] revealedGuesses;
     address[] players;
+    uint32 guessDeadline;
+    uint32 revealDeadline;
   }
 
   struct CommitedGuess {
@@ -107,7 +107,7 @@ contract Lupi is ReentrancyGuard {
   }
 
   function newGame() private {
-    round++;
+    ++round;
 
     // If the prior winner failed to receive payment, and failed to collect payment, it is forfeit
     // at the start of the next round
@@ -116,14 +116,14 @@ contract Lupi is ReentrancyGuard {
     }
     // When on Arbitrum Testnet run rounds faster
     rounds[round].guessDeadline =
-      block.timestamp +
+      uint32(block.timestamp) +
       (
         block.chainid == 421611 ? 10 minutes : block.chainid == 31337
           ? 2 minutes
           : 3 days
       );
     rounds[round].revealDeadline =
-      block.timestamp +
+      uint32(block.timestamp) +
       (
         block.chainid == 421611 ? 15 minutes : block.chainid == 31337
           ? 4 minutes
@@ -167,29 +167,31 @@ contract Lupi is ReentrancyGuard {
     );
 
     uint256 length = rounds[round].committedGuesses[msg.sender].length;
+    uint256 revealsLength = reveals.length;
 
-    for (uint256 r = 0; r < reveals.length; r++) {
+    for (uint256 r; r < revealsLength; ) {
       bool found = false;
-      for (uint256 i = 0; i < length; ++i) {
+      Reveal memory revealedGuess = reveals[r];
+      for (uint256 i; i < length; ) {
         if (
           rounds[round].committedGuesses[msg.sender][i].guessHash ==
-          reveals[r].guessHash
+          revealedGuess.guessHash
         ) {
           require(
-            reveals[r].answer > 0,
+            revealedGuess.answer > 0,
             "revealGuesses answer must be positive"
           );
           require(
-            reveals[r].round == round,
+            revealedGuess.round == round,
             "revealGuesses must be for current round"
           );
 
           require(
             getSaltedHash(
               rounds[round].nonce,
-              reveals[r].answer,
-              reveals[r].salt
-            ) == reveals[r].guessHash,
+              revealedGuess.answer,
+              revealedGuess.salt
+            ) == revealedGuess.guessHash,
             "Reveal hash does not match guessHash"
           );
           require(
@@ -198,13 +200,19 @@ contract Lupi is ReentrancyGuard {
           );
           rounds[round].committedGuesses[msg.sender][i].revealed = true;
           rounds[round].revealedGuesses.push(
-            RevealedGuess(msg.sender, reveals[r].answer)
+            RevealedGuess(msg.sender, revealedGuess.answer)
           );
           found = true;
+        }
+        unchecked {
+          ++i;
         }
       }
 
       require(found, "revealGuesses no matching guessHash found");
+      unchecked {
+        ++r;
+      }
     }
   }
 
@@ -230,11 +238,15 @@ contract Lupi is ReentrancyGuard {
     Lupi.AllCommitedGuess[] memory ret = new AllCommitedGuess[](
       rounds[round].players.length
     );
-    for (uint256 i; i < rounds[round].players.length; ++i) {
+    uint256 playersLength = rounds[round].players.length;
+    for (uint256 i; i < playersLength; ) {
       ret[i].player = rounds[round].players[i];
       ret[i].commitedGuesses = rounds[round].committedGuesses[
         rounds[round].players[i]
       ];
+      unchecked {
+        ++i;
+      }
     }
 
     return (
@@ -258,24 +270,32 @@ contract Lupi is ReentrancyGuard {
     uint32 lowestGuess = 0xffffffff;
     address winner = address(0);
 
-    for (uint256 i = 0; i < rounds[round].revealedGuesses.length; ++i) {
-      if (rounds[round].revealedGuesses[i].guess < lowestGuess) {
+    uint256 revealedGuessesLength = rounds[round].revealedGuesses.length;
+
+    for (uint256 i; i < revealedGuessesLength; ) {
+      RevealedGuess memory revealedGuessI = rounds[round].revealedGuesses[i];
+      if (revealedGuessI.guess < lowestGuess) {
         bool unique = true;
-        for (uint256 x = 0; x < rounds[round].revealedGuesses.length; x++) {
+        for (uint256 x; x < revealedGuessesLength; ) {
           if (i != x) {
             if (
-              rounds[round].revealedGuesses[x].guess ==
-              rounds[round].revealedGuesses[i].guess
+              rounds[round].revealedGuesses[x].guess == revealedGuessI.guess
             ) {
               unique = false;
               break;
             }
           }
+          unchecked {
+            ++x;
+          }
         }
         if (unique) {
-          lowestGuess = rounds[round].revealedGuesses[i].guess;
-          winner = rounds[round].revealedGuesses[i].player;
+          lowestGuess = revealedGuessI.guess;
+          winner = revealedGuessI.player;
         }
+      }
+      unchecked {
+        ++i;
       }
     }
 
@@ -291,7 +311,7 @@ contract Lupi is ReentrancyGuard {
       rollover += rounds[round].balance;
     }
 
-    for (uint256 i = 0; i < rounds[round].players.length; ++i) {
+    for (uint256 i; i < rounds[round].players.length; ++i) {
       delete rounds[round].committedGuesses[rounds[round].players[i]];
     }
     delete rounds[round].revealedGuesses;
