@@ -5,6 +5,7 @@ import { DebugPanel } from "./components/DebugPanel";
 import { Footer } from "./components/Footer";
 import { MenuId, SiteHeader } from "./components/SiteHeader";
 import { LupiContractProvider, supportedChain } from "./hooks/useLupiContract";
+import { useResponsive } from "./hooks/useResponsive";
 import { useWeb3Context, WalletStatus } from "./hooks/useWeb3";
 import { Box } from "./ui";
 import { GamePhases } from "./views/GamePhases";
@@ -47,10 +48,17 @@ function App() {
     setPopup(false);
   }, []);
 
+  const { isSmall } = useResponsive();
+
   return (
-    <Box padding="md" gap="lg">
+    <Box>
       {/* above the fold container */}
-      <Box grow minHeight={`calc(100vh - var(--bl14))`}>
+      <Box
+        grow
+        gap="lg"
+        minHeight={`calc(100vh - ${isSmall ? 200 : 140}px`}
+        padding="md"
+      >
         <SiteHeader onSelectMenuItem={onSelectMenuItem} pageId={pageId} />
         {isChainSupported && walletStatus === WalletStatus.Unlocked ? (
           <LupiContractProvider>

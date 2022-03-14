@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useResponsive } from "src/hooks/useResponsive";
 import { Box, Text } from "src/ui";
 import { TextButton } from "src/ui/Button/Button";
@@ -9,36 +10,49 @@ type Props = {
 };
 
 export const Footer = (props: Props) => {
+  const { onSelectMenuItem } = props;
   const { isSmall } = useResponsive();
+  const responsiveProps = useMemo(() => {
+    return isSmall
+      ? ({
+          background: "muted",
+          style: { marginTop: `var(--bl4)` },
+        } as const)
+      : {};
+  }, [isSmall]);
   return (
     <>
-      {isSmall && (
-        <Box
-          grow
-          color="muted"
-          gap="sm"
-          padding="md"
-          alignItems="center"
-          border
-          borderRadius
-        >
-          <TextButton
-            color="text"
-            size="regular"
-            onClick={() => props.onSelectMenuItem("how-to-play")}
-          >
-            HOW TO PLAY
-          </TextButton>
-          <TextButton
-            color="text"
-            size="regular"
-            onClick={() => props.onSelectMenuItem("past-games")}
-          >
-            PAST LUPIS
-          </TextButton>
-        </Box>
-      )}
-      <Box grow color="muted" gap="sm" padding alignItems="center">
+      <Box
+        grow
+        color="muted"
+        gap="sm"
+        alignItems="center"
+        padding="md"
+        {...responsiveProps}
+      >
+        {isSmall && (
+          <Box grow gap="md" alignItems="center" padding="sm">
+            <TextButton
+              size="small"
+              color="primary"
+              onClick={() => onSelectMenuItem("how-to-play")}
+            >
+              LUPI
+            </TextButton>
+            <TextButton
+              size="small"
+              onClick={() => onSelectMenuItem("how-to-play")}
+            >
+              HOW TO PLAY
+            </TextButton>
+            <TextButton
+              size="small"
+              onClick={() => onSelectMenuItem("past-games")}
+            >
+              PAST LUPIS
+            </TextButton>
+          </Box>
+        )}
         <Box>
           <Text small>
             An experiment by{" "}
