@@ -6,14 +6,13 @@ import { TextProps } from "src/ui/Text/Text";
 
 export const ConnectWallet = (props: { textProps?: TextProps }) => {
   const textProps = props.textProps ?? {};
+
   const { accounts, requestAccounts, walletStatus } = useWeb3Context();
   const shortAccounts = accounts.map(getShortAddress);
 
   return walletStatus === WalletStatus.Unlocked ? (
-    <Text textTransform="uppercase" color="muted">
-      <Text span color="primary" {...textProps}>
-        {shortAccounts[0]}
-      </Text>
+    <Text textTransform="uppercase" color="muted" {...textProps}>
+      {shortAccounts[0]}
     </Text>
   ) : (
     <TextButton
