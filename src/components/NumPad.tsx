@@ -28,7 +28,7 @@ export const NumPad = (props: Props) => {
   return (
     <Grid
       columns={isSmall ? 4 : 3}
-      gap={isSmall ? "sm" : "md"}
+      gap={isSmall ? "md" : "md"}
       width={isSmall ? "100%" : undefined}
     >
       {keys.map((value) => (
@@ -39,8 +39,9 @@ export const NumPad = (props: Props) => {
           key={value}
           aspectRatio="square"
           centerContent
+          padding={isSmall ? undefined : "xs"}
           horizontalPadding={isSmall ? undefined : "xs"}
-          size={isSmall ? "xlarge" : "giant"}
+          size={isSmall ? "giant" : "giant"}
           value={value}
           icon={value === "ENTER" && <EnterIcon />}
           disabled={value === "ENTER" && !props.canSubmit}
