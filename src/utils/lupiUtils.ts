@@ -14,7 +14,11 @@ export const getHumanDate = (date?: Date, dismissTime = false) => {
   }
 
   return (
-    date.toLocaleDateString() +
+    date.toLocaleDateString(undefined, {
+      year: "2-digit",
+      month: "2-digit",
+      day: "2-digit",
+    }) +
     (!dismissTime
       ? " " +
         date.toLocaleTimeString(undefined, {

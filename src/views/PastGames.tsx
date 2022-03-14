@@ -60,7 +60,7 @@ export const GameList = () => {
                           result.lowestGuess || "-",
                           result.winner === nullAddress
                             ? isSmall
-                              ? "No winner"
+                              ? "-"
                               : "No winner (pot rolled over)"
                             : getShortAddress(result.winner),
                         ]}
@@ -94,7 +94,11 @@ const ResultRow = (props: {
 }) => (
   <>
     {props.columns.map((c, index) => (
-      <FadeBox key={`column-${index}`} color={props.self ? "primary" : "text"}>
+      <FadeBox
+        key={`column-${index}`}
+        color={props.self ? "primary" : "text"}
+        alignItems={"center"}
+      >
         <Text
           singleLine
           small={props.small || undefined}
