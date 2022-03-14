@@ -99,8 +99,10 @@ const useWeb3 = () => {
   const [provider, setProvider] = useState<ethers.providers.Web3Provider>();
 
   useEffect(() => {
-    setProvider(new ethers.providers.Web3Provider(window.ethereum));
-  }, [accounts, chainId]);
+    setProvider(
+      ethereum ? new ethers.providers.Web3Provider(ethereum) : undefined
+    );
+  }, [accounts, chainId, ethereum]);
 
   useEffect(() => {
     let shutdown = false;
