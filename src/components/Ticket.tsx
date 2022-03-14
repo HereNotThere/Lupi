@@ -40,6 +40,7 @@ export const Ticket = forwardRef(
 const GradientCard = styled(Box)`
   background: radial-gradient(50% 50% at 50% 50%, #70f9f1 0%, #8f00ff 100%);
   border-radius: var(--bl5);
+  user-select: none;
 `;
 
 const InsideCard = styled(Box)`

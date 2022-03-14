@@ -34,17 +34,17 @@ const buttonVariants = {
   },
   animate: {
     background:
-      "radial-gradient(50% 50% at 50% 50%,rgba(209, 249, 112,0.9) 0%, rgba(143, 255, 0,0.9) 10%)",
-    boxShadow: `0 0 20px 0px rgba(209, 249, 112, 0.4)`,
+      "radial-gradient(50% 50% at 50% 50%,rgba(209, 249, 112,1) 0%, rgba(143, 255, 0,1) 100%)",
+    boxShadow: `0 0 20px 0px rgba(209, 249, 112, 0)`,
   },
   disabled: {
     background:
-      "radial-gradient(50% 50% at 50% 50%,rgba(209, 249, 112,0.1) 0%, rgba(143, 255, 0,0.1) 10%)",
+      "radial-gradient(50% 50% at 50% 50%,rgba(209, 249, 112,0.25) 0%, rgba(143, 255, 0,0.25) 10%)",
   },
   hover: {
     scale: 1.02,
     background:
-      "radial-gradient(50% 50% at 50% 50%, rgba(209, 249, 112,100 ) 0%, rgba(143, 255, 0,100 ) 100%)",
+      "radial-gradient(50% 50% at 50% 50%, rgba(209, 249, 112, 1) 50%, rgba(143, 255, 0,100 ) 100%)",
     boxShadow: `0 0 20px 0px rgba(209, 249, 112, 0.4)`,
   },
 };

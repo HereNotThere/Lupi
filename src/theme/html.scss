@@ -90,6 +90,7 @@ button {
   background-color: var(--theme-fg);
   color: var(--theme-bg);
   border: 1px solid transparent;
+  -webkit-tap-highlight-color: transparent;
 }
 
 input {
