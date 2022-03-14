@@ -108,11 +108,13 @@ const GuessView = (props: { onPreviewGuess: (guess: number) => void }) => {
       {/* left column */}
       <Box centerContent grow gap="md">
         <FadeBox>
-          <Text header="regular" align="center">
-            Round {round}
-          </Text>
           {!isSmall && (
-            <NumBox value={inputValue} cols={1} onReset={onResetGuess} />
+            <>
+              <Text header="regular" align="center">
+                Round {round}
+              </Text>
+              <NumBox value={inputValue} cols={1} onReset={onResetGuess} />
+            </>
           )}
         </FadeBox>
         <FadeBox width={isSmall ? "100%" : undefined}>
@@ -132,8 +134,14 @@ const GuessView = (props: { onPreviewGuess: (guess: number) => void }) => {
       {/* right column */}
       <FadeBox grow centerContent transitionType={"fade"} gap="lg">
         {isSmall && (
-          <NumBox value={inputValue} cols={1} onReset={onResetGuess} />
+          <>
+            <Text header="regular" align="center">
+              Round {round}
+            </Text>
+            <NumBox value={inputValue} cols={1} onReset={onResetGuess} />
+          </>
         )}
+
         <NumPad onKeyPadPress={onKeyPadPress} canSubmit={inputValue > 0} />
       </FadeBox>
     </Box>
