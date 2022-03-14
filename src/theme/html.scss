@@ -77,6 +77,9 @@ body {
 a {
   color: var(--theme-fg);
   text-decoration: none;
+  &:hover {
+    color: var(--theme-p1);
+  }
 }
 
 button {
