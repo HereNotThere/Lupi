@@ -58,7 +58,7 @@ export const SiteHeader = (props: Props) => {
       </Box>
 
       {isSmall ? (
-        <Box grow row justifyContent="end" gap="md" alignItems="center">
+        <Box grow justifyContent="end">
           <ConnectWallet textProps={{ color: "muted" }} />
         </Box>
       ) : (
