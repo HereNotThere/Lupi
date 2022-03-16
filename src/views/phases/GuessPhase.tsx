@@ -227,7 +227,7 @@ const TicketResult = (props: {
   onBackClick: () => void;
 }) => {
   const { ticket } = props;
-  const { round, phaseDeadline } = useLupiContractContext();
+  const { round, revealDeadline } = useLupiContractContext();
   const { guessHashes } = useLupiContractContext();
 
   const ticketList = useTicketList(guessHashes);
@@ -248,10 +248,10 @@ const TicketResult = (props: {
   }, [allSubmittedTickets, round]);
 
   const revealDate = useMemo(() => {
-    if (phaseDeadline) {
-      return new Date(phaseDeadline.toNumber() * 1000);
+    if (revealDeadline) {
+      return new Date(revealDeadline.toNumber() * 1000);
     }
-  }, [phaseDeadline]);
+  }, [revealDeadline]);
 
   return (
     <FadeBox grow centerContent gap="lg" transitionType="fade">

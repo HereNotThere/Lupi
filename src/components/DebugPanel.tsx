@@ -61,7 +61,8 @@ export const DebugPanel = () => {
 
   const {
     phase,
-    phaseDeadline,
+    guessDeadline,
+    revealDeadline,
     guessHashes,
     finishedGames,
     revealedGuesses,
@@ -146,7 +147,8 @@ export const DebugPanel = () => {
           <Box padding border centerContent>
             <>
               <Text>Phase: {phase}</Text>
-              <Text>Phase deadline: {phaseDeadline?.toString()}</Text>
+              <Text>Guess Phase deadline: {guessDeadline?.toString()}</Text>
+              <Text>Reveal Phase deadline: {revealDeadline?.toString()}</Text>
             </>
           </Box>
           <Box padding border centerContent>
