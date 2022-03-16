@@ -62,7 +62,7 @@ export const HowToPlayView = (props: { onClose?: () => void }) => {
         <Text>
           Lowest:{" "}
           <Text span color="muted">
-            Thelowest guess that also fulfills the other requirements
+            The lowest guess that also fulfills the other requirements
           </Text>
         </Text>
         <Text>
