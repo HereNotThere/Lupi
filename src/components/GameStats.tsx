@@ -33,6 +33,19 @@ export const GameStats = (props: { noSpace?: boolean }) => {
     [phaseDeadline]
   );
 
+  const endGameTimestamp = useMemo(
+    () =>
+      phase === GamePhase.GUESS && phaseDeadline?.toNumber()
+        ? // NOTE: the following estimate is based on the assumption the reveal deadline
+          // occurs one day after guessing phase is over. If the contract gets updated
+          // this needs to be amended too.
+          getHumanDate(
+            new Date((60 * 60 * 24 + phaseDeadline.toNumber()) * 1000)
+          )
+        : "",
+    [phase, phaseDeadline]
+  );
+
   const wei = currentBalance?.add(rolloverBalance ?? 0);
 
   return (
@@ -83,6 +96,20 @@ export const GameStats = (props: { noSpace?: boolean }) => {
           </Text>
           <Text header="regular" color="primary">
             {phaseEndTimestamp}
+          </Text>
+        </Box>
+      )}
+      {phase === GamePhase.GUESS && !!endGameTimestamp && (
+        <Box
+          padding={noSpace ? "md" : "sm"}
+          border
+          centerContent
+          gap="xs"
+          cols={2}
+        >
+          <Text header="small">Approximate Reveal Deadline</Text>
+          <Text header="regular" color="primary">
+            {endGameTimestamp}
           </Text>
         </Box>
       )}
