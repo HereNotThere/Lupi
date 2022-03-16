@@ -34,11 +34,11 @@ export const ChainWarning = (props: { isChainSupported?: boolean }) => {
                 Unsupported chain
               </Text>
               <Text color="muted">
-                Please switch to one of the supported networks
+                Please switch to the Arbitrum One network to play
               </Text>
             </Box>
             <Box centerContent>
-              <Grid columns={2} gap="lg">
+              <Grid columns={1} gap="lg">
                 <BigGreyButton
                   onClick={addArbitrumOneChain}
                   transition={{ delay: 1.1 }}
@@ -49,7 +49,7 @@ export const ChainWarning = (props: { isChainSupported?: boolean }) => {
                   initial="hidden"
                   animate="show"
                 >
-                  Arbitrum
+                  Arbitrum One
                 </BigGreyButton>
               </Grid>
             </Box>
