@@ -19,19 +19,28 @@ export const getEntryCount = (
 
 export const GameStats = (props: { noSpace?: boolean }) => {
   const { noSpace } = props;
-  const { guessHashes, currentBalance, rolloverBalance, phaseDeadline, phase } =
-    useLupiContractContext();
+  const {
+    guessHashes,
+    currentBalance,
+    rolloverBalance,
+    guessDeadline,
+    revealDeadline,
+    phase,
+  } = useLupiContractContext();
 
   const showUnrevealed = phase === GamePhase.GUESS;
   const entryCount = getEntryCount(guessHashes, showUnrevealed);
 
-  const phaseEndTimestamp = useMemo(
-    () =>
-      phaseDeadline?.toNumber()
-        ? getHumanDate(new Date(phaseDeadline.toNumber() * 1000))
+  const { guessPhaseTimestamp, revealPhaseTimestamp } = useMemo(() => {
+    return {
+      guessPhaseTimestamp: guessDeadline?.toNumber()
+        ? getHumanDate(new Date(guessDeadline?.toNumber() * 1000))
         : "",
-    [phaseDeadline]
-  );
+      revealPhaseTimestamp: revealDeadline?.toNumber()
+        ? getHumanDate(new Date(revealDeadline?.toNumber() * 1000))
+        : "",
+    };
+  }, [guessDeadline, revealDeadline]);
 
   const wei = currentBalance?.add(rolloverBalance ?? 0);
 
@@ -68,7 +77,7 @@ export const GameStats = (props: { noSpace?: boolean }) => {
           {entryCount}
         </Text>
       </Box>
-      {phaseEndTimestamp && (
+      {phase === GamePhase.GUESS && (
         <Box
           padding={noSpace ? "md" : "sm"}
           border
@@ -76,16 +85,27 @@ export const GameStats = (props: { noSpace?: boolean }) => {
           gap="xs"
           cols={2}
         >
-          <Text header="small">
-            {phase === GamePhase.GUESS
-              ? "Approximate Guess Deadline"
-              : "Approximate Reveal deadline"}
-          </Text>
+          <Text header="small">Approximate Guess Deadline</Text>
           <Text header="regular" color="primary">
-            {phaseEndTimestamp}
+            {guessPhaseTimestamp}
           </Text>
         </Box>
       )}
+      {(phase === GamePhase.GUESS || phase === GamePhase.REVEAL) &&
+        !!revealDeadline && (
+          <Box
+            padding={noSpace ? "md" : "sm"}
+            border
+            centerContent
+            gap="xs"
+            cols={2}
+          >
+            <Text header="small">Approximate Reveal Deadline</Text>
+            <Text header="regular" color="primary">
+              {revealPhaseTimestamp}
+            </Text>
+          </Box>
+        )}
     </Grid>
   );
 };

@@ -186,20 +186,8 @@ export const useLupiContract = () => {
     }
   }, [contractState]);
 
-  const phaseDeadline = useMemo(() => {
-    if (contractState) {
-      const { blockTimestamp, guessDeadline, revealDeadline } = contractState;
-      if (blockTimestamp.lte(guessDeadline)) {
-        return guessDeadline;
-      } else if (blockTimestamp.lte(revealDeadline)) {
-        return revealDeadline;
-      } else {
-        return BigNumber.from(0);
-      }
-    } else {
-      return BigNumber.from(0);
-    }
-  }, [contractState]);
+  const guessDeadline = contractState?.guessDeadline;
+  const revealDeadline = contractState?.revealDeadline;
 
   const revealedGuesses = useMemo(
     () => contractState?.revealedGuesses,
@@ -360,7 +348,8 @@ export const useLupiContract = () => {
     contractAddress,
     round,
     phase,
-    phaseDeadline,
+    guessDeadline,
+    revealDeadline,
     currentBalance,
     rolloverBalance,
     guessHashes,
