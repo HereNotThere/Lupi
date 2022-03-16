@@ -5,8 +5,7 @@ import { BigGreyButton } from "./Buttons";
 
 export const ChainWarning = (props: { isChainSupported?: boolean }) => {
   const { isChainSupported } = props;
-  const { addArbitrumRinkebyChain, addArbitrumOneChain, requestAccounts } =
-    useWeb3Context();
+  const { addArbitrumOneChain, requestAccounts } = useWeb3Context();
 
   return (
     <AnimatePresence>
@@ -51,18 +50,6 @@ export const ChainWarning = (props: { isChainSupported?: boolean }) => {
                   animate="show"
                 >
                   Arbitrum
-                </BigGreyButton>
-                <BigGreyButton
-                  onClick={addArbitrumRinkebyChain}
-                  transition={{ delay: 1.1 }}
-                  variants={{
-                    hidden: { opacity: 0, scale: 0.95 },
-                    show: { opacity: 1, scale: 1 },
-                  }}
-                  initial="hidden"
-                  animate="show"
-                >
-                  Arbitrum Rinkeby
                 </BigGreyButton>
               </Grid>
             </Box>

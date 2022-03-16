@@ -13,9 +13,9 @@ import {
 } from "./useContractTransact";
 import { createGenericContext } from "../utils/createGenericContext";
 
-// Lupi on Rinkeby
-const rinkebyAddress = "0x60a5d60D9173f788D3caF27a86193c2418A5F90D";
-const arbRinkebyAddress = "0xFc8e5F235d2597576669A328f9a9366e0dA845d3";
+//const rinkebyAddress = "0x60a5d60D9173f788D3caF27a86193c2418A5F90D";
+//const arbRinkebyAddress = "0xFc8e5F235d2597576669A328f9a9366e0dA845d3";
+const arbAddress = "0x4951e6c53dE1FBe34baeF5d4Cd9BD3B417D7d577";
 const hhAddress = process.env.REACT_APP_HARDHAT_ADDRESS;
 // const lupiAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
 
@@ -110,10 +110,14 @@ export const supportedChain = (chainId: string | undefined) => {
   switch (chainId) {
     case undefined:
       return undefined;
+    case "0xa4b1":
+      return arbAddress;
+    /*
     case "0x66eeb":
       return arbRinkebyAddress;
     case "0x4":
       return rinkebyAddress;
+      */
     case "0x7a69":
       console.log(
         "useLupiContract::useLupiContractconnecting to hardhat",

@@ -57,6 +57,13 @@ const config: HardhatUserConfig = {
           ? [process.env.ARB_RINKEBY_PRIVATE_KEY]
           : [],
     },
+    arbitrum: {
+      url: "https://arb1.arbitrum.io/rpc",
+      accounts:
+        process.env.ARB_PRIVATE_KEY !== undefined
+          ? [process.env.ARB_PRIVATE_KEY]
+          : [],
+    },
     hardhat: {
       mining: {
         mempool: {
